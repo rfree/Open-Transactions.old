@@ -181,7 +181,8 @@ OTCronItem * OTCronItem::NewCronItem(const OTString & strCronItem)
     // --------------------------------------------------------------------
     OTString strContract(strCronItem);
     
-    if (false == strContract.DecodeIfArmored(false)) // bEscapedIsAllowed=true by default.
+	bool bIsArmored = false;
+    if (false == strContract.DecodeIfArmored(bIsArmored, false)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strCronItem.Get());

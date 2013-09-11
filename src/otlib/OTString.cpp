@@ -1193,7 +1193,7 @@ void OTString::Truncate(uint32_t lAt)
 //                        (Whether I actually HAD to unarmor it or not... it's unarmored now.)
 //               false == There was some error or the string is empty.
 //
-bool OTString::DecodeIfArmored(bool bEscapedIsAllowed/*=true*/)
+bool OTString::DecodeIfArmored(bool & out_bIsArmored, bool bEscapedIsAllowed/*=true*/)
 {
     if (!this->Exists())
         return false;
@@ -1218,6 +1218,7 @@ bool OTString::DecodeIfArmored(bool bEscapedIsAllowed/*=true*/)
     }
     // ----------------------------------------
     const bool bArmored = (bArmoredAndALSOescaped || bArmoredButNOTescaped);
+	out_bIsArmored = bArmored;
     // ----------------------------------------
     // Whether the string is armored or not, (-----BEGIN OT ARMORED)
     // either way, we'll end up with the decoded version in this variable:

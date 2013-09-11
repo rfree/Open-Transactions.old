@@ -1588,6 +1588,12 @@ bool OTServer::LoadServerUserAndContract()
                 OTLog::Output(0, "\n** Main Server Contract Verified **\n");
                 m_pServerContract = pContract;
                 bSuccess          = true;
+
+				if (!this->m_bReadOnly)
+				if (0 == pContract->IsRawContractArmored())
+				{
+					pContract->SaveToContractFolder();
+				}
             }
             else
             {
@@ -1600,9 +1606,11 @@ bool OTServer::LoadServerUserAndContract()
             delete pContract; pContract = NULL;
             OTLog::vOutput(0, "\n%s: Failed reading Main Server Contract:\n%s\n", szFunc,
                            strContractPath.Get());
-        }						
+        }
+
     }
-    
+
+
     return bSuccess;
 }
 
@@ -1932,7 +1940,8 @@ bool OTServer::LoadMainFile(bool bReadOnly/*=false*/)
     {
         OTStringXML xmlFileContents(strFileContents);
         
-        if (false == xmlFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
+		bool bIsArmored = false;
+        if (false == xmlFileContents.DecodeIfArmored(bIsArmored)) // bEscapedIsAllowed=true by default.
         {
             OTLog::vError("%s: Notary server file apparently was encoded and then failed decoding. Filename: %s \n"
                           "Contents: \n%s\n", __FUNCTION__, m_strWalletFilename.Get(), strFileContents.Get());
@@ -2078,7 +2087,7 @@ bool OTServer::LoadMainFile(bool bReadOnly/*=false*/)
                         
                         OT_ASSERT_MSG(NULL != pContract, "ASSERT: allocating memory for Asset Contract in OTServer::LoadMainFile\n");
                         
-                        if (pContract->LoadContract()) 
+                        if (pContract->LoadContract())
                         {
                             if (pContract->VerifyContract())
                             {
@@ -2087,6 +2096,12 @@ bool OTServer::LoadMainFile(bool bReadOnly/*=false*/)
                                 pContract->SetName(AssetName);
                                 
                                 m_mapContracts[AssetID.Get()] = pContract;
+
+								if (!this->m_bReadOnly)
+									if (0 == pContract->IsRawContractArmored())
+									{
+										pContract->SaveToContractFolder();
+									}
                             }
                             else
                             {

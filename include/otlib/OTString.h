@@ -405,7 +405,7 @@ EXPORT	bool At    (uint32_t lIndex, char &c) const;
     // ----------------------------------------------
 EXPORT	bool Exists() const;
    	// ----------------------------------------------
-EXPORT  bool DecodeIfArmored(bool bEscapedIsAllowed=true);
+EXPORT  bool DecodeIfArmored(bool & out_bIsArmored, bool bEscapedIsAllowed=true);
    	// ----------------------------------------------
 EXPORT uint32_t GetLength(void) const;
 	// ----------------------------------------------

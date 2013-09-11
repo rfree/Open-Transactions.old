@@ -244,6 +244,8 @@ protected:
 	OTString		m_strRawFile;		// The complete raw file including signatures.
 	OTString		m_strSigHashType;	// The Hash algorithm used for the signature
 	OTString		m_strContractType;	// CONTRACT, MESSAGE, TRANSACTION, LEDGER, TRANSACTION ITEM
+
+	const int		* m_bRawContractArmored; // When Loading (or when saved) the contract, was it Armored? (null if not loaded)
     
 	mapOfNyms		m_mapNyms;	// The default behavior for a contract, though occasionally overridden,
 								// is to contain its own public keys internally, located on standard XML tags.
@@ -297,7 +299,9 @@ public:
         // On success, bool is returned, and strFirstLine contains the first line
         // from strOutput.
         //
+
         static bool DearmorAndTrim(const OTString & strInput, OTString & strOutput, OTString & strFirstLine);
+		static bool DearmorAndTrim(const OTString & strInput, OTString & strOutput, OTString & strFirstLine, bool & bIsArmored);
 
         // The Method "RewriteContract" calls this. I put the meat into a static
         // method so I could use it from outside OTContract as well.
@@ -401,6 +405,10 @@ EXPORT	virtual void GetIdentifier(OTString     & theIdentifier);   // The Contra
 	
         void GetFilename(OTString & strFilename);
         void GetFoldername(OTString & strFoldername);
+
+		// -1 for error.
+EXPORT	int	 IsRawContractArmored();
+EXPORT  bool SetRawContractArmored(const bool bContractArmored);
 	
         // If you have a contract in string form, and you don't know what subclass it is,
         // but you still want to instantiate it, and load it up properly, then call this
@@ -420,7 +428,7 @@ EXPORT	bool ParseRawFile();		// parses m_strRawFile into the various member vari
                                     // Separating these into two steps allows us to load contracts
                                     // from other sources besides files.
 	
-        bool SaveToContractFolder(); // data_folder/contracts/Contract-ID
+EXPORT	bool SaveToContractFolder(); // data_folder/contracts/Contract-ID
 
 	
 EXPORT	bool SaveContractRaw(OTString & strOutput) const; // Saves the raw (pre-existing) contract text to any string you want to pass in.

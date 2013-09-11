@@ -2935,8 +2935,9 @@ bool OTCredential::Load_Master(const OTString & strNymID,
         OTLog::vError("%s: Failed trying to load master credential from local storage.\n", __FUNCTION__);
         return false;
     }
-    // ---------------------------------------    
-    if (false == strFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
+    // ---------------------------------------
+	bool bIsArmored = false;
+    if (false == strFileContents.DecodeIfArmored(bIsArmored)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: File contents apparently were encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strFileContents.Get());
@@ -3052,7 +3053,8 @@ bool OTCredential::LoadSubkey(const OTString & strSubID)
         return false;
     }
     // ---------------------------------------
-    if (false == strFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
+	bool bIsArmored = false;
+    if (false == strFileContents.DecodeIfArmored(bIsArmored)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: File contents apparently were encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strFileContents.Get());
@@ -3130,7 +3132,8 @@ bool OTCredential::LoadSubcredential(const OTString & strSubID)
         return false;
     }
     // ---------------------------------------
-    if (false == strFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
+	bool bIsArmored = false;
+    if (false == strFileContents.DecodeIfArmored(bIsArmored)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: File contents apparently were encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strFileContents.Get());

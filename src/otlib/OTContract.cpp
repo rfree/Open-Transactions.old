@@ -188,6 +188,12 @@ using namespace io;
 //static
 bool OTContract::DearmorAndTrim(const OTString & strInput, OTString & strOutput, OTString & strFirstLine)
 {
+	bool bIsArmored = false;
+	return OTContract::DearmorAndTrim(strInput, strOutput, strFirstLine, bIsArmored);
+}
+
+bool OTContract::DearmorAndTrim(const OTString & strInput, OTString & strOutput, OTString & strFirstLine, bool & bIsArmored)
+{
     // --------------------------
 	if (false == strInput.Exists())
     {
@@ -197,12 +203,13 @@ bool OTContract::DearmorAndTrim(const OTString & strInput, OTString & strOutput,
     // --------------------------------------------------------------------
     strOutput.Set(strInput);
     
-    if (false == strOutput.DecodeIfArmored(false)) // bEscapedIsAllowed=true by default.
+	
+    if (false == strOutput.DecodeIfArmored(bIsArmored, false)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strInput.Get());
         return false;
-    }
+	}
     // ------------------------------------------
     strOutput.reset(); // for sgets
     
@@ -719,6 +726,7 @@ void OTNumList::Release()
 
 
 OTContract::OTContract()
+	: m_bRawContractArmored(NULL)
 {
 	Initialize();
 }
@@ -728,6 +736,7 @@ OTContract::OTContract()
 
 
 OTContract::OTContract(const OTString & name, const OTString & foldername, const OTString & filename, const OTString & strID)
+	: m_bRawContractArmored(NULL)
 {
 	Initialize();
 	
@@ -743,6 +752,7 @@ OTContract::OTContract(const OTString & name, const OTString & foldername, const
 
 
 OTContract::OTContract(const OTString & strID)
+	: m_bRawContractArmored(NULL)
 {
 	Initialize();
 	
@@ -754,6 +764,7 @@ OTContract::OTContract(const OTString & strID)
 
 
 OTContract::OTContract(const OTIdentifier & theID)
+	: m_bRawContractArmored(NULL)
 {
 	Initialize();
 	
@@ -827,7 +838,7 @@ void OTContract::Release()
 
 OTContract::~OTContract()
 {	
-	
+	if (NULL != this->m_bRawContractArmored) { delete this->m_bRawContractArmored; this->m_bRawContractArmored = NULL; }
 	Release_Contract();
 }
 
@@ -862,6 +873,19 @@ bool OTContract::SaveToContractFolder()
 void OTContract::GetFilename(OTString & strFilename)
 {
 	strFilename = m_strFilename;
+}
+
+int OTContract::IsRawContractArmored()
+{
+	if (NULL == this->m_bRawContractArmored) return -1;
+	return *this->m_bRawContractArmored;
+}
+
+bool OTContract::SetRawContractArmored(const bool bContractArmored) {
+	if (NULL != this->m_bRawContractArmored) { delete this->m_bRawContractArmored; this->m_bRawContractArmored = NULL; }
+
+	this->m_bRawContractArmored = new int (bContractArmored);
+	return true;
 }
 
 
@@ -1861,6 +1885,8 @@ bool OTContract::SaveContract(const char * szFoldername, const char * szFilename
     }
     // --------------------------------------------------------------------
 	bool bSaved = OTDB::StorePlainString(strFinal.Get(), szFoldername, szFilename);
+
+	if (bSaved) this->SetRawContractArmored(bSaved); // we now have an armored contract.
 	
 	if (!bSaved)
 	{
@@ -1925,12 +1951,17 @@ bool OTContract::LoadContractRawFile()
 		return false;
 	}
 	// --------------------------------------------------------------------
-    if (false == strFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
-    {
-        OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Contents: \n%s\n",
-                      __FUNCTION__, strFileContents.Get());
-        return false;
-    }
+
+	{
+		bool bContractArmored = false;
+		if (false == strFileContents.DecodeIfArmored(bContractArmored)) // bEscapedIsAllowed=true by default.
+		{
+			OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Contents: \n%s\n",
+				__FUNCTION__, strFileContents.Get());
+			return false;
+		}
+		this->SetRawContractArmored(bContractArmored);
+	}
     // ------------------------------------------
     // At this point, strFileContents contains the actual contents, whether they
     // were originally ascii-armored OR NOT. (And they are also now trimmed, either way.)
@@ -1980,12 +2011,16 @@ bool OTContract::LoadContractFromString(const OTString & theStr)
     // --------------------------------------------------------------------
     OTString strContract(theStr);
     
-    if (false == strContract.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
-    {
-        OTLog::vError("%s: ERROR: Input string apparently was encoded and then failed decoding. "
-                      "Contents: \n%s\n", __FUNCTION__, theStr.Get());
-        return false;
-    }
+	{
+		bool bContractArmored = false;
+		if (false == strContract.DecodeIfArmored(bContractArmored)) // bEscapedIsAllowed=true by default.
+		{
+			OTLog::vError("%s: ERROR: Input string apparently was encoded and then failed decoding. "
+				"Contents: \n%s\n", __FUNCTION__, theStr.Get());
+			return false;
+		}
+		this->SetRawContractArmored(bContractArmored);
+	}
     // ------------------------------------------
     m_strRawFile.Set(strContract);
     

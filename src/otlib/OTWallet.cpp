@@ -1468,7 +1468,8 @@ bool OTWallet::LoadWallet(const char * szFilename/*=NULL*/)
 	{
         OTStringXML xmlFileContents(strFileContents);
 
-        if (false == xmlFileContents.DecodeIfArmored()) // bEscapedIsAllowed=true by default.
+		bool bIsArmored = false;
+        if (false == xmlFileContents.DecodeIfArmored(bIsArmored)) // bEscapedIsAllowed=true by default.
         {
             OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Filename: %s \n"
                           "Contents: \n%s\n", __FUNCTION__, szFilename, strFileContents.Get());

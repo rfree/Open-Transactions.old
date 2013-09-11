@@ -3891,7 +3891,8 @@ bool OTPseudonym::LoadCredentials(bool bLoadPrivate/*=false*/, // Loads public c
         // its validity by hashing (the source string that validates the credentials in that list,
         // or by hashing/ the public key for that Nym, if doing things the old way.)
         //
-        if (strFileContents.Exists() && strFileContents.DecodeIfArmored())
+		bool bIsArmored = false;
+        if (strFileContents.Exists() && strFileContents.DecodeIfArmored(bIsArmored))
         {
             const bool bLoaded = this->LoadFromString(strFileContents,
                                                       NULL, // map of credentials--if NULL, it loads them from local storage.

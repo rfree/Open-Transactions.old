@@ -190,8 +190,9 @@ OTScriptable * OTScriptable::InstantiateScriptable(const OTString & strInput)
     }
     // --------------------------------------------------------------------
     OTString strContract(strInput);
-    
-    if (false == strContract.DecodeIfArmored(false)) // bEscapedIsAllowed=true by default.
+
+	bool bIsArmored = false;
+    if (false == strContract.DecodeIfArmored(bIsArmored, false)) // bEscapedIsAllowed=true by default.
     {
         OTLog::vError("%s: Input string apparently was encoded and then failed decoding. Contents: \n%s\n",
                       __FUNCTION__, strInput.Get());
