@@ -309,19 +309,23 @@ bool OTAPI_Wrap::AppCleanup() // Call this ONLY ONCE, when your App is shutting 
 }
 
 
+#define DBG(X) { std::cerr << X << std::endl ;  } // XXX
 
 // **********************************************************************
 
 //static
 OTAPI_Wrap * OTAPI_Wrap::It(bool bLoadAPI/*=true*/)
 {
+	std::cerr << "It(" << bLoadAPI << ")" << std::endl; // XXX
 	if (!OTAPI_Wrap::bCleanupOTApp)
 	{
-		if (NULL != OTAPI_Wrap::p_Wrap) return OTAPI_Wrap::p_Wrap;
+		DBG("Not in cleanup");
+		if (NULL != OTAPI_Wrap::p_Wrap) { DBG("Wrap exists, return it"); return OTAPI_Wrap::p_Wrap; }
 
 		if (!bLoadAPI) return NULL; // don't load API (e.g. for sighandler)
 		if (OTAPI_Wrap::bGoingDown) return NULL; // don't load API - we are going down
 
+		DBG("Creating the wrap");
 		OTAPI_Wrap * tmpWrap = new OTAPI_Wrap();
 		if (NULL != tmpWrap)
 		{
@@ -329,22 +333,28 @@ OTAPI_Wrap * OTAPI_Wrap::It(bool bLoadAPI/*=true*/)
 			{
 				OTAPI_Wrap::p_Wrap = tmpWrap;  // success
 				return OTAPI_Wrap::p_Wrap;
-			}
-			delete tmpWrap; tmpWrap = NULL;    // fail
+			} else assert(false); // unable to create wrapper with OTAPI
+			delete tmpWrap; tmpWrap = NULL;    // fail 
 			return NULL;
-		}
+		} else assert(false); // unable to create wrapper
 	}
 	// --------------------
 	// else
 	
+	DBG("ending");
+	
 	if (bLoadAPI) assert(false); // we are in cleanup and it's not just a question - can't create object!
+	DBG("nothing");
 	return NULL;
 }
 
 //static
 OT_API * OTAPI_Wrap::OTAPI(bool bLoadAPI/*=true*/)
 {
-	return OTAPI_Wrap::It(bLoadAPI)->p_OTAPI;
+	std::cerr << "OTAPI(" << bLoadAPI << ")" << std::endl; // XXX
+	OTAPI_Wrap *wrap = OTAPI_Wrap::It(bLoadAPI);
+	if (wrap) return wrap->p_OTAPI;
+	return NULL;
 }
 
 
