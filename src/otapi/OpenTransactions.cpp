@@ -778,7 +778,7 @@ void OT_API_atexit() {
 void OT_API_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
 	async_write_string("test--atexit-1\n");
 	async_write_string("test--atexit-2\n"); 
-	return ; // XXX DBG
+	async_write_string(  (signal==-1) ? "signal not known(-1)\n" : "real signal\n" ); 
 
 	if (OT_API_atexit_now) {
 		async_write_string("Got another atexit while processing an atexit (double signal?) so aborting!\n");
@@ -790,10 +790,11 @@ void OT_API_atexit(int signal) { // for global signal handler - must be able to 
 
 	OT_API * ot_api = OTAPI_Wrap::OTAPI(false); // just check if OTAPI was even created yet? (and write down the address)
 	if (ot_api) { // OTAPI was created
+		async_write_string("doing the cleanup\n");
 		ot_api->CleanupForAtexit();
 	} 
 
-	OT_API_atexit_now=0;
+	// OT_API_atexit_now=0;
 }
 
 
@@ -804,14 +805,22 @@ bool OT_API_signalHandler_now=0; // now running a signal handler
 
 template <int T> 
 void OT_API_signalHanlder(int signal) {
+	async_write_string("signal handler\n");
 	if (OT_API_signalHandler_now) {
 		async_write_string("Got signal while already in signal - abort!\n");
 		abort();
 	}
 	OT_API_signalHandler_now=1;
 	async_write_string("Got signal - will close and exit.\n");
-	// OT_API_atexit(signal); // try to call it directly so it knows the signal that cuased it
-	exit(signal); // called also from here
+
+	async_write_string("Calling the atexit with signal\n");
+	OT_API_atexit(signal); // try to call it directly so it knows the signal that cuased it
+
+	async_write_string("Will abort now to not execute other atexits() that are insecure now\n");
+	abort();
+
+	//exit(signal); // called also from here
+	async_write_string("ERROR: in DEAD CODE in signal handler (after exit)!\n");
 	OT_API_signalHandler_now=0; // dead code
 	async_write_string("End of the signal handler!\n");
 }
@@ -1035,11 +1044,14 @@ void OT_API::Pid::OpenPid(const OTString strPidFilePath)
 #if defined(__unix__)
 	if (!OT_API_atexit_installed) {
 		std::cerr << "Installing signal handlers"<<std::endl;
+
+		#if 0
 		bool ok =  0== atexit(OT_API_atexit); // atexit install
 		if (!ok) {
 			std::cerr << "Unable to installer atexit handler!" << std::endl; 
 			assert(false);
 		}
+		#endif
 		
 		#define _local_add_handler(SIG) \
 		{ int sig=SIG;  sighandler_t ret = signal(sig, OT_API_signalHanlder<SIG>);  if (ret==SIG_ERR) { std::cerr<<"skipping signal " << #SIG << std::endl; } }
