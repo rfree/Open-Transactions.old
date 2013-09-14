@@ -776,6 +776,10 @@ void OT_API_atexit() {
 }
 
 void OT_API_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
+	async_write_string("test--atexit-1\n");
+	async_write_string("test--atexit-2\n"); 
+	return ; // XXX DBG
+
 	if (OT_API_atexit_now) {
 		async_write_string("Got another atexit while processing an atexit (double signal?) so aborting!\n");
 		abort();
@@ -806,17 +810,22 @@ void OT_API_signalHanlder(int signal) {
 	}
 	OT_API_signalHandler_now=1;
 	async_write_string("Got signal - will close and exit.\n");
-	OT_API_atexit(signal); // try to call it directly so it knows the signal that cuased it
+	// OT_API_atexit(signal); // try to call it directly so it knows the signal that cuased it
 	exit(signal); // called also from here
 	OT_API_signalHandler_now=0; // dead code
+	async_write_string("End of the signal handler!\n");
 }
 
 // =====================================================================
 
 void OT_API::CleanupForAtexit(int signal) {
+	async_write_string("CleanupForAtexit");
 	if (m_refPid.IsPidOpen()) {
+		async_write_string("CleanupForAtexit - is opened");
 		m_refPid.ClosePid_asyncsafe();
+		async_write_string("CleanupForAtexit - is opened END");
 	}
+	async_write_string("CleanupForAtexit - END");
 }
 
 // ------------------------------------
@@ -1049,6 +1058,8 @@ void OT_API::Pid::OpenPid(const OTString strPidFilePath)
     }
 #endif
 #endif
+	std::cerr << "Installing signal handlers - DONE"<<std::endl;
+	
 
 	if (this->IsPidOpen()) { OTLog::sError("%s: Pid is OPEN, MUST CLOSE BEFORE OPENING A NEW ONE!\n",__FUNCTION__,"strPidFilePath"); OT_ASSERT(false); }
 
@@ -1132,6 +1143,7 @@ void OT_API::Pid::OpenPid(const OTString strPidFilePath)
 // to the same data folder simultaneously, which could corrupt the data...)
 void OT_API::Pid::ClosePid()
 {
+	async_write_string("ClosePid() (non-safe version)\n");
 	if (OT_API_atexit_now) { async_write_string("ERROR: Closing the pid file now (from signal) - with NOT SIGNAL SAFE FUNCTION - abort!\n"); abort(); }
 	if (!this->IsPidOpen()) { OTLog::sError("%s: Pid is CLOSED, WHY CLOSE A PID IF NONE IS OPEN!\n",__FUNCTION__,"strPidFilePath"); OT_ASSERT(false); }
 	if (!this->m_strPidFilePath.Exists()) { OTLog::sError("%s: %s is Empty!\n",__FUNCTION__,"m_strPidFilePath"); OT_ASSERT(false); }
@@ -1149,26 +1161,43 @@ void OT_API::Pid::ClosePid()
 }
 
 void OT_API::Pid::ClosePid_asyncsafe() { // asynce-safe (can be used in signal handler)
+	async_write_string("ClosePid_asyncsafe\n");
 	if (OT_API_atexit_now) { async_write_string("Closing the pid file now (from signal)\n"); }
 	else async_write_string("Warning (code error - fix it) using the asyncsafe close when not needed, why?\n");
 
+	async_write_string("ClosePid_asyncsafe - will test if file exists\n");
 	{ // test if the file existed
+		async_write_string("ClosePid_asyncsafe - test 1\n");
 		int fd = open( this->m_strPidFilePath_cstr , O_RDONLY , 0600 ); //  TODO mode 0600 ?
+		async_write_string("ClosePid_asyncsafe - test 2\n");
 		if (fd == -1) async_write_string("Warning (code error - fix it) trying to close pid while not opened.\n");
+		async_write_string("ClosePid_asyncsafe - test 3\n");
 		if (fd != -1) close(fd);
+		async_write_string("ClosePid_asyncsafe - test 4\n");
 	}
 	// TODO check? if (!this->m_strPidFilePath.Exists()) { OTLog::sError("%s: %s is Empty!\n",__FUNCTION__,"m_strPidFilePath"); OT_ASSERT(false); }
 
+	async_write_string("ClosePid_asyncsafe - write 1\n");
 	int fd = open( this->m_strPidFilePath_cstr , O_WRONLY|O_CREAT|O_TRUNC , 0600 ); //  TODO mode 0600 ?
+	async_write_string("ClosePid_asyncsafe - write 2\n");
 	if (fd != -1) {
+	async_write_string("ClosePid_asyncsafe - write 3\n");
 		write(fd,"0",1); // 1 bytes: the '0'
+	async_write_string("ClosePid_asyncsafe - write 4\n");
 		close(fd);
+	async_write_string("ClosePid_asyncsafe - write 5\n");
 		this->m_bIsPidOpen = false;
+	async_write_string("ClosePid_asyncsafe - write 6\n");
 	}
 	else {
+	async_write_string("ClosePid_asyncsafe - write a1\n");
 		async_write_string("Warning (in async close) - failed trying to open data locking file (to wipe PID back to 0)\n");
+	async_write_string("ClosePid_asyncsafe - write a2\n");
 		this->m_bIsPidOpen = true;
+	async_write_string("ClosePid_asyncsafe - write a3\n");
 	}
+	async_write_string("ClosePid_asyncsafe - END\n");
+
 }
 
 const bool OT_API::Pid::IsPidOpen() const
