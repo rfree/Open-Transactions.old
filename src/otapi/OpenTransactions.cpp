@@ -287,6 +287,10 @@ using namespace tthread;
 #define	KEY_IS_BLOCKING						"is_blocking"
 
 
+#ifndef OT_CFG_DEBUG_SIGNALS_EXIT 
+	#define OT_CFG_DEBUG_SIGNALS_EXIT 0
+#endif
+
 
 OTSocket::OTSocket()
   : m_pMutex(new tthread::mutex),
@@ -782,16 +786,25 @@ void OT_API_atexit() {
 	OT_API_atexit(-1); // we don't know the signal number because we are called from the actuall exit code, not directly from a signal handler
 }
 
+#if OT_CFG_DEBUG_SIGNALS_EXIT
+	#define OT_DEBUG_SIGNALS_DELAY() \
+		do { async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT)\n"); \
+		async_write_string( __FUNCTION__ ); \
+		long long int start = time(NULL); \
+		while (time(NULL) < start + 4) { } \
+		async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT) - done\n"); } while(0)
+#else
+	#define OT_DEBUG_SIGNALS_DELAY() do { } while(0) 
+#endif
+
 void OT_API_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
 	if (OT_API_atexit_now) { // rare case of e.g. CTRL-C while doing normal exit
 		async_write_string("Got into another atexit while processing atexit - skipping this one.\n");
 		return;
 	}
 	OT_API_atexit_now=1;
-	{async_write_string("wait1\n"); // XXX DBG
-	long long int start = time(NULL);
-	while (time(NULL) < start + 3) { }
-	async_write_string("wait2 - done\n");} // XXX
+
+	OT_DEBUG_SIGNALS_DELAY(); // debug code to show in slow-motion how multiple signals can be handled
 
 	OTAPI_Wrap::GoingDown(); // tell the wrapper that we are going down to make sure it will not race to create one while we are checking
 
@@ -852,7 +865,7 @@ void OT_API_signalHanlder(int signal) {
 #ifdef _WIN32
 	_exit(0);
 #else
-	abort(); // to make sure we will not do normal atexit like destructors etc now
+	_exit(0); // to make sure we will not do normal atexit like destructors etc now
 #endif
 }
 
@@ -1199,10 +1212,6 @@ void OT_API::Pid::ClosePid()
 	if (!this->IsPidOpen()) { OTLog::sError("%s: Pid is CLOSED, WHY CLOSE A PID IF NONE IS OPEN!\n",__FUNCTION__,"strPidFilePath"); OT_FAIL; }
 	if (!this->m_strPidFilePath.Exists()) { OTLog::sError("%s: %s is Empty!\n",__FUNCTION__,"m_strPidFilePath"); OT_FAIL; }
 
-	{async_write_string("closepid wait1\n"); // XXX DBG
-	long long int start = time(NULL);
-	while (time(NULL) < start + 3) { }
-	async_write_string("closepid wait2 - done\n"); }// XXX
 	std::ofstream pid_outfile(this->m_strPidFilePath.Get());
 	if (pid_outfile.is_open()) {
 		pid_outfile << 0; // the pid 0 signals that there is no pid running
@@ -1228,6 +1237,7 @@ void OT_API::Pid::ClosePid_asyncsafe() { // asynce-safe (can be used in signal h
 
 	int fd = open( this->m_strPidFilePath_cstr , O_WRONLY|O_CREAT|O_TRUNC , 0600 ); //  TODO mode 0600 ?
 	if (fd != -1) {
+		OT_DEBUG_SIGNALS_DELAY(); // debug code to show in slow-motion how multiple signals can be handled
 		write(fd,"0",1); // 1 bytes: the '0'
 		close(fd);
 		this->m_bIsPidOpen = false;
