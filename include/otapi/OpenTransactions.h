@@ -312,11 +312,24 @@ public:
 	EXPORT  static	bool InitOTApp();	 // Once per run. calls OTLog::Init("client");
 	EXPORT	static	bool CleanupOTApp(); // As the application shuts down gracefully...
 
-	void CleanupForAtexit(int signal=-1); // to be called onexit (ctrl-C etc.) - from global handler, in SIGNAL CONTEXT 
+	void Cleanup_asyncsafe(int signal=-1); // to be called onexit (ctrl-C etc.) - from global handler, in SIGNAL CONTEXT 
 
 	// Member
 private:
 
+/**
+ * PID behaviour:
+ * When program should try to cleanup on Ctrl-C/kill exit (remove lock file etc) and when it needs to giveup
+ * and die fast? Always try to remove pid file, but sending a kill during cleanup will abort.
+ *
+ * Ctrl-C = cleanup-exit
+ * Ctrl-C, Ctrl-C, Ctrl-C... = cleanup-exit
+ * Ctrl-C, Kill = if cleanup-exit hanged then a kill will abort instantly
+ * Kill   = cleanup-exit
+ * Kill, Ctrl-C, Ctrl-C...   = cleanup-exit (one kill still exits with cleanup)
+ * Kill, Kill  = cleanup-exit (more kills trigger abort)
+ *
+ */
 	class Pid
 	{
 	private:

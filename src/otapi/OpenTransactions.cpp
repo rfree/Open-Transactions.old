@@ -783,11 +783,15 @@ void OT_API_atexit() {
 }
 
 void OT_API_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
-	if (OT_API_atexit_now) {
-		async_write_string("Got another atexit while processing an atexit (double signal?) so aborting!\n");
-		abort();
+	if (OT_API_atexit_now) { // rare case of e.g. CTRL-C while doing normal exit
+		async_write_string("Got into another atexit while processing atexit - skipping this one.\n");
+		return;
 	}
 	OT_API_atexit_now=1;
+	{async_write_string("wait1\n"); // XXX DBG
+	long long int start = time(NULL);
+	while (time(NULL) < start + 3) { }
+	async_write_string("wait2 - done\n");} // XXX
 
 	OTAPI_Wrap::GoingDown(); // tell the wrapper that we are going down to make sure it will not race to create one while we are checking
 
@@ -806,10 +810,10 @@ void OT_API_atexit(int signal) { // for global signal handler - must be able to 
 		if (signal==SIGHUP)  msg = "\n\nEmergency cleanup [terminal lost, SIGHUP]\n";
 #endif
 		async_write_string(msg);
-		ot_api->CleanupForAtexit();
+		ot_api->Cleanup_asyncsafe();
 	} 
 
-	// OT_API_atexit_now=0;
+	OT_API_atexit_now=0;
 }
 
 
@@ -820,12 +824,28 @@ bool OT_API_signalHandler_now=0; // now running a signal handler
 
 template <int T> 
 void OT_API_signalHanlder(int signal) {
-	async_write_string("\nsignal handler\n");
-	if (OT_API_signalHandler_now) {
-		async_write_string("Got signal while already in signal - abort!\n");
-		abort();
-	}
+	bool was_in_signal = OT_API_signalHandler_now;
 	OT_API_signalHandler_now=1;
+
+	switch (signal) {
+			case SIGINT:	async_write_string("\nSignal handler [Ctrl-C detected, SIGINT] "); break;
+			case SIGTERM:	async_write_string("\nSignal handler [kill detected, SIGTERM] "); break;
+			case SIGHUP:	async_write_string("\nSignal handler [terminal lost, SIGHUP] "); break;
+			default: async_write_string("\nSignal handler [unknown signal] "); break;
+	}
+
+	if (was_in_signal) {
+		if (signal == SIGTERM) {
+			async_write_string("...kill while already in signal - aborting now!\n");
+			abort();
+		}
+		else {
+			async_write_string("...ignoring signal (use kill to abort the program).\n");
+			// OT_API_signalHandler_now=0; // we are no longer in-signal .. but we ARE in the previous one
+			return; // <------
+		}
+	} else async_write_string("\n"); // end previous line
+
 
 	OT_API_atexit(signal); // try to call it directly so it knows the signal that cuased it
 
@@ -838,7 +858,7 @@ void OT_API_signalHanlder(int signal) {
 
 // =====================================================================
 
-void OT_API::CleanupForAtexit(int signal) {
+void OT_API::Cleanup_asyncsafe(int signal) {
 	if (m_refPid.IsPidOpen()) {
 		m_refPid.ClosePid_asyncsafe();
 	}
@@ -1179,6 +1199,10 @@ void OT_API::Pid::ClosePid()
 	if (!this->IsPidOpen()) { OTLog::sError("%s: Pid is CLOSED, WHY CLOSE A PID IF NONE IS OPEN!\n",__FUNCTION__,"strPidFilePath"); OT_FAIL; }
 	if (!this->m_strPidFilePath.Exists()) { OTLog::sError("%s: %s is Empty!\n",__FUNCTION__,"m_strPidFilePath"); OT_FAIL; }
 
+	{async_write_string("closepid wait1\n"); // XXX DBG
+	long long int start = time(NULL);
+	while (time(NULL) < start + 3) { }
+	async_write_string("closepid wait2 - done\n"); }// XXX
 	std::ofstream pid_outfile(this->m_strPidFilePath.Get());
 	if (pid_outfile.is_open()) {
 		pid_outfile << 0; // the pid 0 signals that there is no pid running
