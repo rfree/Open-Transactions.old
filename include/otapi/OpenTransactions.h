@@ -162,6 +162,8 @@
 #endif
 #include <ExportWrapper.h>
 
+#include <OTRunnableAsProgram.h>
+
 #include <string>
 #include <functional>
 
@@ -288,14 +290,11 @@ public:
 
 
 
-extern bool OT_API_atexit_now; // (global) are we *now* running atexit? 
-void OT_API_atexit(int signal=-1); // for global signal handler - must be able to run in SIGNAL CONTEXT
-
 /**
  We assume in few places that OT_API will be always a singleton.
  For example in places marked with [[OT_API_singleton]] (but also more) you need to change them to make OT_API class usable in multiple instances
 */
-class OT_API // The C++ high-level interface to the Open Transactions client-side.
+class OT_API : protected OTRunnableAsProgram // The C++ high-level interface to the Open Transactions client-side.
 {
 
 	// Static
@@ -310,52 +309,11 @@ public:
 
 
 	EXPORT  static	bool InitOTApp();	 // Once per run. calls OTLog::Init("client");
-	EXPORT	static	bool CleanupOTApp(); // As the application shuts down gracefully...
+	EXPORT	static	bool CleanupOTApp(); // As the application shuts down gracefully... (various other cleanup, NOT the PID lock)
 
-	void Cleanup_asyncsafe(int signal=-1); // to be called onexit (ctrl-C etc.) - from global handler, in SIGNAL CONTEXT 
 
 	// Member
 private:
-
-/**
- * PID behaviour:
- * When program should try to cleanup on Ctrl-C/kill exit (remove lock file etc) and when it needs to giveup
- * and die fast? Always try to remove pid file, but sending a kill during cleanup will abort.
- *
- * Ctrl-C = cleanup-exit
- * Ctrl-C, Ctrl-C, Ctrl-C... = cleanup-exit
- * Ctrl-C, Kill = if cleanup-exit hanged then a kill will abort instantly
- * Kill   = cleanup-exit
- * Kill, Ctrl-C, Ctrl-C...   = cleanup-exit (one kill still exits with cleanup)
- * Kill, Kill  = cleanup-exit (more kills trigger abort)
- *
- */
-	class Pid
-	{
-	private:
-		bool m_bIsPidOpen;
-
-	  OTString m_strPidFilePath;
-		std::string m_strPidFilePath_str; // same, as std::string
-	  const char* m_strPidFilePath_cstr; // same, as cstring. not-owned, it only points to the data owned by std::string
-
-		private:
-			void set_PidFilePath(const OTString &path); // updates all versions of this string
-
-#ifdef _WIN32
-		static BOOL WINAPI ConsoleHandler(DWORD);
-#endif
-
-	public:
-		Pid();
-		~Pid();
-		void OpenPid(const OTString strPidFilePath);
-		void ClosePid();
-		void ClosePid_asyncsafe(); // asynce-safe (can be used in signal handler)
-		const bool IsPidOpen() const;
-	};
-
-    Pid & m_refPid;  // only one pid reference per instance, must not change
 
 	bool		m_bInitialized;
 	bool		m_bDefaultStore;
@@ -382,8 +340,6 @@ public:
 private:
 
 	EXPORT	bool Init();	// Per instance. (called automaticly by constructor)
-	EXPORT	bool Cleanup(); // Per instance. (called automaticly by constructor)
-
 
 public:
 

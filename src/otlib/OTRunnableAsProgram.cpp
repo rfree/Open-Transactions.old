@@ -1,41 +1,146 @@
 
 #include <stdafx.h>
 
+#include <OTRunnableAsProgram.h>
 
 #include <ctime>
 #include <cstdlib>
-
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <io.h>
-
- // credit:stlplus library.
-#include "containers/simple_ptr.hpp"
+// for manuall file operations in signal handler:
+#include <fcntl.h> 
 
 #ifdef _WIN32
-#include <WinsockWrapper.h>
+#include <io.h> // write() etc
+#else
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
-#if defined (OT_ZMQ_MODE)
-#include <zmq.hpp>
+#include <OTString.h>
+#include <OTAPI.h> // OTAPI_Wrap 
+
+// ==================================================================
+
+// macro - configuration
+#ifndef OT_CFG_DEBUG_SIGNALS_EXIT  // build with this option to do test delay in signal handler when you ctrl-C etc
+	#define OT_CFG_DEBUG_SIGNALS_EXIT 0
 #endif
 
+// macro - debugging from async context (e.g. from signal handler)
+#define async_write_string(str) { size_t len=0; const char* ptr = str; while(*ptr){++ptr; ++len;} write(2,str,len); }
 
-#include <OTRunnableAsProgram.h>
+bool OT_program_atexit_now = false; // are we *now* running atexit? 
 
-OTRunnableAsProgram::OTRunnableAsProgram() 
-	: m_refPid(*new Pid())
-{ 
+bool OTRunnableAsProgram::m_bMainProgramGoingDown = false; // is the program (and this object btw) going down - should we refuse to initialize stuff
+
+#if OT_CFG_DEBUG_SIGNALS_EXIT
+	#define OT_DEBUG_SIGNALS_DELAY() \
+		do { async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT)\n"); \
+		async_write_string( __FUNCTION__ ); \
+		long long int start = time(NULL); \
+		while (time(NULL) < start + 4) { } \
+		async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT) - done\n"); } while(0)
+#else
+	#define OT_DEBUG_SIGNALS_DELAY() do { } while(0) 
+#endif
+
+void OT_program_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
+	if (OT_program_atexit_now) { // rare case of e.g. CTRL-C while doing normal exit
+		async_write_string("Got into another atexit while processing atexit - skipping this one.\n");
+		return;
+	}
+	OT_program_atexit_now=1;
+
+	OT_DEBUG_SIGNALS_DELAY(); // debug code to show in slow-motion how multiple signals can be handled
+
+	OTAPI_Wrap::GoingDown(); // tell the wrapper that we are going down to make sure it will not race to create one while we are checking
+
+	OT_API * ot_api = OTAPI_Wrap::OTAPI(false); // just check if OTAPI was even created yet? (and write down the address)
+	if (ot_api) { // OTAPI was created
+		const char *msg = "\n\nEmergency cleanup [unknown signal]\n";
+		if (signal==-1) msg = "\n\nEmergency cleanup [not-signal]\n";
+#ifdef _WIN32
+		if (signal==CTRL_C_EVENT)  msg = "\n\nEmergency cleanup [Ctrl-C detected, CTRL_C_EVENT]\n";
+		if (signal==CTRL_BREAK_EVENT)  msg = "\n\nEmergency cleanup [Ctrl-Break detected, CTRL_BREAK_EVENT]\n";
+		if (signal==CTRL_CLOSE_EVENT)  msg = "\n\nEmergency cleanup [terminal lost, CTRL_CLOSE_EVENT]\n";
+		
+#else
+		if (signal==SIGINT)  msg = "\n\nEmergency cleanup [Ctrl-C detected, SIGINT]\n";
+		if (signal==SIGTERM) msg = "\n\nEmergency cleanup [kill detected, SIGTERM]\n";
+		if (signal==SIGHUP)  msg = "\n\nEmergency cleanup [terminal lost, SIGHUP]\n";
+#endif
+		async_write_string(msg);
+		ot_api->Cleanup_asyncsafe();
+	} 
+
+	OT_program_atexit_now=0;
 }
 
 
-virtual ~OTRunnableAsProgram::OTRunnableAsProgram() {
-	if (NULL != &m_refPid) delete &m_refPid;  m_refPid=NULL;
+void OT_program_atexit() {
+	OT_program_atexit(-1); // we don't know the signal number because we are called from the actuall exit code, not directly from a signal handler
+}
+
+// signals (unix version mainly)
+bool OT_program_atexit_installed=0;  // (global - in this cpp only) is the atexit installed yet?
+bool OT_program_signalHandler_now=0; // now running a signal handler
+
+template <int T> 
+void OT_program_signalHanlder(int signal) {
+	bool was_in_signal = OT_program_signalHandler_now;
+	OT_program_signalHandler_now=1;
+
+	switch (signal) {
+			case SIGINT:	async_write_string("\nSignal handler [Ctrl-C detected, SIGINT] "); break;
+			case SIGTERM:	async_write_string("\nSignal handler [kill detected, SIGTERM] "); break;
+			case SIGHUP:	async_write_string("\nSignal handler [terminal lost, SIGHUP] "); break;
+			default: async_write_string("\nSignal handler [unknown signal] "); break;
+	}
+
+	if (was_in_signal) {
+		if (signal == SIGTERM) {
+			async_write_string("...kill while already in signal - aborting now!\n");
+			abort();
+		}
+		else {
+			async_write_string("...ignoring signal (use kill to abort the program).\n");
+			// OT_program_signalHandler_now=0; // we are no longer in-signal .. but we ARE in the previous one
+			return; // <------
+		}
+	} else async_write_string("\n"); // end previous line
+
+
+	OT_program_atexit(signal); // try to call it directly so it knows the signal that cuased it
+
+#ifdef _WIN32
+	_exit(0);
+#else
+	_exit(0); // to make sure we will not do normal atexit like destructors etc now
+#endif
+}
+
+// =====================================================================
+
+bool OTRunnableAsProgram::Cleanup()
+{
+	if (!Is->sPidOpen()) { return false; } // pid isn't open, just return false.
+	this->GoingDown();
+	this->ClosePid();
+	if (this->IsPidOpen()) { OT_FAIL; }  // failed cleanup
+	return true;
 }
 
 
-OTRunnableAsProgram::Pid::Pid()
+void OTRunnableAsProgram::Cleanup_asyncsafe(int signal) {
+	if (IsPidOpen()) {
+		OTRunnableAsProgram::ClosePid_asyncsafe();
+	}
+}
+
+
+OTRunnableAsProgram::OTRunnableAsProgram()
 	: 
 	m_bIsPidOpen(false),
 	m_strPidFilePath(""),
@@ -44,54 +149,54 @@ OTRunnableAsProgram::Pid::Pid()
 {
 }
 
-OTRunnableAsProgram::Pid::~Pid()
+OTRunnableAsProgram::~OTRunnableAsProgram()
 {
 	// nothing for now
 }
 
 
 #if defined(_WIN32)
-BOOL WINAPI OTRunnableAsProgram::Pid::ConsoleHandler(DWORD dwType)
+BOOL WINAPI OTRunnableAsProgram::ConsoleHandler(DWORD dwType)
 {
 	switch(dwType) {
 	case CTRL_C_EVENT:
-		OT_API_signalHanlder<CTRL_C_EVENT>(dwType);
+		OT_program_signalHanlder<CTRL_C_EVENT>(dwType);
 		break;
 	case CTRL_BREAK_EVENT:
-		OT_API_signalHanlder<CTRL_BREAK_EVENT>(dwType);
+		OT_program_signalHanlder<CTRL_BREAK_EVENT>(dwType);
 		break;
 	case CTRL_CLOSE_EVENT:
-		OT_API_signalHanlder<CTRL_CLOSE_EVENT>(dwType);
+		OT_program_signalHanlder<CTRL_CLOSE_EVENT>(dwType);
 		break;
 	case CTRL_LOGOFF_EVENT:
-		OT_API_signalHanlder<CTRL_LOGOFF_EVENT>(dwType);
+		OT_program_signalHanlder<CTRL_LOGOFF_EVENT>(dwType);
 		break;
 	case CTRL_SHUTDOWN_EVENT:
-		OT_API_signalHanlder<CTRL_SHUTDOWN_EVENT>(dwType);
+		OT_program_signalHanlder<CTRL_SHUTDOWN_EVENT>(dwType);
 		break;
 	default:
-		OT_API_signalHanlder<0>(0);
+		OT_program_signalHanlder<0>(0);
 	}
 	return TRUE;
 }
 #endif
 
-void OTRunnableAsProgram::Pid::set_PidFilePath(const OTString &path) { // updates all versions of this string
+void OTRunnableAsProgram::set_PidFilePath(const OTString &path) { // updates all versions of this string
 	this->m_strPidFilePath = path;
 	this->m_strPidFilePath_str  = this->m_strPidFilePath.Get();
 	this->m_strPidFilePath_cstr = this->m_strPidFilePath_str.c_str();
 }
 
 
-void OTRunnableAsProgram::Pid::OpenPid(const OTString strPidFilePath)
+void OTRunnableAsProgram::OpenPid(const OTString strPidFilePath)
 {
 #ifndef OT_SIGNAL_HANDLING // if debug is not taking over the signals
 #if defined(__unix__)
-	if (!OT_API_atexit_installed) {
+	if (!OT_program_atexit_installed) {
 		// std::cerr << "Installing signal handlers"<<std::endl;
 
 		#if 0
-		bool ok =  0== atexit(OT_API_atexit); // atexit install
+		bool ok =  0== atexit(OT_program_atexit); // atexit install
 		if (!ok) {
 			std::cerr << "Unable to installer atexit handler!" << std::endl; 
 			assert(false);
@@ -99,22 +204,22 @@ void OTRunnableAsProgram::Pid::OpenPid(const OTString strPidFilePath)
 		#endif
 		
 		#define _local_add_handler(SIG) \
-		{ int sig=SIG;  sighandler_t ret = signal(sig, OT_API_signalHanlder<SIG>);  if (ret==SIG_ERR) { std::cerr<<"skipping signal " << #SIG << std::endl; } }
+		{ int sig=SIG;  sighandler_t ret = signal(sig, OT_program_signalHanlder<SIG>);  if (ret==SIG_ERR) { std::cerr<<"skipping signal " << #SIG << std::endl; } }
 			_local_add_handler(SIGINT);
 			_local_add_handler(SIGTERM);
 			_local_add_handler(SIGHUP);
 		#undef _local_add_handler
 
-		OT_API_atexit_installed=1;
+		OT_program_atexit_installed=1;
 	}
 #endif
 #ifdef _WIN32
-	if (!OT_API_atexit_installed) {
+	if (!OT_program_atexit_installed) {
 		if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler,TRUE)) {
 			fprintf(stderr, "Unable to install handler!\n");
 			assert(false); //error!
 		}
-		OT_API_atexit_installed=1;
+		OT_program_atexit_installed=1;
 	}
 #endif
 #endif
@@ -201,9 +306,9 @@ void OTRunnableAsProgram::Pid::OpenPid(const OTString strPidFilePath)
 // PID -- Set it to 0 in the lock file so the next time we run OT, it knows there isn't
 // another copy already running (otherwise we might wind up with two copies trying to write
 // to the same data folder simultaneously, which could corrupt the data...)
-void OTRunnableAsProgram::Pid::ClosePid()
+void OTRunnableAsProgram::ClosePid()
 {
-	if (OT_API_atexit_now) { async_write_string("ERROR: Closing the pid file now (from signal) - with NOT SIGNAL SAFE FUNCTION - abort!\n"); abort(); }
+	if (OT_program_atexit_now) { async_write_string("ERROR: Closing the pid file now (from signal) - with NOT SIGNAL SAFE FUNCTION - abort!\n"); abort(); }
 	if (!this->IsPidOpen()) { OTLog::sError("%s: Pid is CLOSED, WHY CLOSE A PID IF NONE IS OPEN!\n",__FUNCTION__,"strPidFilePath"); OT_FAIL; }
 	if (!this->m_strPidFilePath.Exists()) { OTLog::sError("%s: %s is Empty!\n",__FUNCTION__,"m_strPidFilePath"); OT_FAIL; }
 
@@ -219,8 +324,8 @@ void OTRunnableAsProgram::Pid::ClosePid()
 	}
 }
 
-void OTRunnableAsProgram::Pid::ClosePid_asyncsafe() { // asynce-safe (can be used in signal handler)
-	if (OT_API_atexit_now) { async_write_string("Closing the pid file now (from signal)\n"); }
+void OTRunnableAsProgram::ClosePid_asyncsafe() { // asynce-safe (can be used in signal handler)
+	if (OT_program_atexit_now) { async_write_string("Closing the pid file now (from signal)\n"); }
 	else async_write_string("Warning (code error - fix it) using the asyncsafe close when not needed, why?\n");
 
 	{ // test if the file existed
@@ -232,6 +337,7 @@ void OTRunnableAsProgram::Pid::ClosePid_asyncsafe() { // asynce-safe (can be use
 
 	int fd = open( this->m_strPidFilePath_cstr , O_WRONLY|O_CREAT|O_TRUNC , 0600 ); //  TODO mode 0600 ?
 	if (fd != -1) {
+		OT_DEBUG_SIGNALS_DELAY(); // debug code to show in slow-motion how multiple signals can be handled
 		write(fd,"0",1); // 1 bytes: the '0'
 		close(fd);
 		this->m_bIsPidOpen = false;
@@ -242,7 +348,17 @@ void OTRunnableAsProgram::Pid::ClosePid_asyncsafe() { // asynce-safe (can be use
 
 }
 
-const bool OTRunnableAsProgram::Pid::IsPidOpen() const
+const bool OT_API::OTRunnableAsProgram::IsPidOpen() const
 {
 	return this->m_bIsPidOpen;
 }
+
+
+OTRunnableAsProgram::OTRunnableAsProgram() { 
+}
+
+
+~OTRunnableAsProgram::OTRunnableAsProgram() {
+}
+
+

@@ -100,6 +100,7 @@ otlib_sources     =		OTAccount.cpp			\
 				OTPaymentPlan.cpp		\
 				OTPseudonym.cpp			\
 				OTPurse.cpp			\
+				OTRunnableAsProgram.cpp \
 				OTScript.cpp			\
 				OTScriptable.cpp		\
 				OTServerContract.cpp		\

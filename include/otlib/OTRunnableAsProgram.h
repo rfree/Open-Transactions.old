@@ -1,6 +1,3 @@
-
-
-
 /************************************************************
  -----BEGIN PGP SIGNED MESSAGE-----
  Hash: SHA1
@@ -127,8 +124,8 @@
  -----END PGP SIGNATURE-----
  **************************************************************/
 
-#ifndef __OTAPI_H__
-#define __OTAPI_H__
+#ifndef __OTRunnableAsProgram_H__
+#define __OTRunnableAsProgram_H__
 
 #ifndef EXPORT
 #define EXPORT
@@ -150,47 +147,61 @@
 
 #include <OTPassword.h>
 #include <OTData.h>
-
-// for manuall file operations in signal handler:
-#include <fcntl.h> 
+#include <OTString.h>
 
 
-class OTRunnableAsProgram {
+/**
+ * PID behaviour:
+ * When program should try to cleanup on Ctrl-C/kill exit (remove lock file etc) and when it needs to giveup
+ * and die fast? Always try to remove pid file, but sending a kill during cleanup will abort.
+ *
+ * Ctrl-C = cleanup-exit
+ * Ctrl-C, Ctrl-C, Ctrl-C... = cleanup-exit
+ * Ctrl-C, Kill = if cleanup-exit hanged then a kill will abort instantly
+ * Kill   = cleanup-exit
+ * Kill, Ctrl-C, Ctrl-C...   = cleanup-exit (one kill still exits with cleanup)
+ * Kill, Kill  = cleanup-exit (more kills trigger abort)
+ *
+ */
+
+
+// ==================================================================
+
+class OTRunnableAsProgram { // OTAPI, OTServer
 	public:
 		OTRunnableAsProgram();
 		virtual ~OTRunnableAsProgram();
+		
+		const bool IsPidOpen() const;
 
-		// Member
-	private:
+		EXPORT	virtual bool Cleanup(); // Per instance. (called automaticly by constructor)
+		virtual void Cleanup_asyncsafe(int signal=-1); // to be called onexit (ctrl-C etc.) - from global handler, in SIGNAL CONTEXT 
 
-		class Pid	{
-			private:
-				bool m_bIsPidOpen;
+	protected:
+		OTString m_strPidFilePath; // config path - used also for lock/PID
+		std::string m_strPidFilePath_str; // same, as std::string
+		const char* m_strPidFilePath_cstr; // same, as cstring. not-owned, it only points to the data owned by std::string
 
-				OTString m_strPidFilePath;
-				std::string m_strPidFilePath_str; // same, as std::string
-				const char* m_strPidFilePath_cstr; // same, as cstring. not-owned, it only points to the data owned by std::string
+		static bool m_bMainProgramGoingDown; // is the program (and this object btw) going down - should we refuse to initialize stuff
 
-				private:
-					void set_PidFilePath(const OTString &path); // updates all versions of this string
+		bool m_bIsPidOpen;
+		void set_PidFilePath(const OTString &path); // updates all versions of this string
 
-#ifdef _WIN32
-				static BOOL WINAPI ConsoleHandler(DWORD);
-#endif
+		void OpenPid(const OTString strPidFilePath);
+		void ClosePid(); // do NOT call that from signal handlers!
+		void ClosePid_asyncsafe(); // asynce-safe (can be used in signal handler)
 
-			public:
-				Pid();
-				~Pid();
-				void OpenPid(const OTString strPidFilePath);
-				void ClosePid();
-				void ClosePid_asyncsafe(); // asynce-safe (can be used in signal handler)
-				const bool IsPidOpen() const;
-		}; // class Pid		
-
-		Pid & m_refPid;  // only one pid reference per instance, must not change
+		#ifdef _WIN32
+		static BOOL WINAPI ConsoleHandler(DWORD);
+		#endif
 };
 
 
+// global:
+
+extern bool OT_API_atexit_now; // (global) are we *now* running atexit? 
+void OT_API_atexit(int signal=-1); // for global signal handler - must be able to run in SIGNAL CONTEXT
 
 
+#endif
 
