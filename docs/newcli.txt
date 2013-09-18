@@ -1,0 +1,38 @@
+
+
+# nym administration:
+ot nym new
+ot nym list
+ot nym show ALICE1
+ot nym rm ALICE1
+
+# status:
+ot status # all indexes, current active (nym,server,etc) ; other important data
+
+# sending messages:
+ot message new BOB2
+ot message new BOB2 -s "Subject line" # editor; then ask should we save or cache 
+ot message new BOB2 -s "Subject line" --draft # editor, save after editing
+ot message new BOB2 -s "Subject line" --send # editor, send out after editing
+cat letter.txt | ot message new BOB2 -s "Subject line" --send # 100% automatic sending
+
+# reading messages:
+ot message list # show offline the downloaded messages
+ot message list --get # online download new messages and show them
+ot message show # show current message
+ot message show MESSAGE1ABC # show message by hash
+ot message show -i 1 # show message by index in your inbox
+ot message show -i 2
+ot message next # just moves to next message
+ot message pop # shows the current message and moves to next one ; exit=1 no new messages; exit=0 all ok, shown you the new message
+
+
+* other commands
+
+
+* bash auto complete
+
+* colors in terminal 
+
+* interactive (call editor - parse result like git cherry-pick)
+
