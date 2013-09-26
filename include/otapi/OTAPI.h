@@ -207,9 +207,10 @@ public :
     ~OTAPI_Wrap();
 
 	EXPORT static void GoingDown(); // tell wrapper to never spawn next OT_API e.g. because we are going down (atexit/signals etc)
-	EXPORT static OTAPI_Wrap * It(bool bLoadAPI=true);
 
-	EXPORT static OT_API * OTAPI(bool bLoadAPI=true);
+	EXPORT static OTAPI_Wrap * It(bool bLoadAPI=true); // singleton to me
+
+	EXPORT static OT_API * OTAPI(bool bLoadAPI=true); // singleton to main OTAPI object
 
 //	EXPORT static const bool & Cleanup();
 

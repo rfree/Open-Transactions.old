@@ -8,11 +8,67 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+<<<<<<< Updated upstream
 #include <io.h>
+=======
+// for manuall file operations in signal handler:
+#include <fcntl.h> 
+
+#ifdef _WIN32
+#include <io.h> // write() etc
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
+#include <OTString.h>
+//  #include <OTAPI.h> // OTAPI_Wrap 
+>>>>>>> Stashed changes
 
  // credit:stlplus library.
 #include "containers/simple_ptr.hpp"
 
+<<<<<<< Updated upstream
+=======
+// macro - configuration
+#ifndef OT_CFG_DEBUG_SIGNALS_EXIT  // build with this option to do test delay in signal handler when you ctrl-C etc
+	#define OT_CFG_DEBUG_SIGNALS_EXIT 0
+#endif
+
+// macro - debugging from async context (e.g. from signal handler)
+#define async_write_string(str) { size_t len=0; const char* ptr = str; while(*ptr){++ptr; ++len;} write(2,str,len); }
+
+bool OT_program_atexit_now = false; // are we *now* running atexit? 
+
+bool OTRunnableAsProgram::m_bMainProgramGoingDown = false; // is the program (and this object btw) going down - should we refuse to initialize stuff
+
+#if OT_CFG_DEBUG_SIGNALS_EXIT
+	#define OT_DEBUG_SIGNALS_DELAY() \
+		do { async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT)\n"); \
+		async_write_string( __FUNCTION__ ); \
+		long long int start = time(NULL); \
+		while (time(NULL) < start + 4) { } \
+		async_write_string("\ntest delay here (debug OT_DEBUG_SIGNALS_EXIT) - done\n"); } while(0)
+#else
+	#define OT_DEBUG_SIGNALS_DELAY() do { } while(0) 
+#endif
+
+void OT_program_atexit(int signal) { // for global signal handler - must be able to run in SIGNAL CONTEXT
+	if (OT_program_atexit_now) { // rare case of e.g. CTRL-C while doing normal exit
+		async_write_string("Got into another atexit while processing atexit - skipping this one.\n");
+		return;
+	}
+	OT_program_atexit_now=1;
+
+	OT_DEBUG_SIGNALS_DELAY(); // debug code to show in slow-motion how multiple signals can be handled
+
+	// OTAPI_Wrap::GoingDown(); // tell the wrapper that we are going down to make sure it will not race to create one while we are checking
+
+	OT_API * ot_api = OTAPI_Wrap::OTAPI(false); // just check if OTAPI was even created yet? (and write down the address)
+	if (ot_api) { // OTAPI was created
+		const char *msg = "\n\nEmergency cleanup [unknown signal]\n";
+		if (signal==-1) msg = "\n\nEmergency cleanup [not-signal]\n";
+>>>>>>> Stashed changes
 #ifdef _WIN32
 #include <WinsockWrapper.h>
 #endif
