@@ -1,0 +1,18 @@
+
+For clang3.3.
+
+Current best result, on example of OTWallet.h:
+__% speedup
+real    0m8.648s
+changed to:
+real    0m6.653s
+
+
+Required: clang3.3
+
+PCH build step: 
+~/work-foss/ot/Open-Transactions/include/otlib$ time /home/opentransactions/local/bin/clang++ -DBUILDING_PCH_NOW -DHAVE_CONFIG_H -I. -I../.. -g3 -O0 -fPIC -I../../include -I../../include/otlib -I../../include/containers -pthread -I/home/opentransactions/.local/include -pthread -I/usr/include -pthread -DOT_PREFIX_PATH="/home/opentransactions/.local" -DOT_VERSION="0.89.q" -g -O2        -fPIC -DPIC    -x c++-header  stdafx.h -o stdafx.h.pch
+
+PCH use step, for building 1 .cpp file:
+~/work-foss/ot/Open-Transactions/src/otlib$ rm .libs/libot_la-OTWallet.o  ;   time /home/opentransactions/local/bin/clang++  -include stdafx.h  -DHAVE_CONFIG_H -I. -I../.. -g3 -O0 -fPIC -I../../include -I../../include/otlib -I../../include/containers -pthread -I/home/opentransactions/.local/include -pthread -I/usr/include -pthread -DOT_PREFIX_PATH="/home/opentransactions/.local" -DOT_VERSION="0.89.q" -g -O2  -c OTWallet.cpp -fPIC -DPIC -o .libs/libot_la-OTWallet.o  ; file .libs/libot_la-OTWallet.o
+
