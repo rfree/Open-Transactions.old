@@ -69,7 +69,16 @@ if [[ -x "${COMPILER_PREFIX_TRY}/compile-cxx" ]] ; then
 fi
 
 if [[ -z $COMPILER_PREFIX ]] ; then
-	echo "We recommend to install in HOME/.local/bin/ our scripts compile-cpp compile-cc compile-cxx - that can compile better (e.g. with ccache+clang)"
+	echo "We recommend to copy files of compiler-wrapper, as in: utils/compiler-wrapper/README.txt"
+	echo "This will result in switching to more recommended compilers e.g. clang for faster compilation"
+	echo "Install our scripts? You will also need to install e.g. apt-get install clang ccache"
+	echo "Install compiler wrapper for use with OT? (y/n):"
+	read yn
+	if [[ $yn == "y" ]] ; then
+		this_script_filename="$(readlink -e "$BASH_SOURCE")"
+		this_script_dir="$(dirname "${this_script_filename}")"
+		${this_script_dir}/../../utils/compiler-wrapper/install.sh || die "Sorry, could not install the compiler-wrapper. Try to install manually, or skip it"
+	fi
 else
 	export CPP="${COMPILER_PREFIX}/compile-cpp"; 
 	export CC="${COMPILER_PREFIX}/compile-cc"; 
