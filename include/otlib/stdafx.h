@@ -29,8 +29,6 @@
 
 #ifdef _WIN32
 #include <memory>
-#elif __GXX_EXPERIMENTAL_CXX0X__ || __cplusplus >= 201103L
-#include <memory>
 #else
 #include <tr1/memory>
 #endif
@@ -39,15 +37,12 @@
 // decide should we now include various common libraries now (e.g. for PCH)
 #ifdef _WIN32
 #ifndef NO_OT_PCH
-	// we build on windows, so just inclide some commong, windows-build compatible headers like old stdafh
-	// fell free to adjust this stdafx for windows if needed
 	#define INCLUDE_COMMON_OT_HEADERS_NOW
 #else
 #undef NO_OT_PCH
 #endif
 #endif
 
-// command line option tells us to prepare PCH now:
 #ifdef BUILDING_PCH_NOW
 	#define INCLUDE_COMMON_CPP_HEADERS_NOW // very safe 
 	#define INCLUDE_COMMON_3RD_PARTY_HEADERS_NOW // quite safe 
@@ -59,8 +54,7 @@
 
 // these should be very safe (untill compilator/system upgrade)
 #ifdef INCLUDE_COMMON_CPP_HEADERS_NOW
-	#warning "INCLUDING C/C++..."
-	// Cr++
+	// C++
 	#include <iostream>
 	#include <fstream>
 	#include <exception>
@@ -87,7 +81,6 @@
 
 // these should be safe, only rebuild PCH (manually if needed) after upgrading versions of this libs:
 #ifdef INCLUDE_COMMON_3RD_PARTY_HEADERS_NOW
-	// #warning "INCLUDING 3rd..."
 	// other 3rd party libs we use:
 	#include <chaiscript/chaiscript.hpp> // huge one, dependency
 
@@ -100,7 +93,6 @@
 
 // these can be dengerous if we are working on thoes files right now
 #ifdef INCLUDE_COMMON_OT_HEADERS_NOW
-	// #warning "Including OT headers"
 	#include <OTString.h>
 	#include <OTStorage.h>
 	#include <OTSmartContract.h>
