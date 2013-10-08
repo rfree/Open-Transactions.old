@@ -1,0 +1,124 @@
+
+Information about performance, e.g. compilation statistics.
+There are footnotes marked like [[0]] explained at end.
+
+// ==================================================================
+// ==================================================================
+// ==================================================================
+// COMPILATION TIMING STATISTICS
+// ==================================================================
+
+
+All tests on computer machine-M [[2]]
+
+==============================
+First compilation:
+
+ccache, no-precheaders, clang(debian7 - clang 3.0 [[1]] )
+real	6m37.821s - MAYBE not accurate result, need re-testing with ccache -C etc.
+
+after no change: (again make)
+real	0m5.713s
+
+ccache, no-precheaders, clang(clang 3.3 from sources, on debian 7)
+real    8m37.663s (after ccache -C)
+
+==============================
+One .h change:
+after changed to include/otlib/OTWallet.h
+
+no-ccache, no-precheaders, gcc
+time bash cmd/rebuild_and_install_old2.sh
+real	1m11.494s
+real	1m13.774s
+
+no-ccache, no-precheaders, clang(debian7)
+time bash cmd/rebuild_and_install_old.sh 
+real	1m9.287s
+
+ccache, no-precheaders, clang(debian7)
+time bash cmd/rebuild_and_install.sh(?)
+real	1m6.996s
+
+but going back to previous version: 0m5 s
+
+
+
+
+
+
+
+// ==================================================================
+Usefull COMMANDS, tips and tricks:
+
+List includes for selection on PCH:
+grep -i -r "#include" src/ include/ | grep -v .deps | cut -d":" -f2,3,4,5,6 | sort | uniq
+
+
+
+
+
+// ==================================================================
+Notes/hints/dump
+
+clang -x c-header test.h -o test.h.pch
+clang -include test.h test.c -o test
+
+time clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib   -I include/otapi -I include -I include/otlib    -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option  -D  INCLUDE_COMMON_OT_HEADERS_NOW -x c++-header    include/otlib/stdafx.h  -o include/otlib/stdafx.h.pch 
+
+real	0m5.462s (each time - not cachable?)
+include/otlib/stdafx.h.pch: ELF 64-bit LSB relocatable, x86-64, version 1 (GNU/Linux), not stripped
+
+
+
+grep -i -r "#include" src/ include/ | grep -v .deps | cut -d":" -f2,3,4,5,6 | sort | uniq
+
+
+
+
+/usr/bin/clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option 
+
+
+-coverage-file /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 
+-o /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -x c++ otd/main.cpp
+
+
+
+/usr/bin/clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -coverage-file /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option -o /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -x c++ otd/main.cpp
+
+
+
+// ==================================================================
+// ==================================================================
+// ==================================================================
+Footnotes:
+
+[[1]] 
+Debian 7 clang version:
+
+Debian clang version 3.0-6.2 (tags/RELEASE_30/final) (based on LLVM 3.0)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+
+
+[[2]]
+Test computer "machine M" used by developer rfree:
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 42
+model name      : Intel(R) Core(TM) i3-2100 CPU @ 3.10GHz
+stepping        : 7
+microcode       : 0x28
+cpu MHz         : 1600.000
+cache size      : 3072 KB
+
+RAM: 8 GB
+
+Kernel: 3.2.46-grsec-good.0.1.6 (grsecurity high settings - can slow down compilation a bit)
+TODO: compare with stock kernel (@vyrly #mempo)
+
+
+
+
+
+
