@@ -59,10 +59,20 @@ grep -i -r "#include" src/ include/ | grep -v .deps | cut -d":" -f2,3,4,5,6 | so
 
 
 // ==================================================================
+// ==================================================================
 Notes/hints/dump
 
 clang -x c-header test.h -o test.h.pch
 clang -include test.h test.c -o test
+
+clang -x c++-header -std=c++11  stdafx.hpp -o stdafx.hpp.pch
+clang++ -std=c++11  -include  stdafx.hpp   main.cpp   -lboost_system  -lpthread -o hotelnet-apiserver.out
+
+[works? requires new clang eg 3.3]
+~/work-foss/ot/Open-Transactions/include/otlib$ /home/opentransactions/local/bin/clang++ -DHAVE_CONFIG_H -I. -I../.. -g3 -O0 -fPIC -I../../include -I../../include/otlib -I../../include/containers -pthread -I/home/opentransactions/.local/include -pthread -I/usr/include -pthread -DOT_PREFIX_PATH="/home/opentransactions/.local" -DOT_VERSION="0.89.q" -g -O2       -fPIC -DPIC    -x c++-header  stdafx.h -o stdafx.h.pch
+
+// ---------
+
 
 time clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib   -I include/otapi -I include -I include/otlib    -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option  -D  INCLUDE_COMMON_OT_HEADERS_NOW -x c++-header    include/otlib/stdafx.h  -o include/otlib/stdafx.h.pch 
 
@@ -70,12 +80,20 @@ real	0m5.462s (each time - not cachable?)
 include/otlib/stdafx.h.pch: ELF 64-bit LSB relocatable, x86-64, version 1 (GNU/Linux), not stripped
 
 
+[bad?]
+most_compile_opt="-emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib   -I include/otapi -I include -I include/otlib    -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option  -D  INCLUDE_COMMON_OT_HEADERS_NOW " \
+time clang -x c++-header -D  INCLUDE_COMMON_OT_HEADERS_NOW  ${most_compile_opt}  include/otlib/stdafx.h -o include/otlib/stdafx.h.pch 
+
+[bad?]
+time clang -x c++-header -D  INCLUDE_COMMON_OT_HEADERS_NOW -emit-obj -disable-free -disable-llvm-verifier -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib   -I include/otapi -I include -I include/otlib    -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option  -D  INCLUDE_COMMON_OT_HEADERS_NOW  include/otlib/stdafx.h -o include/otlib/stdafx.h.pch 
+
+
 
 grep -i -r "#include" src/ include/ | grep -v .deps | cut -d":" -f2,3,4,5,6 | sort | uniq
 
 
 
-
+[bad -cc1 style]
 /usr/bin/clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option 
 
 
@@ -83,9 +101,8 @@ grep -i -r "#include" src/ include/ | grep -v .deps | cut -d":" -f2,3,4,5,6 | so
 -o /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -x c++ otd/main.cpp
 
 
-
+[bad -cc1 style]
 /usr/bin/clang -cc1 -triple x86_64-pc-linux-gnu -emit-obj -disable-free -disable-llvm-verifier -main-file-name main.cpp -pic-level 2 -mdisable-fp-elim -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -g -coverage-file /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -resource-dir /usr/bin/../lib/clang/3.0 -D HAVE_CONFIG_H -D OT_ZMQ_MODE -I . -I .. -I ../include/otapi -I ../include -I ../include/otlib -I /home/opentransactions/.local/include -I /usr/include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/include/c++/4.6 -internal-isystem /usr/include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/clang/3.0/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fmessage-length 0 -pthread -fgnu-runtime -fobjc-runtime-has-arc -fobjc-runtime-has-weak -fobjc-fragile-abi -fcxx-exceptions -fexceptions -fdiagnostics-show-option -o /home/opentransactions/.ccache/2/b/6c885ea3a3669615e8d1fe9631dcaf-6494884.o.tmp.mut.13724 -x c++ otd/main.cpp
-
 
 
 // ==================================================================
