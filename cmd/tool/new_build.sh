@@ -62,7 +62,7 @@ if [[ -z "$PKG_CONFIG_PATH" ]] ; then
 	fi
 fi
 
-COMPILER_PREFIX_TRY="$HOME/.local/bin/"
+COMPILER_PREFIX_TRY="$HOME/.local/bin"
 if [[ -x "${COMPILER_PREFIX_TRY}/compile-cxx" ]] ; then
 	COMPILER_PREFIX="${COMPILER_PREFIX_TRY}"
 	echo "Auto-detected local compiler script COMPILER_PREFIX=$COMPILER_PREFIX"
