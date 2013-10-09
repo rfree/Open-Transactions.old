@@ -57,7 +57,7 @@ if [[ -z "$PKG_CONFIG_PATH" ]] ; then
 	fi
 
 	if [[ ! -z "PKG_CONFIG_PATH" ]] ; then
-		PKG_CONFIG_PATH=$PKG_CONFIG_PATH_AUTO
+		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH_AUTO
 		echo "Found PKG_CONFIG_PATH=PKG_CONFIG_PATH"
 	fi
 fi
