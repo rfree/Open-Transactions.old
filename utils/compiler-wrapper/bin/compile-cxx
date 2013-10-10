@@ -1,4 +1,14 @@
 #!/bin/bash
 this_script_filename="$(readlink -e "$BASH_SOURCE")"
 this_script_dir="$(dirname "${this_script_filename}")"
-${this_script_dir}/run-and-log "ccache" "$HOME/.local/bin/clang++" "$@"
+
+bin_name="clang++" # find this compiler binary program with this short-name
+bin="" # here we will put the needed name/path to it
+bin_try="$HOME/.local/bin/$bin_name"; if [[ -x "$bin_try" ]] ; then bin="$bin_try"; fi ;
+bin_try="$HOME/local/bin/$bin_name"; if [[ -x "$bin_try" ]] ; then bin="$bin_try"; fi ;
+if [[ -z $bin ]] ; then
+	echo "Can not find your local good clang compiler [parts], please install it (or symlink) into $bin_try"
+	exit 1
+fi
+
+${this_script_dir}/run-and-log "ccache" "$bin" "$@"

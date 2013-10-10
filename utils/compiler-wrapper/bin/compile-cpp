@@ -1,4 +1,7 @@
 #!/bin/bash
 this_script_filename="$(readlink -e "$BASH_SOURCE")"
 this_script_dir="$(dirname "${this_script_filename}")"
-${this_script_dir}/run-and-log "ccache" "cpp" "$@"
+
+bin="cpp"
+
+${this_script_dir}/run-and-log "ccache" "$bin" "$@"
