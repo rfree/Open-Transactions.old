@@ -93,6 +93,7 @@ libtool
 stamp-h1
 src/opentxs.pc
 src/.deps/
+src/otlib/*/.deps/
 src/otapi/.deps/
 src/otlib/.deps/
 src/otlib/bigint/.deps/
@@ -110,3 +111,6 @@ src/otlib/.libs
 src/createmint
 src/ot
 src/otserver
+
+# linux build (other format) of protobuffers
+src/otlib/otprotob/*.cc
