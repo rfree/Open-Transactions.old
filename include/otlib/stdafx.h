@@ -60,7 +60,7 @@
 // these should be very safe (untill compilator/system upgrade)
 #ifdef INCLUDE_COMMON_CPP_HEADERS_NOW
 	#warning "INCLUDING C/C++..."
-	// C++
+	// Cr++
 	#include <iostream>
 	#include <fstream>
 	#include <exception>
@@ -87,7 +87,7 @@
 
 // these should be safe, only rebuild PCH (manually if needed) after upgrading versions of this libs:
 #ifdef INCLUDE_COMMON_3RD_PARTY_HEADERS_NOW
-	#warning "INCLUDING 3rd..."
+	// #warning "INCLUDING 3rd..."
 	// other 3rd party libs we use:
 	#include <chaiscript/chaiscript.hpp> // huge one, dependency
 
@@ -100,7 +100,7 @@
 
 // these can be dengerous if we are working on thoes files right now
 #ifdef INCLUDE_COMMON_OT_HEADERS_NOW
-	#warning "Including OT headers"
+	// #warning "Including OT headers"
 	#include <OTString.h>
 	#include <OTStorage.h>
 	#include <OTSmartContract.h>
