@@ -38,8 +38,12 @@ isnumber "$level" || die_usage "You need to choose the level, e.g. 0"
 # MY_
 
 if [[ -z $CONCURENCY_LEVEL ]] ; then
-	CONCURENCY_LEVEL=2
-	echo "Set default concurency level $CONCURENCY_LEVEL (you can change that with export CONCURENCY_LEVEL=8 before)"
+	cores=2
+	if hash nproc 2>/dev/null; then
+		cores=$((nproc) 2>&1)	
+	fi
+	CONCURENCY_LEVEL=$cores
+	echo "Set concurency level $CONCURENCY_LEVEL equal number of cores (you can change that with export CONCURENCY_LEVEL=8 before running this script)"
 fi
 
 if [[ -z "$PKG_CONFIG_PATH" ]] ; then 
