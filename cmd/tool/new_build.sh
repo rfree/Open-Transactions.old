@@ -37,17 +37,24 @@ isnumber "$level" || die_usage "You need to choose the level, e.g. 0"
 # CONCURENCY_LEVEL=4 # set to number of CPUs, unless memory constrains
 # MY_
 
+cores_max_from_ram=2 # TODO detect max possible level of threads from ram/free-ram amount
+
 if [[ -z $CONCURENCY_LEVEL ]] ; then
 	cores=2
-	if hash nproc 2>/dev/null; then
+	if command -v nproc 2>/dev/null; then
 		cores=$((nproc) 2>&1)	
+		if (( $cores > $cores_max_from_ram )) ; then
+			cores=$cores_max_from_ram
+			echo "Limied to cores=$cores (because free RAM limitation) you can override by setting CONCURENCY_LEVEL env"
+		fi
+	else 
+		echo "Warning: can not detect number of CPUs to optimize build speed, please configure CONCURENCY_LEVEL variable if you want"
 	fi
 	CONCURENCY_LEVEL=$cores
-	echo "Set concurency level $CONCURENCY_LEVEL equal number of cores (you can change that with export CONCURENCY_LEVEL=8 before running this script)"
 fi
 
 if [[ -z "$PKG_CONFIG_PATH" ]] ; then 
-	echo "The variable PKG_CONFIG_PATH is not configured ($PKG_CONFIG_PATH) - please set it."
+	echo "Info: The variable PKG_CONFIG_PATH is not configured ($PKG_CONFIG_PATH), we will autodetect."
 	PKG_CONFIG_PATH_AUTO=""
 
 	MAYBE="$HOME/.local/lib/pkgconfig"
@@ -62,17 +69,21 @@ if [[ -z "$PKG_CONFIG_PATH" ]] ; then
 
 	if [[ ! -z "PKG_CONFIG_PATH" ]] ; then
 		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH_AUTO
-		echo "Found PKG_CONFIG_PATH=PKG_CONFIG_PATH"
+		echo "Found PKG_CONFIG_PATH=$PKG_CONFIG_PATH good."
+	else 
+		die "Unable to autodetect PKG_CONFIG_PATH. It must be set because chaiscript needs it. Please build chaiscript and set PKG_CONFIG_PATH env variable as described in OT install documentation. After local installation typical path would be: \$HOME/.local/lib/pkgconfig"
 	fi
 fi
 
-COMPILER_PREFIX_TRY="$HOME/.local/bin"
-if [[ -x "${COMPILER_PREFIX_TRY}/compile-cxx" ]] ; then
-	COMPILER_PREFIX="${COMPILER_PREFIX_TRY}"
-	echo "Auto-detected local compiler script COMPILER_PREFIX=$COMPILER_PREFIX"
-fi
+function detect_COMPILER_PREFIX {
+	COMPILER_PREFIX_TRY="$HOME/.local/bin"
+	if [[ -x "${COMPILER_PREFIX_TRY}/compile-cxx" ]] ; then
+		COMPILER_PREFIX="${COMPILER_PREFIX_TRY}"
+		echo "Auto-detected local compiler script COMPILER_PREFIX=$COMPILER_PREFIX"
+	fi
+}
 
-if [[ -z $COMPILER_PREFIX ]] ; then
+function fix_problems_with_COMPILER_PREFIX {
 	echo "We recommend to copy files of compiler-wrapper, as in: utils/compiler-wrapper/README.txt"
 	echo "This will result in switching to more recommended compilers e.g. clang for faster compilation"
 	echo "Install our scripts? You will also need to install e.g. apt-get install clang ccache"
@@ -83,11 +94,22 @@ if [[ -z $COMPILER_PREFIX ]] ; then
 		this_script_dir="$(dirname "${this_script_filename}")"
 		${this_script_dir}/../../utils/compiler-wrapper/install.sh || die "Sorry, could not install the compiler-wrapper. Try to install manually, or skip it"
 	fi
-else
-	export CPP="${COMPILER_PREFIX}/compile-cpp"; 
-	export CC="${COMPILER_PREFIX}/compile-cc"; 
-	export CXX="${COMPILER_PREFIX}/compile-cxx";
+}
+
+
+detect_COMPILER_PREFIX ;
+if [[ -z $COMPILER_PREFIX ]] ; then
+	fix_problems_with_COMPILER_PREFIX ;
+	detect_COMPILER_PREFIX # try again
 fi
+
+if [[ -z $COMPILER_PREFIX ]] ; then
+	die "Unable to detect compiler prefix."
+fi
+
+export CPP="${COMPILER_PREFIX}/compile-cpp"
+export CC="${COMPILER_PREFIX}/compile-cc"
+export CXX="${COMPILER_PREFIX}/compile-cxx"
 
 echo "Will use compilers: CPP=$CPP CC=$CC CXX=$CXX with CONCURENCY_LEVEL=$CONCURENCY_LEVEL"
 
