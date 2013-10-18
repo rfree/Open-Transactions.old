@@ -1,0 +1,47 @@
+
+This are instructions for the new, modern building.
+Why: Very fast builds, debug, clang seems better compiler (speed,memory) generating better code (fast; C++11)
+How: Use ~/local/ script that wraps and calls ccache + user-local newer clang and debug code
+State: This functionality is now (2013-10) under development, see 
+github https://github.com/rfree/Open-Transactions/ for unofficial version by rfree (me).
+
+
+
+1. System installation
+2. Once per-user (or system) dependencies installation
+3. Main build
+4. Fast rebuilding
+
+
+
+
+1. See general instructions for your system - but and also install "clang" as in point 2.
+
+
+
+2. 
+a) clang
+As user we recommend to build from sources clang compiler in some new version
+e.g. at least clang 3.3 (as of 2013-10). We would advice to build it per-user, 
+using 
+PREFIX=$HOME/.local/
+On debian 7 good setup is to system-wide install clang from repository (3.2)
+and user-local build clang 3.3.
+
+b) 3rd party libs like chaiscript - same as in the other tutorials
+
+c) run our script utils/compiler-wrapper/install.sh (or you will be asked to 
+run it when building. It will install the wrapper in $HOME/.local/bin as 
+compile-cxx and other scripts.
+
+
+
+3. For main build use 
+./cmd/build.sh 0
+
+
+
+4. Fast recompilations are done with e.g.
+./cmd/build.sh 200
+
+

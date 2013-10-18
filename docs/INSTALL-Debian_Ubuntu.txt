@@ -7,6 +7,9 @@
 #########################################################################
 
 
+See also docs/INSTALL-linux-modern.txt for (wip) fast build: clang 3.3, precompile headers.
+
+
 ## DEBIAN ONLY ##
 
 
@@ -16,6 +19,8 @@ On older version Debian or Ubuntu we may need to up-date GCC to a newer version:
 
 ###################
 ## DEBIAN STABLE ##
+This is for Debian 6 - Debian squeeze.
+Debian 7 Wheezy does not need backports.
 
 # if you are on DEBIAN (*not* Ubuntu) then you need to include backports and sid in your etc settings:
 
