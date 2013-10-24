@@ -20,6 +20,8 @@ usage() {
 	echo "  120 - start with configure"
 	echo "  150 - start with make clean"
 	echo "  200 - just make (of changed files)"
+	echo "  300 - and install" # TODO
+	echo "  500 - and run" # TODO
 }
 die_usage() {
 	usage
