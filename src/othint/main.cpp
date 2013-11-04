@@ -63,16 +63,39 @@ using nOT::nUtil::ToStr;
 namespace nExamplesOfConvention { 
 // Welcome, to the world of C++11 !
 
+int g_globalVariable; // g_ - global variable
+
 class cFooBar {
-	int m_fooBarBaz;
+private:
+	static int s_staticVariable; // s_ - static variable
+	
+	int m_fooBarBaz; // m_ - variable, member of class
 
 	int Fooberize();
 	int DerpTheHerp();
+	
+public:
+	cFooBar(int x) 
+	: m_fooBarBaz(x)
+	{}
+	
 	inline int Foo() {
 		int abc=42;
 		return abc;
 	}
 };
+int cFooBar::s_staticVariable = 0;
+
+// In case of simple parameters, we can skip "m_" prefix. In this case:
+struct cSimpleParam{
+	int x;
+	int y;
+	
+	cSimpleParam(int x, int y)
+	: x(x), y(y)
+	{}
+};
+
 
 } // namespace
 
