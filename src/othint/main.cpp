@@ -294,20 +294,26 @@ using nOT::nUtil::ToStr;
 
 Commands are in form:
 topic, action, [--subaction] var1 var2 ... [argN1] [argN2] [--optionNameN[=][optionArgN]] 
-<- cCmdname ---------------> <-------------------- arguments ------------------------->
-<- cCmdname ---------------> <-- var ----> <--- extra ---> <-- option ---------------->
+<- cCmdname ---------------> <-------------------- arguments --------------------------->
+<- cCmdname ---------------> <-- var ----> <-- extra var --> <-- option ---------------->
+<- mandatory-----------------------------> <--- optional ------------------------------->
 
-So, 2..3 words of command name, 0..N mandatory variables, 0..N extra variables, any options
+2..3 words of command name, 0..N mandatory variables, 0..N extra variables, any options
 
-Arguments available depend on the command name.
+	- subaction will be probably not used but leaving such possibility to be flexible	
+	
+ARGUMENTS:
+	- Arguments available depend on the command name.
 
-Options for command depend on the command name, as well are imported from global.
+	- Options for command depend on the command name, as well are imported from global.
 
-Options can be unique or can repeat. Options can have no value/data, or can have one.
-This gives 2*2 = 4 kinds of options: uniq, uniqData, repeat, repeatData 
-Options can be both global and comming from selected action/subaction.
+	- Options can't be placed before variables!
 
-subaction will be probably not used but leaving such possibility to be flexible
+	- Options can be unique or can repeat. Options can have no value/data,
+		or can have one.This gives 2*2 = 4 kinds of options: uniq, uniqData, 
+		repeat, repeatData 
+		
+	- Options can be both global and comming from selected action/subaction.
 
 SEE testcases below in functions
 
@@ -315,29 +321,25 @@ msg     # error: incomplete action
 msg send     # error: missing required options
 msg send <mynym>     # error: missing required options
 msg send <mynym> <hisnym>
-msg send --headers <mynym> <hisnym>
-msg send --body <mynym> <hisnym>
-msg send --body <mynym> <hisnym>
-msg send --body <mynym> <hisnym> --push     # global option
-msg send --body <mynym> <hisnym> --no-footer     # action option
-msg send --body <mynym> <hisnym> --cc <ccnym>     # action option with value
-msg send --body <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
-msg send --body <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
-msg send --body <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
+msg send <mynym> <hisnym>
+msg send <mynym> <hisnym>
+msg send <mynym> <hisnym>
+msg send <mynym> <hisnym> --push     # global option
+msg send <mynym> <hisnym> --no-footer     # action option
+msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
+msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
+msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
+msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
 msg ls
-msg list
 msg mv
-msg move
-msg rm
-msg del
-msg delete
-nym 
-nym ls
-nym list
-nym new
-nym del
-nym delete
+msg rm <index>
+nym 		# can display active (default) nym
+nym ls 
+nym new 
+nym new <name>
+nym rm <name>
+nym rm <nymID>
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
  
 */
@@ -548,11 +550,20 @@ OT_COMMON_USING_NAMESPACE; // <========= NAMESPACE inclusion
 
 bool testcase_complete_1() {
 	map<string , vector<string> > const cases {
-		 { "msg", { "uard", " send", " ls", " mv", " rm" } }
-		,{ "msg ", { "send", "ls", "mv", "rm" } }
-		,{ "msgruard", { " info" } }
-		,{ "msg send", { "uard", " send", " ls", " mv", " rm" } }
+		 { "msg", { " uard", " send", " ls", " mv", " rm" } }
+		,{ "msg ", { "send", "ls", "mv", "rm" } } 
+		,{ "msg send", { " mynym", " hisnym" } }
+		,{ "msg send ", { "mynym", "hisnym" } }
+		,{ "msg ls", {  } }
+		,{ "msg ls ", {  } }
+		,{ "msg mv", {  } }
+		,{ "msg mv ", {  } }
+		,{ "msg rm", {  } }
+		,{ "msg rm ", {  } }
+		,{ "msguard", { " info" } }
+		,{ "msguard ", { "info" } }
 		,{ "nym" , { " ls", " new" , " rm"} }
+		,{ "nym " , { "ls", "new" , "rm"} }
 	};
 
 	nOT::nOTHint::cHint hint; 
