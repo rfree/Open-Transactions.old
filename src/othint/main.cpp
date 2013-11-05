@@ -1,15 +1,9 @@
-/************************************************************************************
-*
-* otnewcli  -- Open Transactions command line interface
-*  
-*/
 /************************************************************
  * 
- *  <PROGRAM NAME> - <DESCRIPTION> 
+ *  OTNewcli  -- Open Transactions new command line interface
  * 
- * 	Written in <YEAR> by <AUTHOR NAME> <AUTHOR E-MAIL ADDRESS> 
- * 	
- * 	[other author/contributor lines as appropriate] 
+ * 	Written in 2013 by rfree (rfree@gmx.us) and other members of 
+ * 	open-source community
  * 
  * 	To the extent possible under law, the author(s) have dedicated all 
  * 	copyright and related and neighboring rights to this software to 
@@ -20,7 +14,7 @@
  * 	work. If not, see: 
  * 	http://creativecommons.org/publicdomain/zero/1.0/
  * 
- * 	This project is developed as a part of OPEN TRANSACTIONS project
+ * 	OTNewcli is developed as a part of OPEN TRANSACTIONS project
  * 
  * 	Where applicable (under given jurisdiction's law system), 
  * 	we want to give away our code as CC0 (Creative Commons 0) 
