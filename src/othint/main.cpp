@@ -335,7 +335,8 @@ nym new <name>
 nym rm <name>
 nym rm <nymID>
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
- 
+msguard start
+msguard stop
 */
 
 
@@ -544,20 +545,51 @@ OT_COMMON_USING_NAMESPACE; // <========= NAMESPACE inclusion
 
 bool testcase_complete_1() {
 	map<string , vector<string> > const cases {
-		 { "msg", { " uard", " send", " ls", " mv", " rm" } }
-		,{ "msg ", { "send", "ls", "mv", "rm" } } 
-		,{ "msg send", { " mynym", " hisnym" } }
+		 { "m", { "msg", "msguard" } }
+		,{ "ms", { "msg", "msguard" } }
+		,{ "msg", { "msg", "msguard" } }
+		,{ "msg ", { "send", "ls", "mv", "rm" } }
+		,{ "msg s", { "send" } }
+		,{ "msg se", { "send" } } 
+		,{ "msg sen", { "send" } } 
+		,{ "msg send", { "send" } }
 		,{ "msg send ", { "mynym", "hisnym" } }
-		,{ "msg ls", {  } }
-		,{ "msg ls ", {  } }
-		,{ "msg mv", {  } }
-		,{ "msg mv ", {  } }
-		,{ "msg rm", {  } }
-		,{ "msg rm ", {  } }
-		,{ "msguard", { " info" } }
-		,{ "msguard ", { "info" } }
-		,{ "nym" , { " ls", " new" , " rm"} }
+		,{ "msg l", { "ls" } }
+		,{ "msg ls", { "ls" } }
+		,{ "msg ls ", { "?" } }
+		,{ "msg m", { "mv" } }
+		,{ "msg mv", { "mv" } }
+		,{ "msg mv ", { "?" } }
+		,{ "msg r", { "rm" } }
+		,{ "msg rm", { "rm" } }
+		,{ "msg rm ", { "?" } }
+		,{ "msgu", { "msguard" } }
+		,{ "msgua", { "msguard" } }
+		,{ "msguar", { "msguard" } }
+		,{ "msguard", { "msguard" } }
+		,{ "msguard ", { "info", "start", "stop" } }
+		,{ "msguard i", { "info" } }
+		,{ "msguard in", { "info" } }
+		,{ "msguard inf", { "info" } }
+		,{ "msguard info", { "info" } }
+		,{ "msguard s", { "start", "stop" } }
+		,{ "msguard st", { "start", "stop" } }
+		,{ "msguard sta", { "start" } }
+		,{ "msguard star", { "start" } }
+		,{ "msguard start", { "start" } }
+		,{ "msguard sto", { "stop" } }
+		,{ "msguard stop", { "stop" } }
+		,{ "n" , { "nym"} }
+		,{ "ny" , { "nym"} }
+		,{ "nym" , { "nym"} }
 		,{ "nym " , { "ls", "new" , "rm"} }
+		,{ "nym l" , { "ls" } }
+		,{ "nym ls" , { "ls" } }
+		,{ "nym n" , { "new" } }
+		,{ "nym ne" , { "new" } }
+		,{ "nym new" , { "new" } }
+		,{ "nym r" , { "rm"} }
+		,{ "nym rm" , { "rm"} }
 	};
 
 	nOT::nOTHint::cHint hint; 
