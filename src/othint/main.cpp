@@ -261,6 +261,13 @@ std::string ToStr(const T & obj) {
 	return oss.str();
 }
 
+template <class T>
+void DisplayVector(const std::vector<T> &v)
+{
+	std::copy(v.begin(), v.end(),
+    std::ostream_iterator<T>(std::cout, " "));
+}
+
 }
 }
 
@@ -440,7 +447,7 @@ using std::cin;
 using std::cout;
 using std::endl;
 using nOT::nUtil::ToStr;
-
+using nOT::nUtil::DisplayVector;
 class cHint {
 	public:
 
@@ -460,29 +467,36 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	std::istringstream iss(sofar_str);
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option?
-
-	std::copy( sofar.begin() , sofar.end() ,  std::ostream_iterator<string>(std::cout, ", ") );
-
+	
+	// std::copy( sofar.begin() , sofar.end() ,  std::ostream_iterator<string>(std::cout, ", ") ); // copy vector to cout with ", " between elements
+	// with bash "ot" will be first element of cmdline so starting from 2 word
+	// vector<string> namepart(sofar.begin() + 1, sofar.end());
 	auto namepart = sofar; // exactly 3 elements, with "" for missing elements
 	// TODO split - limit to 3 on copy ^
-	while (namepart.size()<3) namepart.push_back("");
-
+	//while (namepart.size()<3) namepart.push_back("");
 
 	if (namepart.at(0)=="msg") {
 
-		if (namepart.at(1)=="") {
+		if (namepart.size()==1) {
 			return vector<string>(1,"complete-1");
 		} // msg ""
 
-		else if (namepart.at(1)=="send") {
-
+		else if (namepart.at(1)=="send" || namepart.at(1)=="sen" || namepart.at(1)=="se" || namepart.at(1)=="s") {
+			return vector<string>(1,"send");
 		} // msg send
 
-		else if (namepart.at(1)=="del") {
+		else if (namepart.at(1)=="rm" || namepart.at(1)=="r") {
+			return vector<string>(1,"rm");
 		} // msg del
 
 	} // msg
-
+	
+	else if (namepart.at(0)=="msguard") {
+		if (namepart.size()==1) {
+			return vector<string>(1,"complete-1");
+		} // msguard ""
+	} // msguard
+	
 	else if (namepart.at(0)=="nym") {
 
 	} // nym 
@@ -527,7 +541,7 @@ bool testcase_complete_1();
 int main() {
 	nOT::nTests::testcase_complete_1();
 	nOT::nTests::testcase_namespace_pollution();
-	nOT::nTests::testcase_cxx11_memory();
+	//nOT::nTests::testcase_cxx11_memory();
 
 	// return 42; // nope. in C++, the exit code returns YOU
 }
@@ -593,8 +607,8 @@ bool testcase_complete_1() {
 	};
 
 	nOT::nOTHint::cHint hint; 
-	hint.AutoComplete("msg send");
-
+	vector<string> out = hint.AutoComplete("msguard");
+	nOT::nUtil::DisplayVector(out);
 	bool ok = 1;
 
 	return ok;
@@ -627,7 +641,7 @@ bool testcase_cxx11_memory() {
 	using namespace nOT::nOTHint;
 
 	struct cObj {
-			cObj() { cout<<"new"<<endl; }
+			cObj() {  cout<<"new"<<endl; }
 			~cObj() { cout<<"delete"<<endl; }
 	};
 
