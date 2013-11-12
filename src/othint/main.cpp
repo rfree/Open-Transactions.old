@@ -1,45 +1,45 @@
 /************************************************************
- * 
+ *
  *  OTNewcli  -- Open Transactions new command line interface
- * 
- * 	Written in 2013 by rfree (rfree@gmx.us) and other members of 
+ *
+ * 	Written in 2013 by rfree (rfree@gmx.us) and other members of
  * 	open-source community
- * 
- * 	To the extent possible under law, the author(s) have dedicated all 
- * 	copyright and related and neighboring rights to this software to 
- * 	the public domain worldwide. This software is distributed without 
- * 	any warranty. 
- * 
+ *
+ * 	To the extent possible under law, the author(s) have dedicated all
+ * 	copyright and related and neighboring rights to this software to
+ * 	the public domain worldwide. This software is distributed without
+ * 	any warranty.
+ *
  * 	You should have received a copy of the CC0 legalcode along with this
- * 	work (COPYING file). If not, see: 
+ * 	work (COPYING file). If not, see:
  * 	http://creativecommons.org/publicdomain/zero/1.0/
- * 
+ *
  * 	OTNewcli is developed as a part of OPEN TRANSACTIONS project
- * 
- * 	Where applicable (under given jurisdiction's law system), 
- * 	we want to give away our code as CC0 (Creative Commons 0) 
- * 	as detailed below, however, some parts of code might be not fully 
- * 	ours to licence/decide (from point of view of given law system), 
- * 	because they are connecting to other work. In such cases, 
- * 	the general Open Transaction licence as published by 
- * 	FellowTraveller on GitHub should be applied if possible (because 
- * 	it clarifies how to deal with linking to work like Lucre code, 
- * 	OpenSSL code, and so on). 
- * 
- * 	We also allow this code to be released to Public Domain, but again, 
- * 	we do not verify how is that possible in given law system. We take 
- * 	absolutely no legal responsibility about licensing this code (nor 
- * 	patent nor copyright nor any other law related issues) e.g. in your 
- * 	country. We are not lawyers, and it is up to You to find out what 
- * 	laws apply for your case. Do not use any of this code if you don't 
+ *
+ * 	Where applicable (under given jurisdiction's law system),
+ * 	we want to give away our code as CC0 (Creative Commons 0)
+ * 	as detailed below, however, some parts of code might be not fully
+ * 	ours to licence/decide (from point of view of given law system),
+ * 	because they are connecting to other work. In such cases,
+ * 	the general Open Transaction licence as published by
+ * 	FellowTraveller on GitHub should be applied if possible (because
+ * 	it clarifies how to deal with linking to work like Lucre code,
+ * 	OpenSSL code, and so on).
+ *
+ * 	We also allow this code to be released to Public Domain, but again,
+ * 	we do not verify how is that possible in given law system. We take
+ * 	absolutely no legal responsibility about licensing this code (nor
+ * 	patent nor copyright nor any other law related issues) e.g. in your
+ * 	country. We are not lawyers, and it is up to You to find out what
+ * 	laws apply for your case. Do not use any of this code if you don't
  * 	agree.
  *
  * 	PROJECT GIT REPOSITORY:
  * 	https://github.com/rfree/Open-Transactions/
- * 
+ *
  ***********************************************************************
  * 	OPEN TRANSACTION RELATED INFORMATIONS:
- *********************************************************************** 
+ ***********************************************************************
  *                    OPEN TRANSACTIONS
  *
  *       Financial Cryptography and Digital Cash
@@ -54,7 +54,7 @@
  *       -- Scripted smart contracts.
  *
  *  Copyright (C) 2010-2013 by "Fellow Traveler" (A pseudonym)
- * 
+ *
  * 	BITCOIN:  1NtTPVVjDsUfDWybS4BwvHpG2pdS9RnYyQ
  *
  *  OFFICIAL OPEN TRANSACTIONS PROJECT WIKI(s):
@@ -136,7 +136,7 @@
  *   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  *   PURPOSE.  See the GNU Affero General Public License for
  *   more details.
- 
+
  **************************************************************/
 /**
 
@@ -197,11 +197,11 @@ using std::unique_ptr; \
 using std::cin; \
 using std::cout; \
 using std::endl; \
-using nOT::nUtil::ToStr; 
+using nOT::nUtil::ToStr;
 
 
 // Please read and follow this syntax examples:
-namespace nExamplesOfConvention { 
+namespace nExamplesOfConvention {
 // Welcome, to the world of C++11 !
 
 int gGlobalVariable; // g - global variable
@@ -216,7 +216,7 @@ private:
 	int DerpTheHerp();
 	
 public:
-	cFooBar(int x) 
+	cFooBar(int x)
 	: mFooBarBaz(x)
 	{}
 	
@@ -253,7 +253,7 @@ std::string GetObjectName() {	return GetObjectName_global_string; }
 
 // TODO: move to utils
 namespace nOT {
-namespace nUtil { 
+namespace nUtil {
 
 template <class T>
 std::string ToStr(const T & obj) {
@@ -303,7 +303,7 @@ using nOT::nUtil::ToStr;
 [Description_of_auto_completion]
 
 Commands are in form:
-topic, action, [--subaction] var1 var2 ... [argN1] [argN2] [--optionNameN[=][optionArgN]] 
+topic, action, [--subaction] var1 var2 ... [argN1] [argN2] [--optionNameN[=][optionArgN]]
 <- cCmdname ---------------> <-------------------- arguments --------------------------->
 <- cCmdname ---------------> <-- var ----> <-- extra var --> <-- option ---------------->
 <- mandatory-----------------------------> <--- optional ------------------------------->
@@ -320,7 +320,7 @@ ARGUMENTS:
 	- Options can't be placed before variables!
 
 	- Options can be unique or can repeat. Options can have no value/data,
-		or can have one.This gives 2*2 = 4 kinds of options: uniq, uniqData, 
+		or can have one.This gives 2*2 = 4 kinds of options: uniq, uniqData,
 		repeat, repeatData.
 		
 	- Options can be both global and comming from selected action/subaction.
@@ -345,8 +345,8 @@ msg ls
 msg mv
 msg rm <index>
 nym 		# can display active (default) nym
-nym ls 
-nym new 
+nym ls
+nym new
 nym new <name>
 nym rm <name>
 nym rm <nymID>
@@ -373,7 +373,7 @@ class cCmdname { // holds (2)-part name of command like "msg","send"
 		cCmdname(const string &topic, const string &action, const string &subaction);
 };
 
-cCmdname::cCmdname(const string &topic, const string &action, const string &subaction) 
+cCmdname::cCmdname(const string &topic, const string &action, const string &subaction)
 :mTopic(topic), mAction(action), mSubaction(subaction)
 {
 }
@@ -383,7 +383,7 @@ cCmdname::cCmdname(const string &topic, const string &action, const string &suba
 Build:
 Tree of max options:
 [msg] ---------> { --unicode }
-[msg send] ----> (2) + (3) + {--now,--later,--sign,--red} , msg_send_complete() 
+[msg send] ----> (2) + (3) + {--now,--later,--sign,--red} , msg_send_complete()
 
 msg_send_complete() {
 	if (stage==arg) { if (arg_pos==1) get_my_nyms();    if (arg_pos==2) get_your_nyms(); }
@@ -393,7 +393,7 @@ msg_send_complete() {
 			if (--now) delete --later;
 			if (uniq) delete this_option;
 		} // existing options eliminate possibilities
-		if (half_world) finish_option( remaining_options ); 
+		if (half_world) finish_option( remaining_options );
 		else show_other_options();
 	}
 }
@@ -402,7 +402,7 @@ msg_send_complete() {
 
 /*
 class argument_info {
-	// klasa mowi jaki to argument  np ze to argument  "mynym" i ze ma byc stringiem albo ze ma byc integerem albo ze to tylko boolean 
+	// klasa mowi jaki to argument  np ze to argument  "mynym" i ze ma byc stringiem albo ze ma byc integerem albo ze to tylko boolean
 	// oraz dostarcza klasa !!! do auto complete jakas
 	
 	string mName; // "mynym" "hisnym" (nawet te argumenty, ktore maja okreslona kolejnosc wiec niby nie maja nazwy, beda jak mialy dla jasnosci i np generowania tekstu help"
@@ -413,7 +413,7 @@ class argument_info {
 */
 
 /*
-typedef string argument_data ; // na razie...  
+typedef string argument_data ; // na razie...
 
 class cCmdoptions {
 
@@ -521,7 +521,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	
 	else if (namepart.at(0)=="nym") {
 
-	} // nym 
+	} // nym
 
 	else {
 	}
@@ -586,8 +586,8 @@ bool testcase_complete_1() {
 		,{ "msg", { "msg", "msguard" } }
 		,{ "msg ", { "send", "ls", "mv", "rm" } }
 		,{ "msg s", { "send" } }
-		,{ "msg se", { "send" } } 
-		,{ "msg sen", { "send" } } 
+		,{ "msg se", { "send" } }
+		,{ "msg sen", { "send" } }
 		,{ "msg send", { "send" } }
 		,{ "msg send ", { "mynym1", "mynym2" } }
 		,{ "msg send m", { "mynym1", "mynym2" } }
@@ -666,7 +666,7 @@ bool testcase_complete_1() {
 		,{ "nym rm" , { "rm"} }
 	};
 
-	nOT::nOTHint::cHint hint; 
+	nOT::nOTHint::cHint hint;
 	vector<string> out = hint.AutoComplete("ms");
 	nOT::nUtil::DisplayVector(out);
 	bool ok = 1;
@@ -689,7 +689,7 @@ bool testcase_namespace_pollution() {
 	}
 	#endif
 	{
-		using std::string; 
+		using std::string;
 		string s; // <-- must work
 	}
 
@@ -713,5 +713,3 @@ bool testcase_cxx11_memory() {
 
 } // nTest
 } // nOT
-
-
