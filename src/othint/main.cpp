@@ -303,16 +303,33 @@ using nOT::nUtil::ToStr;
 [Description_of_auto_completion]
 
 Commands are in form:
-topic, action, [--subaction] var1 var2 ... [argN1] [argN2] [--optionNameN[=][optionArgN]]
-<- cCmdname ---------------> <-------------------- arguments --------------------------->
-<- cCmdname ---------------> <-- var ----> <-- extra var --> <-- option ---------------->
-<- mandatory-----------------------------> <--- optional ------------------------------->
 
-2..3 words of command name, 0..N mandatory variables, 0..N extra variables, any options
+ot [front1,front2...] topic action [--subact] var1,...  [varM,...] [--optNameN[=[optArgN]]...]
+ot <-front options--> <- cCmdname ----------> <---- arguments ------------------------------->
+ot                    <- cCmdname ----------> <---- vars -----> <-- options ----------------->
+ot <--- optional ---> <- mandatory-------------------> <--- optional ------------------------>
+Examples:
+ot                    msg   send              bob alice            --attach scan.jpeg
+ot                    msg   send              bob alice carol      --attach scan.jpeg
+ot                    msg   send              bob alice carol      -v -v -v 
+ot  --hint-private    msg   send              bob alice carol      -v -v -v 
+ot  --hint-cached     msg   send              bob alice carol      -v -v -v 
+ot  --hint-cached     msg   help
+Examples of SYNTAX ERRORS:
+ot                    msg                     bob  # missing subcommand
+ot                    msg   send              bob  # requires at least 2 arguments
+ot                    msg   send              bob  alice           --date=now --date=0 # date is unique
+ot                    msg   send              bob  --hint-cached # forward command must be in font
+
+Therefore the syntax is:
+[front-options] 2..3 words of command name, 0..N mandatory variables, 0..N extra variables, any options
 
 	- subaction will be probably not used but leaving such possibility to be flexible	
 	
 ARGUMENTS:
+	- front-options are speciall options that must appear in front because they change meaning/parsing
+		of everything next - particullary, auto-completion options. Read section [front-options] for details
+
 	- Arguments available depend on the command name.
 
 	- Options for command depend on the command name, as well are imported from global.
@@ -353,6 +370,27 @@ nym rm <nymID>
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
+
+[front-options] planned:
+	--hint-remote=V set's the privacy to level 0..9. 0=never ask remote severs for data needed for 
+	this autocompletion, 9 freely ask (less secure, because remote server see that we compose a command).
+
+	--hint-cached=V set's the usage of cached data. 0=revalidate now all data from server. 
+	8=only cached unless we have no choice, 9=only cached data even if it causes an error (data unknown)
+
+--hint-remote=0 implies --hint-cached=9 as we are not allowed to touch remote server at all
+--hint-cached=0 implied --hints-remote=0 as we are ordering to touch remote server so we are not working in private mode
+
+--hint-remote=0 --hint-cached=0 is disallowed syntax, 
+even though some commands that indeed do not need neither cached nor remote data could work, 
+like "ot --hint-remote=0 --hint-cached=0 msg help" 
+or "ot --hint-remote=0 --hint-cached=0 msg draft"
+but for clarity it will be an error because likelly someone confused the options.
+But then, --hint-allow-strange option will allow such syntax, if it appears in front of option causing this
+contradiction.
+E.g. this is allowed syntax:
+ot --hint-allow-strange --hint-remote=0 --hint-cached=0 msg draft
+
 */
 
 
