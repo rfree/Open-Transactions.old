@@ -11,7 +11,7 @@
  * 	any warranty. 
  * 
  * 	You should have received a copy of the CC0 legalcode along with this
- * 	work. If not, see: 
+ * 	work (COPYING file). If not, see: 
  * 	http://creativecommons.org/publicdomain/zero/1.0/
  * 
  * 	OTNewcli is developed as a part of OPEN TRANSACTIONS project
@@ -29,9 +29,10 @@
  * 	We also allow this code to be released to Public Domain, but again, 
  * 	we do not verify how is that possible in given law system. We take 
  * 	absolutely no legal responsibility about licensing this code (nor 
- * 	patent nor copyright nor any other law related issues). We are not 
- * 	lawyers, and it is up to You to find out what laws apply for your 
- * 	case. Do not use any of this code if you don't agree.
+ * 	patent nor copyright nor any other law related issues) e.g. in your 
+ * 	country. We are not lawyers, and it is up to You to find out what 
+ * 	laws apply for your case. Do not use any of this code if you don't 
+ * 	agree.
  *
  * 	PROJECT GIT REPOSITORY:
  * 	https://github.com/rfree/Open-Transactions/
