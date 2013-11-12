@@ -483,17 +483,112 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	auto namepart = sofar; // exactly 3 elements, with "" for missing elements
 	// TODO split - limit to 3 on copy ^
 	//while (namepart.size()<3) namepart.push_back("");
-	vector<string> firstLevel{"msg", "msguard", "nym"};
+	
+map<string , vector<string> > const cases {
+		 { "m", { "msg", "msguard" } }
+		,{ "ms", { "msg", "msguard" } }
+		,{ "msg", { "msg", "msguard" } }
+		,{ "msg ", { "send", "ls", "mv", "rm" } }
+		,{ "msg s", { "send" } }
+		,{ "msg se", { "send" } }
+		,{ "msg sen", { "send" } }
+		,{ "msg send", { "send" } }
+		,{ "msg send ", { "mynym1", "mynym2" } }
+		,{ "msg send m", { "mynym1", "mynym2" } }
+		,{ "msg send my", { "mynym1", "mynym2" } }
+		,{ "msg send myn", { "mynym1", "mynym2" } }
+		,{ "msg send myny", { "mynym1", "mynym2" } }
+		,{ "msg send mynym", { "mynym1", "mynym2" } }
+		,{ "msg send mynym1", { "mynym1" } }
+		,{ "msg send mynym1 ", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 h", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hi", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 his", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisn", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisny", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisnym", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisnym1", { "hisnym1" } }
+		,{ "msg send mynym1 hisnym2", { "hisnym2" } }
+		,{ "msg send mynym2", { "mynym2" } }
+		,{ "msg send mynym2 ", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 h", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hi", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 his", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisn", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisny", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisnym", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisnym1", { "hisnym1" } }
+		,{ "msg send mynym2 hisnym2", { "hisnym2" } }
+		,{ "msg l", { "ls" } }
+		,{ "msg ls", { "ls" } }
+		,{ "msg m", { "mv" } }
+		,{ "msg mv", { "mv" } }
+		,{ "msg mv ", { "msgid1", "msgid2" } }
+		,{ "msg mv m", { "msgid1", "msgid2" } }
+		,{ "msg mv ms", { "msgid1", "msgid2" } }
+		,{ "msg mv msg", { "msgid1", "msgid2" } }
+		,{ "msg mv msgi", { "msgid1", "msgid2" } }
+		,{ "msg mv msgid", { "msgid1", "msgid2" } }
+		,{ "msg mv msgid1", { "msgid1" } }
+		,{ "msg mv msgid2", { "msgid2" } }
+		,{ "msg r", { "rm" } }
+		,{ "msg rm", { "rm" } }
+		,{ "msg rm ", { "msgid1", "msgid2" } }
+		,{ "msg rm m", { "msgid1", "msgid2" } }
+		,{ "msg rm ms", { "msgid1", "msgid2" } }
+		,{ "msg rm msg", { "msgid1", "msgid2" } }
+		,{ "msg rm msgi", { "msgid1", "msgid2" } }
+		,{ "msg rm msgid", { "msgid1", "msgid2" } }
+		,{ "msg rm msgid1", { "msgid1" } }
+		,{ "msg rm msgid2", { "msgid2" } }
+		,{ "msgu", { "msguard" } }
+		,{ "msgua", { "msguard" } }
+		,{ "msguar", { "msguard" } }
+		,{ "msguard", { "msguard" } }
+		,{ "msguard ", { "info", "start", "stop" } }
+		,{ "msguard i", { "info" } }
+		,{ "msguard in", { "info" } }
+		,{ "msguard inf", { "info" } }
+		,{ "msguard info", { "info" } }
+		,{ "msguard s", { "start", "stop" } }
+		,{ "msguard st", { "start", "stop" } }
+		,{ "msguard sta", { "start" } }
+		,{ "msguard star", { "start" } }
+		,{ "msguard start", { "start" } }
+		,{ "msguard sto", { "stop" } }
+		,{ "msguard stop", { "stop" } }
+		,{ "n" , { "nym"} }
+		,{ "ny" , { "nym"} }
+		,{ "nym" , { "nym"} }
+		,{ "nym " , { "ls", "new" , "rm"} }
+		,{ "nym l" , { "ls" } }
+		,{ "nym ls" , { "ls" } }
+		,{ "nym n" , { "new" } }
+		,{ "nym ne" , { "new" } }
+		,{ "nym new" , { "new" } }
+		,{ "nym r" , { "rm"} }
+		,{ "nym rm" , { "rm"} }
+	};
+	//vector<string> firstLevel{"msg", "msguard", "nym"};
 	vector<string> possibleCommands;
-	if (namepart.size()==1){
-		bool match;
-		for(std::vector<string>::iterator it = firstLevel.begin(); it != firstLevel.end(); ++it) {
-			match = CheckIfBegins(namepart.at(0), *it);
-			if (match){
-				possibleCommands.push_back(*it);
+	//if (namepart.size()==1 && sofar_str.back() != " "){
+		//bool match;
+		//for(std::vector<string>::iterator it = firstLevel.begin(); it != firstLevel.end(); ++it) {
+			//match = CheckIfBegins(namepart.at(0), *it);
+			//if (match){
+				//possibleCommands.push_back(*it);
+			//}
+		//}
+	//}else{
+		//bool match;
+		std::map<string, vector<string> >::const_iterator it;
+		for(it = cases.begin(); it != cases.end(); ++it) {
+			if(sofar_str == it->first){
+				possibleCommands = it->second;
+				break;
 			}
 		}
-	}
+	//}
 	
 	return possibleCommands;
 	
@@ -667,8 +762,18 @@ bool testcase_complete_1() {
 	};
 
 	nOT::nOTHint::cHint hint;
-	vector<string> out = hint.AutoComplete("ms");
-	nOT::nUtil::DisplayVector(out);
+	string line;
+	while(1){
+		cout << "Command:" << endl;
+		getline(cin, line);
+		if (line == "q")
+			break;
+		vector<string> out = hint.AutoComplete(line);
+		nOT::nUtil::DisplayVector(out);
+		cout << endl;
+	}
+	
+	
 	bool ok = 1;
 
 	return ok;
