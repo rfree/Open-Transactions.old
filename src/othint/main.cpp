@@ -654,6 +654,8 @@ bool testcase_namespace_pollution();
 bool testcase_cxx11_memory();
 bool testcase_complete_1(char sofar[]);
 
+bool testcase_run_all_tests();
+
 } // nTests
 } // nOT
 
@@ -661,9 +663,9 @@ bool testcase_complete_1(char sofar[]);
 
 // ====================================================================
 int main(int argc, char* argv[]) {
+	nOT::nTests::testcase_run_all_tests();
+
 	nOT::nTests::testcase_complete_1(argv[1]);
-	nOT::nTests::testcase_namespace_pollution();
-	nOT::nTests::testcase_cxx11_memory();
 
 	// return 42; // nope. in C++, the exit code returns YOU
 }
@@ -815,6 +817,8 @@ bool testcase_cxx11_memory() {
 	using namespace nOT::nNewcli;
 	using namespace nOT::nOTHint;
 
+	// TODO capture output and verify expected output
+
 	struct cObj {
 			cObj() { /*cout<<"new"<<endl;*/ }
 			~cObj() { /*cout<<"delete"<<endl;*/ }
@@ -825,6 +829,15 @@ bool testcase_cxx11_memory() {
 	return true;
 }
 
+bool testcase_run_all_tests() {
+	// TODO vector function
+	long long int number_errors=0; // long :o
+	testcase_namespace_pollution();
+	testcase_cxx11_memory();
+	// testcase_complete_1(); // quiet.
+	
+	return true;
+}
 
 } // nTest
 } // nOT
