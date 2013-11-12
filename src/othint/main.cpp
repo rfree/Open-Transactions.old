@@ -27,6 +27,8 @@ Coding rules:
 - document all conventions, all code; Entire WG (working group) must know all of them
 - flexible - easy to tune, to extend, in object-oriented way
 
+File format of sources: identation with \t char, which we assume is 2 spaces wide. Unicode, UTF-8.
+
 */
 
 #include <string>
@@ -63,20 +65,20 @@ using nOT::nUtil::ToStr;
 namespace nExamplesOfConvention { 
 // Welcome, to the world of C++11 !
 
-int g_globalVariable; // g_ - global variable
+int gGlobalVariable; // g - global variable
 
 class cFooBar {
 private:
-	static int s_staticVariable; // s_ - static variable
+	static int sStaticVariable; // s - static variable
 	
-	int m_fooBarBaz; // m_ - variable, member of class
+	int mFooBarBaz; // m - variable, member of class
 
 	int Fooberize();
 	int DerpTheHerp();
 	
 public:
 	cFooBar(int x) 
-	: m_fooBarBaz(x)
+	: mFooBarBaz(x)
 	{}
 	
 	inline int Foo() {
@@ -84,10 +86,10 @@ public:
 		return abc;
 	}
 };
-int cFooBar::s_staticVariable = 0;
+int cFooBar::sStaticVariable = 0;
 
-// In case of simple parameters, we can skip "m_" prefix. In this case:
-struct cSimpleParam{
+// In case of simple parameters, we can skip "m" prefix. In this case:
+struct cSimpleParam {
 	int x;
 	int y;
 	
