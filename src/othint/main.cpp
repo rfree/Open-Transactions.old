@@ -569,7 +569,7 @@ map<string , vector<string> > const cases {
 		,{ "nym r" , { "rm"} }
 		,{ "nym rm" , { "rm"} }
 	};
-	//vector<string> firstLevel{"msg", "msguard", "nym"};
+	vector<string> firstLevel{"msg", "msguard", "nym"};
 	vector<string> possibleCommands;
 	//if (namepart.size()==1 && sofar_str.back() != " "){
 		//bool match;
@@ -581,11 +581,16 @@ map<string , vector<string> > const cases {
 		//}
 	//}else{
 		//bool match;
-		std::map<string, vector<string> >::const_iterator it;
-		for(it = cases.begin(); it != cases.end(); ++it) {
-			if(sofar_str == it->first){
-				possibleCommands = it->second;
-				break;
+		if (sofar_str == ""){
+			possibleCommands = firstLevel;
+		}
+		else{
+			std::map<string, vector<string> >::const_iterator it;
+			for(it = cases.begin(); it != cases.end(); ++it) {
+				if(sofar_str == it->first){
+					possibleCommands = it->second;
+					break;
+				}
 			}
 		}
 	//}
@@ -647,7 +652,7 @@ OT_COMMON_USING_NAMESPACE;
 
 bool testcase_namespace_pollution();
 bool testcase_cxx11_memory();
-bool testcase_complete_1();
+bool testcase_complete_1(char sofar[]);
 
 } // nTests
 } // nOT
@@ -655,8 +660,8 @@ bool testcase_complete_1();
 
 
 // ====================================================================
-int main() {
-	nOT::nTests::testcase_complete_1();
+int main(int argc, char* argv[]) {
+	nOT::nTests::testcase_complete_1(argv[1]);
 	nOT::nTests::testcase_namespace_pollution();
 	nOT::nTests::testcase_cxx11_memory();
 
@@ -674,7 +679,7 @@ namespace nTests {
 
 OT_COMMON_USING_NAMESPACE; // <========= NAMESPACE inclusion
 
-bool testcase_complete_1() {
+bool testcase_complete_1(char sofar[]) {
 	map<string , vector<string> > const cases {
 		 { "m", { "msg", "msguard" } }
 		,{ "ms", { "msg", "msguard" } }
@@ -762,16 +767,21 @@ bool testcase_complete_1() {
 	};
 
 	nOT::nOTHint::cHint hint;
-	string line;
+
+	string line(sofar);
+	line.erase (0,3); // need to erase 'ot' word from intput string
+	/*
 	while(1){
 		cout << "Command:" << endl;
 		getline(cin, line);
 		if (line == "q")
 			break;
-		vector<string> out = hint.AutoComplete(line);
-		nOT::nUtil::DisplayVector(out);
+
 		cout << endl;
 	}
+	*/
+	vector<string> out = hint.AutoComplete(line);
+	nOT::nUtil::DisplayVector(out);
 	
 	
 	bool ok = 1;
