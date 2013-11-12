@@ -267,7 +267,15 @@ void DisplayVector(const std::vector<T> &v)
 	std::copy(v.begin(), v.end(),
     std::ostream_iterator<T>(std::cout, " "));
 }
-
+/*
+bool CheckIfBegins(std::string beggining, std::string all){
+	if (all.compare(0, beggining.length(), beggining) == 0){
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}*/
 }
 }
 
