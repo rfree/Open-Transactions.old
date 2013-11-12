@@ -266,9 +266,9 @@ template <class T>
 void DisplayVector(const std::vector<T> &v)
 {
 	std::copy(v.begin(), v.end(),
-    std::ostream_iterator<T>(std::cout, " "));
+		std::ostream_iterator<T>(std::cout, " "));
 }
-/*
+
 bool CheckIfBegins(std::string beggining, std::string all){
 	if (all.compare(0, beggining.length(), beggining) == 0){
 		return 1;
@@ -276,9 +276,9 @@ bool CheckIfBegins(std::string beggining, std::string all){
 	else{
 		return 0;
 	}
-}*/
 }
-}
+} // nUtil
+} // nOT
 
 // ====================================================================
 
@@ -321,7 +321,7 @@ ARGUMENTS:
 
 	- Options can be unique or can repeat. Options can have no value/data,
 		or can have one.This gives 2*2 = 4 kinds of options: uniq, uniqData, 
-		repeat, repeatData 
+		repeat, repeatData.
 		
 	- Options can be both global and comming from selected action/subaction.
 
@@ -457,6 +457,7 @@ using std::cout;
 using std::endl;
 using nOT::nUtil::ToStr;
 using nOT::nUtil::DisplayVector;
+using nOT::nUtil::CheckIfBegins;
 class cHint {
 	public:
 
@@ -478,12 +479,24 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option?
 	
 	// std::copy( sofar.begin() , sofar.end() ,  std::ostream_iterator<string>(std::cout, ", ") ); // copy vector to cout with ", " between elements
-	// with bash "ot" will be first element of cmdline so starting from 2 word
-	// vector<string> namepart(sofar.begin() + 1, sofar.end());
+
 	auto namepart = sofar; // exactly 3 elements, with "" for missing elements
 	// TODO split - limit to 3 on copy ^
 	//while (namepart.size()<3) namepart.push_back("");
-
+	vector<string> firstLevel{"msg", "msguard", "nym"};
+	vector<string> possibleCommands;
+	if (namepart.size()==1){
+		bool match;
+		for(std::vector<string>::iterator it = firstLevel.begin(); it != firstLevel.end(); ++it) {
+			match = CheckIfBegins(namepart.at(0), *it);
+			if (match){
+				possibleCommands.push_back(*it);
+			}
+		}
+	}
+	
+	return possibleCommands;
+	
 	if (namepart.at(0)=="msg") {
 
 		if (namepart.size()==1) {
@@ -550,7 +563,7 @@ bool testcase_complete_1();
 int main() {
 	nOT::nTests::testcase_complete_1();
 	nOT::nTests::testcase_namespace_pollution();
-	//nOT::nTests::testcase_cxx11_memory();
+	nOT::nTests::testcase_cxx11_memory();
 
 	// return 42; // nope. in C++, the exit code returns YOU
 }
@@ -576,16 +589,54 @@ bool testcase_complete_1() {
 		,{ "msg se", { "send" } } 
 		,{ "msg sen", { "send" } } 
 		,{ "msg send", { "send" } }
-		,{ "msg send ", { "mynym", "hisnym" } }
+		,{ "msg send ", { "mynym1", "mynym2" } }
+		,{ "msg send m", { "mynym1", "mynym2" } }
+		,{ "msg send my", { "mynym1", "mynym2" } }
+		,{ "msg send myn", { "mynym1", "mynym2" } }
+		,{ "msg send myny", { "mynym1", "mynym2" } }
+		,{ "msg send mynym", { "mynym1", "mynym2" } }
+		,{ "msg send mynym1", { "mynym1" } }
+		,{ "msg send mynym1 ", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 h", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hi", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 his", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisn", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisny", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisnym", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym1 hisnym1", { "hisnym1" } }
+		,{ "msg send mynym1 hisnym2", { "hisnym2" } }
+		,{ "msg send mynym2", { "mynym2" } }
+		,{ "msg send mynym2 ", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 h", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hi", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 his", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisn", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisny", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisnym", { "hisnym1", "hisnym2" } }
+		,{ "msg send mynym2 hisnym1", { "hisnym1" } }
+		,{ "msg send mynym2 hisnym2", { "hisnym2" } }
 		,{ "msg l", { "ls" } }
 		,{ "msg ls", { "ls" } }
-		,{ "msg ls ", { "?" } }
 		,{ "msg m", { "mv" } }
 		,{ "msg mv", { "mv" } }
-		,{ "msg mv ", { "?" } }
+		,{ "msg mv ", { "msgid1", "msgid2" } }
+		,{ "msg mv m", { "msgid1", "msgid2" } }
+		,{ "msg mv ms", { "msgid1", "msgid2" } }
+		,{ "msg mv msg", { "msgid1", "msgid2" } }
+		,{ "msg mv msgi", { "msgid1", "msgid2" } }
+		,{ "msg mv msgid", { "msgid1", "msgid2" } }
+		,{ "msg mv msgid1", { "msgid1" } }
+		,{ "msg mv msgid2", { "msgid2" } }
 		,{ "msg r", { "rm" } }
 		,{ "msg rm", { "rm" } }
-		,{ "msg rm ", { "?" } }
+		,{ "msg rm ", { "msgid1", "msgid2" } }
+		,{ "msg rm m", { "msgid1", "msgid2" } }
+		,{ "msg rm ms", { "msgid1", "msgid2" } }
+		,{ "msg rm msg", { "msgid1", "msgid2" } }
+		,{ "msg rm msgi", { "msgid1", "msgid2" } }
+		,{ "msg rm msgid", { "msgid1", "msgid2" } }
+		,{ "msg rm msgid1", { "msgid1" } }
+		,{ "msg rm msgid2", { "msgid2" } }
 		,{ "msgu", { "msguard" } }
 		,{ "msgua", { "msguard" } }
 		,{ "msguar", { "msguard" } }
@@ -616,7 +667,7 @@ bool testcase_complete_1() {
 	};
 
 	nOT::nOTHint::cHint hint; 
-	vector<string> out = hint.AutoComplete("msguard");
+	vector<string> out = hint.AutoComplete("ms");
 	nOT::nUtil::DisplayVector(out);
 	bool ok = 1;
 
@@ -650,8 +701,8 @@ bool testcase_cxx11_memory() {
 	using namespace nOT::nOTHint;
 
 	struct cObj {
-			cObj() {  cout<<"new"<<endl; }
-			~cObj() { cout<<"delete"<<endl; }
+			cObj() { /*cout<<"new"<<endl;*/ }
+			~cObj() { /*cout<<"delete"<<endl;*/ }
 	};
 
 	unique_ptr<cObj> A( new cObj );
