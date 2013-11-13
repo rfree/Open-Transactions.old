@@ -302,29 +302,68 @@ using nOT::nUtil::ToStr;
 
 [Description_of_auto_completion]
 
-Commands are in form:
+=== Introduction ===
+
+First an advance example of magic of OT hints:
+  ot msg send bob al<TAB> 
+will auto-complete options:
+  alice alex alcapone
+In this situatin, bash autocomplete with othint program
+will query the OT server to list your contacts named al...
+
+With respecting your privacy, trying to use remote server only if
+data was not cached, and only asking servers that you trust (the --HT option)
+that is the default. Start with "ot --H0" to make sure there will be 0 network 
+activity, no servers will be asked:
+  ot --H0 msg send bob a<TAB>
+will auto-complete with data that can be given without causing network traffic.
+
+ot_secure: 
+If it's more convinient, we might provide separate command: "ot_net", "ot_secure"
+with other level of discretion in the hinting process as well with say more
+confirmations when also EXECUTING a command that will connect to OT server.
+  ot_quiet mint spawn bob silve<TAB>
+	1. will NOT ask any server about the list of currenies silve... will use cache
+		silvergrams silvertest silverbob {showing only cached data, last update 3h ago}
+	2. when the command is finished and executed as 
+	  ot_quiet mint spawn bob silvergrams 1000<ENTER>
+	it will ask: "Please confirm do you want to NOW connect to OT server aliased BigTest1, 
+	with ID=855gusd2dffj2d9uisdfokj233 (unknown/new server), and execute 
+	mint-spawn command? Type 2 words: 'unknown spawn' to confirm, or 'no'"
+
+Also name alice is in front (instead alphabet sorting) since it was recentyl/frequently used.
+
+All OT commands will be neatly supported in this way. 
+
+
+=== Commands are in form ===
 
 ot [front1,front2...] topic action [--subact] var1,...  [varM,...] [--optNameN[=[optArgN]]...]
+
 ot <-front options--> <- cCmdname ----------> <---- arguments ------------------------------->
 ot                    <- cCmdname ----------> <---- vars -----> <-- options ----------------->
 ot <--- optional ---> <- mandatory-------------------> <--- optional ------------------------>
+
 Examples:
+ot  --H0              msg   send              bob a
 ot                    msg   send              bob alice            --attach scan.jpeg
 ot                    msg   send              bob alice carol      --attach scan.jpeg
 ot                    msg   send              bob alice carol      -v -v -v 
 ot  --hint-private    msg   send              bob alice carol      -v -v -v 
 ot  --hint-cached     msg   send              bob alice carol      -v -v -v 
 ot  --hint-cached     msg   help
+
 Examples of SYNTAX ERRORS:
-ot                    msg                     bob  # missing subcommand
-ot                    msg   send              bob  # requires at least 2 arguments
+ot                    msg                     bob  alice # missing subcommand
+ot                    msg   send              bob  # requires at least 2 arguments(*)
 ot                    msg   send              bob  alice           --date=now --date=0 # date is unique
-ot                    msg   send              bob  --hint-cached # forward command must be in font
+ot                    msg   send              bob  --hint-cachead=0 # forward command must be in font
+(*) possibly such errors will instead allow execution and have the program interactivly ask for missing mandatory vars.
 
 Therefore the syntax is:
-[front-options] 2..3 words of command name, 0..N mandatory variables, 0..N extra variables, any options
+[front-options] 2 words of command name, 0..N mandatory variables, 0..M extra variables, any options
 
-	- subaction will be probably not used but leaving such possibility to be flexible	
+	- subaction will be probably not used but leaving such possibility, then it would be 2..3 words
 	
 ARGUMENTS:
 	- front-options are speciall options that must appear in front because they change meaning/parsing
@@ -371,12 +410,24 @@ msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows
 msguard start
 msguard stop
 
-[front-options] planned:
+[front-options] usage is for example:
+If you type -HN in front of options, then Hints will use Network (-HN) to autocomplete, typing
+ot -HN msg send myuser1 bo<TAB> will e.g. ask OT server(s) (e.g. over internet) about you address book
+ot -HT msg send myuser1 bo<TAB> the same but for Trusted servers only (will not accidentially talk to other servers)
+ot -HS as well as -H0 .... will make sure you will not ask OT servers, just use data cached
+
+The exact planned options are 2 settings: accessing remote and accessing cache.
 	--hint-remote=V set's the privacy to level 0..9. 0=never ask remote severs for data needed for 
 	this autocompletion, 9 freely ask (less secure, because remote server see that we compose a command).
+	1=local server (e.g. localhost that was marked as trusted)
+	3=trusted servers (e.g. several servers you configure as trusted)
+	5=uses network (all servers) but might avoid some really sensive data
+	9=you fully ask the server owners and consent to possiblity of them (or their ISP, hosting) learning
+	what you are planning to do
 
 	--hint-cached=V set's the usage of cached data. 0=revalidate now all data from server. 
-	8=only cached unless we have no choice, 9=only cached data even if it causes an error (data unknown)
+	5=normal reasonable use of cache
+	8=only cached data, unless we have no choice, 9=only cached data even if it causes an error
 
 --hint-remote=0 implies --hint-cached=9 as we are not allowed to touch remote server at all
 --hint-cached=0 implied --hints-remote=0 as we are ordering to touch remote server so we are not working in private mode
@@ -390,6 +441,37 @@ But then, --hint-allow-strange option will allow such syntax, if it appears in f
 contradiction.
 E.g. this is allowed syntax:
 ot --hint-allow-strange --hint-remote=0 --hint-cached=0 msg draft
+
+Shortcuts:
+--HO gives hints offline          equals --hint-remote=0 --hint-cached=9
+--HL gives hints local            equals --hint-remote=1 --hint-cached=5
+--HT gives hints trusted          equals --hint-remote=3 --hint-cached=5
+
+--HV gives VPNed network          equals --vpn-all-net --hint-remote=9 --hint-cached=5
+--HVR is forced VPNed reload      equals --vpn-all-net --hint-remote=9 --hint-cached=0
+
+--HNet gives hints from netwok    equals --hint-remote=5 --hint-cached=5
+--HNetReload is forced net reload equals --hint-remote=9 --hint-cached=0
+
+VPN:
+option --vpn-all-net will force hint autocompletion (and also the actuall commands, unless later
+canceled with other options) to use only VPN or similar secure networking. Details will be 
+configured, it could be e.g. a VPN network, or possibly other secured (private) network facility.
+It is guarnateed that if such secure network fails to work, then no network will be touched
+and program will not leak any activity to open network (LAN, Internet, etc)
+--HV might be most comfortable and yet quite secure option, usable e.g. from hotels.
+
+VPN forced: 
+Global configuration option could force to always use VPN (append --vpn-all-net)
+then use "ot --HNet" will not auto-complete on <TAB> but show:
+  {can not use --HNet because your configuration disabled it, please try --HV}
+and if executed as full command, will also refuse to work, with explanation.
+
+Please remember that VPNs or even more advanced solutions are not that secure, and that
+ot hint sends anyway lots of data of intended action, with timing correlation, to the OT server
+in -HV, -HVR case.
+VPN only hides your IP a bit.
+Full caching with -H0 or -HL is most secure, there is no home like localhost :)
 
 */
 
