@@ -201,7 +201,7 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 
 // list of thigs from libraries that we pull into namespace nOT::nNewcli
 // we might still need to copy/paste it in few places to make IDEs pick it up correctly
-#define OT_COMMON_USING_NAMESPACE \
+#define OT_COMMON_USING_NAMESPACE_1 \
 using std::string; \
 using std::vector; \
 using std::list; \
@@ -213,7 +213,10 @@ using std::cerr; \
 using std::cout; \
 using std::cerr; \
 using std::endl; \
-using nOT::nUtil::ToStr;
+
+#define OT_COMMON_USING_NAMESPACE \
+	OT_COMMON_USING_NAMESPACE_1 \
+	using nOT::nUtil::ToStr;
 
 // Please read and follow this syntax examples:
 namespace nExamplesOfConvention {
@@ -270,6 +273,8 @@ std::string GetObjectName() {	return GetObjectName_global_string; }
 namespace nOT {
 namespace nUtil {
 
+OT_COMMON_USING_NAMESPACE_1;
+
 template <class T>
 std::string ToStr(const T & obj) {
 	std::ostringstream oss;
@@ -288,7 +293,7 @@ void DisplayVectorEndl(const std::vector<T> &v, const std::string &delim=" ") {
 	std::cerr << std::endl;
 }
 
-bool CheckIfBegins(std::string beggining, std::string all) {
+bool CheckIfBegins(const std::string & beggining, const std::string & all) {
 	if (all.compare(0, beggining.length(), beggining) == 0) {
 		return 1;
 	}
@@ -296,6 +301,55 @@ bool CheckIfBegins(std::string beggining, std::string all) {
 		return 0;
 	}
 }
+
+vector<string> WordsThatMatch(const std::string & sofar, const vector<string> & possib) {
+	vector<string> ret;
+	for ( auto rec : possib) { // check of possibilities
+		if (CheckIfBegins(sofar,rec)) ret.push_back(rec); // this record matches
+	}
+	return ret;
+}
+
+char GetLastChar(const std::string & str) { // TODO unicode?
+	auto s = str.length();
+	if (s==0) throw std::runtime_error("Getting last character of empty string (" + ToStr(s) + ")" + OT_CODE_STAMP);
+	return str.at( s - 1);
+}
+
+std::string GetLastCharIf(const std::string & str) { // TODO unicode?
+	auto s = str.length();
+	if (s==0) return ""; // empty string signalizes ther is nothing to be returned
+	return std::string( 1 , str.at( s - 1) );
+}
+
+// ASRT - assert. Name like ASSERT() was too long, and ASS() was just... no.
+// Use it like this: ASRT( x>y );  with the semicolon at end, a clever trick forces this syntax :)
+#define ASRT(x) do { if (!(x)) Assert(false, OT_CODE_STAMP); } while(0)
+
+void Assert(bool result, const std::string &stamp) {
+	if (!result) throw std::runtime_error("Assert failed at "+stamp);
+}
+
+namespace nOper { // nOT::nUtil::nOper
+// cool shortcut operators, like vector + vecotr operator working same as string (appending)
+// isolated to namespace because it's unorthodox ide to implement this 
+
+using namespace std;
+
+// TODO use && and move?
+template <class T>
+vector<T> operator+(const vector<T> &a, const vector<T> &b) {
+	vector<T> ret = a;
+	ret.insert( ret.end() , b.begin(), b.end() );
+	return ret;
+}
+
+template <class T>
+vector<T> & operator+=(vector<T> &a, const vector<T> &b) {
+	return a.insert( a.end() , b.begin(), b.end() );
+}
+
+} // nOT::nUtil::nOper
 
 } // nUtil
 } // nOT
@@ -584,7 +638,7 @@ class cCmdlineInfo {
 namespace nOT {
 namespace nTests {
 
-OT_COMMON_USING_NAMESPACE;
+OT_COMMON_USING_NAMESPACE
 
 using namespace nOT::nUtil;
 
@@ -614,6 +668,7 @@ using std::cout;
 using std::endl;
 
 using namespace nOT::nUtil;
+using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operators. It's appen, as in strings! :)
 
 class cHint {
 	public:
@@ -636,22 +691,42 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
 	
+	if (GetLastCharIf(sofar_str)==" ") {
+		ASRT( sofar.size()>=1 );
+		sofar.at( sofar.size()-1 )+=" "; // append the last space - to the last word so that we know it was ended
+	}
+	
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) namepart( sofar.begin(), sofar.end() ); 
 	while (namepart.size()<2) namepart.push_back("");
 	if (dbg) DisplayVectorEndl(namepart,",");
 
 	const vector<string> forward_options = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
+	const vector<string> all_topics = {"msg","msguard","nym"};
 
 	const string topic  = namepart.at(0);
 	const string action = namepart.at(1);
 
+	int full_words=0;
+	int started_words=0;
+
+	bool last_word_pending=false;
+	size_t nr=0;
+	for (auto rec : sofar) {
+		if (rec!="") started_words++;
+		if (last_word_pending) { full_words++; last_word_pending=0; }
+		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it 
+		// still as finished word if there is a word after this one
+		++nr;
+	}
+	string current_word="";
+	if (full_words < started_words) current_word = sofar.at(full_words);
+	if (dbg) cerr << "full_words=" << full_words << " started_words="<<started_words << " current_word="<<current_word << endl;
+
 	// * possib variable - short for "possibilities"
 
-	if (topic=="") { // nothing - show all level 1 cmdnames
-		vector<string> possib{"msg","msguard","nym"};
-		possib.insert(possib.end(), forward_options.begin(), forward_options.end());
-		return possib;
+	if (full_words<1) { // nothing - show all level 1 cmdnames
+		return WordsThatMatch(  current_word  ,  vector<string>{"msg","msguard","nym"} + forward_options  ) ;
 	}
 
 	if (namepart.at(0)=="msg") {
@@ -694,7 +769,8 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			return v;
 		}
 		*/
-	throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
+	return vector<string>(1,"empty");
+	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
 
 
