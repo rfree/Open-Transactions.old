@@ -1,9 +1,10 @@
 /************************************************************
  *
  *  OTNewcli  -- Open Transactions new command line interface
+ *  (including parts like othint, some util libs, and more)
  *
  * 	Written in 2013 by rfree (rfree@gmx.us) and other members of
- * 	open-source community
+ * 	open-source community.
  *
  * 	To the extent possible under law, the author(s) have dedicated all
  * 	copyright and related and neighboring rights to this software to
@@ -17,20 +18,24 @@
  * 	OTNewcli is developed as a part of OPEN TRANSACTIONS project
  *
  * 	Where applicable (under given jurisdiction's law system),
- * 	we want to give away our code as CC0 (Creative Commons 0)
- * 	as detailed below, however, some parts of code might be not fully
- * 	ours to licence/decide (from point of view of given law system),
- * 	because they are connecting to other work. In such cases,
- * 	the general Open Transaction licence as published by
- * 	FellowTraveller on GitHub should be applied if possible (because
- * 	it clarifies how to deal with linking to work like Lucre code,
+ * 	we want to give away our code as CC0 (Creative Commons 0);
+ * 	However, some parts of code might be not fully ours to licence/decide 
+ * 	(from point of view of given law system), 
+ * 	because they are connecting to other work in some ways. 
+ *
+ * 	In any such unclear cases, the general Open Transaction licence as 
+ * 	published by FellowTraveller on GitHub should be applied if possible 
+ * 	(because it clarifies how to deal with linking to work like Lucre code,
  * 	OpenSSL code, and so on).
  *
  * 	We also allow this code to be released to Public Domain, but again,
- * 	we do not verify how is that possible in given law system. We take
- * 	absolutely no legal responsibility about licensing this code (nor
- * 	patent nor copyright nor any other law related issues) e.g. in your
- * 	country. We are not lawyers, and it is up to You to find out what
+ * 	we do not verify how is that possible in given law system. 
+ *
+ * 	In ANY CASE, we take absolutely NO legal responsibility about 
+ * 	licensing, sharing, using this code (nor patent nor copyright nor 
+ * 	any other law related issues that it might have) e.g. in your	country. 
+ *
+ * 	We are not lawyers, and it is up to only You to find out what
  * 	laws apply for your case. Do not use any of this code if you don't
  * 	agree.
  *
@@ -38,7 +43,7 @@
  * 	https://github.com/rfree/Open-Transactions/
  *
  ***********************************************************************
- * 	OPEN TRANSACTION RELATED INFORMATIONS:
+ * 	OPEN TRANSACTION RELATED INFORMATIONS: (copy pasted for information)
  ***********************************************************************
  *                    OPEN TRANSACTIONS
  *
@@ -138,15 +143,20 @@
  *   more details.
 
  **************************************************************/
+
+
+
 /**
 
 OT Hints (new CLI - new commandline : auto complete commands, verify, check, etc)
 
 Goal: this project aims to provide auto completion of newCLI OT commands, see [Description_of_auto_completion]
+Description: See [Description_of_auto_completion] below
+Example: "ot msg send bob a<TAB>" will ask remote OT and auto-complete alice.
 
 This subproject is separated out of OT, and uses C++11 and few other modern coding style changes.
 
-Rules of language: use C++11, do not use boost (thougl we could copy small part of boost source code if needed,
+Rules of language: use C++11, do not use boost (thoug we could copy small part of boost source code if needed,
 or headers-only library)
 
 Currently this is developed rapidly as 1 big file, to be splited soon, composed of this parts:
@@ -785,7 +795,19 @@ bool testcase_run_all_tests();
 int main(int argc, char* argv[]) {
 	nOT::nTests::testcase_run_all_tests();
 
-	nOT::nTests::testcase_complete_1(argv[1]);
+	if (argc>=1) {
+		std::string arg1 = argv[1];
+		if (arg1=="--shell") {
+			nOT::nOTHint::InteractiveShell();
+		} // SHELL
+		else if (arg1=="--COMPLETE") {
+			if (argc>=2) {
+				std::string var1 = argv[2];
+				nOT::nTests::testcase_complete_1(arg2);
+			} // COMPLETE with it's var1
+			else { cerr<<"No string provided for completion."<<endl; return 1; }
+		} // COMPLETE
+	}
 
 	// return 42; // nope. in C++, the exit code returns YOU
 }
