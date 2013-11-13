@@ -1009,11 +1009,27 @@ bool testcase_cxx11_memory() {
 	return true;
 }
 
-bool testcase_run_all_tests() {
-	// TODO vector function
-	long long int number_errors=0; // long :o
-	testcase_namespace_pollution();
-	testcase_cxx11_memory();
+bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
+	long int number_errors = 0; // long :o
+	
+	vector<bool (*)(void)> vectorOfFunctions;
+	vector<bool (*)(void)>::iterator it;
+	// creating vector of pointers to test functions
+	vectorOfFunctions.push_back(&testcase_namespace_pollution);
+	vectorOfFunctions.push_back(&testcase_cxx11_memory);
+	
+	bool result = true;
+	for(it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
+		result = *it;
+		if(result == false)
+			number_errors++;
+	}
+	if (number_errors == 0){
+		cout << "All tests completed successfully." << endl;
+	}
+	else{
+		cout << "Some tests were not completed." << endl;
+	}
 	// testcase_complete_1(); // quiet.
 	
 	return true;
