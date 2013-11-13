@@ -197,6 +197,12 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <iterator>
 #include <stdexcept>
 
+// for the super advanced trim ;)
+#include <algorithm> 
+#include <functional> 
+#include <cctype>
+#include <locale>
+
 // OTNewcliCmdline
 
 // list of thigs from libraries that we pull into namespace nOT::nNewcli
@@ -321,6 +327,31 @@ std::string GetLastCharIf(const std::string & str) { // TODO unicode?
 	if (s==0) return ""; // empty string signalizes ther is nothing to be returned
 	return std::string( 1 , str.at( s - 1) );
 }
+
+// TODO --- Vvvv  and #include
+// trim from start
+std::string &ltrim_in_place(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+        return s;
+}
+
+// trim from end
+std::string &rtrim_in_place(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+        return s;
+}
+
+/*// trim from both ends
+std::string &trim_in_place(std::string &s) {
+        return ltrim(rtrim(s));
+}*/
+
+std::string rtrim(const std::string &s) {
+	string scopy = s;
+	rtrim_in_place(scopy);
+	return scopy;
+}
+// TODO ltrim trim
 
 // ASRT - assert. Name like ASSERT() was too long, and ASS() was just... no.
 // Use it like this: ASRT( x>y );  with the semicolon at end, a clever trick forces this syntax :)
@@ -704,8 +735,8 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	const vector<string> forward_options = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
 	const vector<string> all_topics = {"msg","msguard","nym"};
 
-	const string topic  = namepart.at(0);
-	const string action = namepart.at(1);
+	const string topic  = rtrim( namepart.at(0) );
+	const string action = rtrim( namepart.at(1) );
 
 	int full_words=0;
 	int started_words=0;
@@ -721,55 +752,46 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 	string current_word="";
 	if (full_words < started_words) current_word = sofar.at(full_words);
-	if (dbg) cerr << "full_words=" << full_words << " started_words="<<started_words << " current_word="<<current_word << endl;
+	if (dbg) { cerr << "full_words=" << full_words << " started_words="<<started_words 
+		<< " topic="<<topic << " action="<<action
+		<< " current_word="<<current_word << endl;
+	}
+
+	// TODO produce the object of parsed commandline by the way of parsing current sofar string
+	// (and return - via referenced argument)
 
 	// * possib variable - short for "possibilities"
+	
+	// TODO support discarding forward-opion flags
+	// ...
+	
+	// === at 1st (non-forward-option) word (topic) ===
 
-	if (full_words<1) { // nothing - show all level 1 cmdnames
+	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
 		return WordsThatMatch(  current_word  ,  vector<string>{"msg","msguard","nym"} + forward_options  ) ;
 	}
-
-	if (namepart.at(0)=="msg") {
-		return vector<string>{"msg","msguard","nym"};
-
-		if (namepart.size()==1) {
-			return vector<string>(1,"complete-1");
-		} // msg ""
-
-		else if (namepart.at(1)=="send" || namepart.at(1)=="sen" || namepart.at(1)=="se" || namepart.at(1)=="s") {
-			return vector<string>(1,"send");
-		} // msg send
-
-		else if (namepart.at(1)=="rm" || namepart.at(1)=="r") {
-			return vector<string>(1,"rm");
-		} // msg del
-
-	} // msg
 	
-	else if (namepart.at(0)=="msguard") {
-		if (namepart.size()==1) {
-			return vector<string>(1,"complete-1");
-		} // msguard ""
-	} // msguard
-	
-	else if (namepart.at(0)=="nym") {
-
-	} // nym
-
-	else {
+	// === at 2nd (non-forward-option) word (action) ===
+	if (topic=="msg") {
+		return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 	}
 
-/*
-		// to be used in "main" to get list of possible command names:
-		static vector<cCmdname> GetDefaultCommands() {
-			v.push_back( cCmdlineInfo("msg","send") );
-			v.push_back( cCmdlineInfo("msg","send","body") );
-			v.push_back( cCmdlineInfo("msg","send","headers") );
-			v.push_back( cCmdlineInfo("msg","list") );
-			return v;
+	if (topic=="msguard") {
+		if (full_words<2) { // we work on word2 - the action:
+			return WordsThatMatch(  current_word  , vector<string>{"info","start","sYYY"} ); // <-- TODO
 		}
-		*/
-	return vector<string>(1,"empty");
+		if (full_words<3) { // we work on word3 - var1
+			if (action=="start") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"eth0","eth1","eth2","usb1","usb2"} );
+			}
+		}
+	}
+
+	if (topic=="nym") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"aaa1","aaa2","ab"} ) ;
+	}
+
+	return vector<string>(1,"ERROR");
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
 
