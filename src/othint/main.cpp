@@ -155,7 +155,7 @@ Description: See [Description_of_auto_completion] below
 Example: "ot msg send bob a<TAB>" will ask remote OT and auto-complete alice.
 
 Usage:
-  ./othint --complete-one "ot msg"
+  ./othint --complete-one "ot msg send ali"
 	./othint --complete-shell
 
 This subproject is separated out of OT, and uses C++11 and few other modern coding style changes.
@@ -209,10 +209,11 @@ using std::set; \
 using std::map; \
 using std::unique_ptr; \
 using std::cin; \
+using std::cerr; \
 using std::cout; \
+using std::cerr; \
 using std::endl; \
 using nOT::nUtil::ToStr;
-
 
 // Please read and follow this syntax examples:
 namespace nExamplesOfConvention {
@@ -277,20 +278,25 @@ std::string ToStr(const T & obj) {
 }
 
 template <class T>
-void DisplayVector(const std::vector<T> &v)
-{
-	std::copy(v.begin(), v.end(),
-		std::ostream_iterator<T>(std::cout, " "));
+void DisplayVector(const std::vector<T> &v, const std::string &delim=" ") {
+	std::copy( v.begin(), v.end(), std::ostream_iterator<T>(std::cerr, delim.c_str()) );
 }
 
-bool CheckIfBegins(std::string beggining, std::string all){
-	if (all.compare(0, beggining.length(), beggining) == 0){
+template <class T>
+void DisplayVectorEndl(const std::vector<T> &v, const std::string &delim=" ") {
+	DisplayVector(v,delim);
+	std::cerr << std::endl;
+}
+
+bool CheckIfBegins(std::string beggining, std::string all) {
+	if (all.compare(0, beggining.length(), beggining) == 0) {
 		return 1;
 	}
-	else{
+	else {
 		return 0;
 	}
 }
+
 } // nUtil
 } // nOT
 
@@ -308,6 +314,7 @@ using std::set;
 using std::map;
 using std::unique_ptr;
 using std::cin;
+using std::cerr;
 using std::cout;
 using std::endl;
 using nOT::nUtil::ToStr;
@@ -579,6 +586,8 @@ namespace nTests {
 
 OT_COMMON_USING_NAMESPACE;
 
+using namespace nOT::nUtil;
+
 bool testcase_namespace_pollution();
 bool testcase_cxx11_memory();
 bool testcase_complete_1(const std::string &sofar);
@@ -600,11 +609,12 @@ using std::set;
 using std::map;
 using std::unique_ptr;
 using std::cin;
+using std::cerr;
 using std::cout;
 using std::endl;
-using nOT::nUtil::ToStr;
-using nOT::nUtil::DisplayVector;
-using nOT::nUtil::CheckIfBegins;
+
+using namespace nOT::nUtil;
+
 class cHint {
 	public:
 
@@ -619,132 +629,33 @@ vector<string> cHint::AutoComplete(const string &sofar_str) const { // the main 
 	return possible;
 }
 
-
 vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const {
+	bool dbg = true;
+
 	std::istringstream iss(sofar_str);
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
-	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option?
+	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
 	
-	// std::copy( sofar.begin() , sofar.end() ,  std::ostream_iterator<string>(std::cout, ", ") ); // copy vector to cout with ", " between elements
+	// exactly 2 elements, with "" for missing elements
+	decltype(sofar) namepart( sofar.begin(), sofar.end() ); 
+	while (namepart.size()<2) namepart.push_back("");
+	if (dbg) DisplayVectorEndl(namepart,",");
 
-	auto namepart = sofar; // exactly 3 elements, with "" for missing elements
-	// TODO split - limit to 3 on copy ^
-	//while (namepart.size()<3) namepart.push_back("");
-	
-map<string , vector<string> > const cases {
-		 { "m", { "msg", "msguard" } }
-		,{ "ms", { "msg", "msguard" } }
-		,{ "msg", { "msg", "msguard" } }
-		,{ "msg ", { "send", "ls", "mv", "rm" } }
-		,{ "msg s", { "send" } }
-		,{ "msg se", { "send" } }
-		,{ "msg sen", { "send" } }
-		,{ "msg send", { "send" } }
-		,{ "msg send ", { "mynym1", "mynym2" } }
-		,{ "msg send m", { "mynym1", "mynym2" } }
-		,{ "msg send my", { "mynym1", "mynym2" } }
-		,{ "msg send myn", { "mynym1", "mynym2" } }
-		,{ "msg send myny", { "mynym1", "mynym2" } }
-		,{ "msg send mynym", { "mynym1", "mynym2" } }
-		,{ "msg send mynym1", { "mynym1" } }
-		,{ "msg send mynym1 ", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 h", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 hi", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 his", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 hisn", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 hisny", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 hisnym", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym1 hisnym1", { "hisnym1" } }
-		,{ "msg send mynym1 hisnym2", { "hisnym2" } }
-		,{ "msg send mynym2", { "mynym2" } }
-		,{ "msg send mynym2 ", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 h", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 hi", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 his", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 hisn", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 hisny", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 hisnym", { "hisnym1", "hisnym2" } }
-		,{ "msg send mynym2 hisnym1", { "hisnym1" } }
-		,{ "msg send mynym2 hisnym2", { "hisnym2" } }
-		,{ "msg l", { "ls" } }
-		,{ "msg ls", { "ls" } }
-		,{ "msg m", { "mv" } }
-		,{ "msg mv", { "mv" } }
-		,{ "msg mv ", { "msgid1", "msgid2" } }
-		,{ "msg mv m", { "msgid1", "msgid2" } }
-		,{ "msg mv ms", { "msgid1", "msgid2" } }
-		,{ "msg mv msg", { "msgid1", "msgid2" } }
-		,{ "msg mv msgi", { "msgid1", "msgid2" } }
-		,{ "msg mv msgid", { "msgid1", "msgid2" } }
-		,{ "msg mv msgid1", { "msgid1" } }
-		,{ "msg mv msgid2", { "msgid2" } }
-		,{ "msg r", { "rm" } }
-		,{ "msg rm", { "rm" } }
-		,{ "msg rm ", { "msgid1", "msgid2" } }
-		,{ "msg rm m", { "msgid1", "msgid2" } }
-		,{ "msg rm ms", { "msgid1", "msgid2" } }
-		,{ "msg rm msg", { "msgid1", "msgid2" } }
-		,{ "msg rm msgi", { "msgid1", "msgid2" } }
-		,{ "msg rm msgid", { "msgid1", "msgid2" } }
-		,{ "msg rm msgid1", { "msgid1" } }
-		,{ "msg rm msgid2", { "msgid2" } }
-		,{ "msgu", { "msguard" } }
-		,{ "msgua", { "msguard" } }
-		,{ "msguar", { "msguard" } }
-		,{ "msguard", { "msguard" } }
-		,{ "msguard ", { "info", "start", "stop" } }
-		,{ "msguard i", { "info" } }
-		,{ "msguard in", { "info" } }
-		,{ "msguard inf", { "info" } }
-		,{ "msguard info", { "info" } }
-		,{ "msguard s", { "start", "stop" } }
-		,{ "msguard st", { "start", "stop" } }
-		,{ "msguard sta", { "start" } }
-		,{ "msguard star", { "start" } }
-		,{ "msguard start", { "start" } }
-		,{ "msguard sto", { "stop" } }
-		,{ "msguard stop", { "stop" } }
-		,{ "n" , { "nym"} }
-		,{ "ny" , { "nym"} }
-		,{ "nym" , { "nym"} }
-		,{ "nym " , { "ls", "new" , "rm"} }
-		,{ "nym l" , { "ls" } }
-		,{ "nym ls" , { "ls" } }
-		,{ "nym n" , { "new" } }
-		,{ "nym ne" , { "new" } }
-		,{ "nym new" , { "new" } }
-		,{ "nym r" , { "rm"} }
-		,{ "nym rm" , { "rm"} }
-	};
-	vector<string> firstLevel{"msg", "msguard", "nym"};
-	vector<string> possibleCommands;
-	//if (namepart.size()==1 && sofar_str.back() != " "){
-		//bool match;
-		//for(std::vector<string>::iterator it = firstLevel.begin(); it != firstLevel.end(); ++it) {
-			//match = CheckIfBegins(namepart.at(0), *it);
-			//if (match){
-				//possibleCommands.push_back(*it);
-			//}
-		//}
-	//}else{
-		//bool match;
-		if (sofar_str == ""){
-			possibleCommands = firstLevel;
-		}
-		else{
-			std::map<string, vector<string> >::const_iterator it;
-			for(it = cases.begin(); it != cases.end(); ++it) {
-				if(sofar_str == it->first){
-					possibleCommands = it->second;
-					break;
-				}
-			}
-		}
-	//}
-	
-	return possibleCommands;
-	
+	const vector<string> forward_options = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
+
+	const string topic  = namepart.at(0);
+	const string action = namepart.at(1);
+
+	// * possib variable - short for "possibilities"
+
+	if (topic=="") { // nothing - show all level 1 cmdnames
+		vector<string> possib{"msg","msguard","nym"};
+		possib.insert(possib.end(), forward_options.begin(), forward_options.end());
+		return possib;
+	}
+
 	if (namepart.at(0)=="msg") {
+		return vector<string>{"msg","msguard","nym"};
 
 		if (namepart.size()==1) {
 			return vector<string>(1,"complete-1");
