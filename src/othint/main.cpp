@@ -520,7 +520,8 @@ msguard stop
 If you type -HN in front of options, then Hints will use Network (-HN) to autocomplete, typing
 ot -HN msg send myuser1 bo<TAB> will e.g. ask OT server(s) (e.g. over internet) about you address book
 ot -HT msg send myuser1 bo<TAB> the same but for Trusted servers only (will not accidentially talk to other servers)
-ot -HS as well as -H0 .... will make sure you will not ask OT servers, just use data cached
+ot -H0 .... will make sure you will not ask OT servers, just use data cached
+ot -HR .... will force othint to refresh all information from servers. Option useful if you want fresh information from servers in real time. Slow and dagerous for privacy.
 
 The exact planned options are 2 settings: accessing remote and accessing cache.
 	--hint-remote=V set's the privacy to level 0..9. 0=never ask remote severs for data needed for 
@@ -549,15 +550,14 @@ E.g. this is allowed syntax:
 ot --hint-allow-strange --hint-remote=0 --hint-cached=0 msg draft
 
 Shortcuts:
---HO gives hints offline          equals --hint-remote=0 --hint-cached=9
---HL gives hints local            equals --hint-remote=1 --hint-cached=5
---HT gives hints trusted          equals --hint-remote=3 --hint-cached=5
+--H0 gives hints offline        equals --hint-offline     equals --hint-remote=0 --hint-cached=9
+--HL gives hints local          equals --hint-local       equals --hint-remote=1 --hint-cached=5
+--HT gives hints trusted        equals --hint-trusted     equals --hint-remote=3 --hint-cached=5
+--HN gives hints from network   equals --hint-net         equals --hint-remote=5 --hint-cached=5
 
---HV gives VPNed network          equals --vpn-all-net --hint-remote=9 --hint-cached=5
---HVR is forced VPNed reload      equals --vpn-all-net --hint-remote=9 --hint-cached=0
+--HR is forced net reload       equals --hint-reload      equals --hint-remote=9 --hint-cached=0
 
---HNet gives hints from netwok    equals --hint-remote=5 --hint-cached=5
---HNetReload is forced net reload equals --hint-remote=9 --hint-cached=0
+--HV gives VPNed network        equals --hint-vpn         equals --vpn-all-net --hint-remote=9 --hint-cached=5
 
 VPN:
 option --vpn-all-net will force hint autocompletion (and also the actuall commands, unless later
@@ -569,15 +569,15 @@ and program will not leak any activity to open network (LAN, Internet, etc)
 
 VPN forced: 
 Global configuration option could force to always use VPN (append --vpn-all-net)
-then use "ot --HNet" will not auto-complete on <TAB> but show:
-  {can not use --HNet because your configuration disabled it, please try --HV}
+then use "ot --HN" will not auto-complete on <TAB> but show:
+  {can not use --HN because your configuration disabled it, please try --HV}
 and if executed as full command, will also refuse to work, with explanation.
 
 Please remember that VPNs or even more advanced solutions are not that secure, and that
 ot hint sends anyway lots of data of intended action, with timing correlation, to the OT server
-in -HV, -HVR case.
+in --HV case.
 VPN only hides your IP a bit.
-Full caching with -H0 or -HL is most secure, there is no home like localhost :)
+Full caching with --H0 or --HL is most secure, there is no home like localhost :)
 
 */
 
