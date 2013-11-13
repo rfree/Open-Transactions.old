@@ -154,6 +154,10 @@ Goal: this project aims to provide auto completion of newCLI OT commands, see [D
 Description: See [Description_of_auto_completion] below
 Example: "ot msg send bob a<TAB>" will ask remote OT and auto-complete alice.
 
+Usage:
+  ./othint --complete-one "ot msg"
+	./othint --complete-shell
+
 This subproject is separated out of OT, and uses C++11 and few other modern coding style changes.
 
 Rules of language: use C++11, do not use boost (thoug we could copy small part of boost source code if needed,
@@ -570,6 +574,19 @@ class cCmdlineInfo {
 // ########################################################################
 
 
+namespace nOT {
+namespace nTests {
+
+OT_COMMON_USING_NAMESPACE;
+
+bool testcase_namespace_pollution();
+bool testcase_cxx11_memory();
+bool testcase_complete_1(const std::string &sofar);
+
+bool testcase_run_all_tests();
+
+} // nTests
+} // nOT
 
 // TODO: move to own file
 namespace nOT {
@@ -769,26 +786,33 @@ map<string , vector<string> > const cases {
 	throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
 
+
+class cInteractiveShell {
+	public:
+		void run();
+};
+
+void cInteractiveShell::run() {
+	while(1) {
+		std::string line;
+		cout << "\n\nCommand: Press ENTER to show auto-completion for the command. Type q or quit (and press ENTER) to quit." << endl;
+		cout << "commandline-part> " << std::flush;
+		getline(cin,line);
+		if (line == "q") break;
+		if (line == "quit") break;
+		std::string cmdline;
+		cmdline = "ot " + line;
+		cout << "Auto-complete for '" << cmdline << "': " << endl;
+		nOT::nTests::testcase_complete_1(cmdline);
+	}
+}
+
+
 }; // namespace nOTHint
 }; // namespace nOT
 // ########################################################################
 // ########################################################################
 // ########################################################################
-
-namespace nOT {
-namespace nTests {
-
-OT_COMMON_USING_NAMESPACE;
-
-bool testcase_namespace_pollution();
-bool testcase_cxx11_memory();
-bool testcase_complete_1(char sofar[]);
-
-bool testcase_run_all_tests();
-
-} // nTests
-} // nOT
-
 
 
 // ====================================================================
@@ -797,16 +821,19 @@ int main(int argc, char* argv[]) {
 
 	if (argc>=1) {
 		std::string arg1 = argv[1];
-		if (arg1=="--shell") {
-			nOT::nOTHint::InteractiveShell();
+		if (arg1=="--complete-shell") {
+			nOT::nOTHint::cInteractiveShell shell;
+			shell.run();
 		} // SHELL
-		else if (arg1=="--COMPLETE") {
+		else if (arg1=="--complete-one") {
 			if (argc>=2) {
 				std::string var1 = argv[2];
-				nOT::nTests::testcase_complete_1(arg2);
+				nOT::nTests::testcase_complete_1(var1);
 			} // COMPLETE with it's var1
-			else { cerr<<"No string provided for completion."<<endl; return 1; }
+			else { std::cerr<<"No string provided for completion."<<std::endl; return 1; }
 		} // COMPLETE
+	} else {
+		std::cerr<<"No arguments given."<<std::endl; return 1; 
 	}
 
 	// return 42; // nope. in C++, the exit code returns YOU
@@ -823,7 +850,7 @@ namespace nTests {
 
 OT_COMMON_USING_NAMESPACE; // <========= NAMESPACE inclusion
 
-bool testcase_complete_1(char sofar[]) {
+bool testcase_complete_1(const string &sofar) {
 	map<string , vector<string> > const cases {
 		 { "m", { "msg", "msguard" } }
 		,{ "ms", { "msg", "msguard" } }
@@ -913,7 +940,9 @@ bool testcase_complete_1(char sofar[]) {
 	nOT::nOTHint::cHint hint;
 
 	string line(sofar);
-	line.erase (0,3); // need to erase 'ot' word from intput string
+	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
+	// TODO verify length (avoid underflow)
+	
 	/*
 	while(1){
 		cout << "Command:" << endl;
