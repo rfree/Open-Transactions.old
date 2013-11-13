@@ -645,6 +645,7 @@ using namespace nOT::nUtil;
 bool testcase_namespace_pollution();
 bool testcase_cxx11_memory();
 bool testcase_complete_1(const std::string &sofar);
+bool testcase_complete_1_wrapper();
 
 bool testcase_run_all_tests();
 
@@ -801,7 +802,7 @@ void cInteractiveShell::run() {
 // ########################################################################
 // ########################################################################
 
-
+std::string gVar1; // to keep program input argument for testcase_complete_1
 // ====================================================================
 int main(int argc, char* argv[]) {
 	nOT::nTests::testcase_run_all_tests();
@@ -814,8 +815,8 @@ int main(int argc, char* argv[]) {
 		} // SHELL
 		else if (arg1=="--complete-one") {
 			if (argc>=2) {
-				std::string var1 = argv[2];
-				nOT::nTests::testcase_complete_1(var1);
+				gVar1 = argv[2];
+				nOT::nTests::testcase_complete_1_wrapper();
 			} // COMPLETE with it's var1
 			else { std::cerr<<"No string provided for completion."<<std::endl; return 1; }
 		} // COMPLETE
@@ -930,16 +931,6 @@ bool testcase_complete_1(const string &sofar) {
 	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
 	// TODO verify length (avoid underflow)
 	
-	/*
-	while(1){
-		cout << "Command:" << endl;
-		getline(cin, line);
-		if (line == "q")
-			break;
-
-		cout << endl;
-	}
-	*/
 	vector<string> out = hint.AutoComplete(line);
 	nOT::nUtil::DisplayVector(out);
 	
@@ -947,6 +938,10 @@ bool testcase_complete_1(const string &sofar) {
 	bool ok = 1;
 
 	return ok;
+}
+
+bool testcase_complete_1_wrapper(){
+	return nOT::nTests::testcase_complete_1(gVar1);
 }
 
 // ==================================================================
@@ -998,20 +993,20 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	
 	bool result = true;
 	for(it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
-		result = *it;
+		result = (*it)();
 		if(result == false)
 			number_errors++;
 	}
 	if (number_errors == 0){
-		cout << "All tests completed successfully." << endl;
+		//cout << "All tests completed successfully." << endl;
 	}
 	else{
-		cout << "Some tests were not completed." << endl;
+		//cout << "Some tests were not completed." << endl;
 	}
 	// testcase_complete_1(); // quiet.
 	
 	return true;
 }
 
-} // nTest
+} // nTests
 } // nOT
