@@ -713,25 +713,25 @@ msg_send_complete() {
 
 /*
 class argument_info {
-	// klasa mowi jaki to argument  np ze to argument  "mynym" i ze ma byc stringiem albo ze ma byc integerem albo ze to tylko boolean
-	// oraz dostarcza klasa !!! do auto complete jakas
+	// class says what kind of argument is this i.e. that argument is "mynym" and it have to be string or integer or only boolean
+	// and provide class!!! for auto complete
 
-	string mName; // "mynym" "hisnym" (nawet te argumenty, ktore maja okreslona kolejnosc wiec niby nie maja nazwy, beda jak mialy dla jasnosci i np generowania tekstu help"
+	string mName; // "mynym" "hisnym" (even those arguments which have specific order, so they don't have "name", will have, for example for generating help text
 
-	// inne mName to bedzie np "cc"  dla opcji --cc ktora juz wymaga nazwy
+	// other mName will be for eg. "cc"  for option --cc which remain name
 
 };
 */
 
 /*
-typedef string argument_data ; // na razie...
+typedef string argument_data ; // for now...
 
 class cCmdoptions {
 
 		// required arguments
-		vector< argument_info > // ty ma być { ("msg","send")  ,  ("msg","send","body") itd tak jak w cCmdname::returnStandard
+		vector< argument_info > // here should be { ("msg","send")  ,  ("msg","send","body") ect. same as in cCmdname::returnStandard
 
-		map< argument_info , vector< argument_data > > // tu bedzie mapa, ktora np dla
+		map< argument_info , vector< argument_data > > // here will be map
 }
 
 class cCmdlineInfo {
@@ -868,7 +868,9 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// === at 1st (non-forward-option) word (topic) ===
 
 	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
+
 		return WordsThatMatch(  current_word  ,  vector<string>{"account", "account-in", "account-out", "asset", "basket", "cash", "cheque", "contract", "market", "mint", "msg", "msguard", "nym", "nym-cred", /*"receipt"??,*/ "server", "text", "voucher"/*, "wallet"??*/} + cmdFrontOpt  ) ;
+		//commented procedures are those which we ain't sure if they will appear - definitions below
 	}
 
 	// === at 2nd (non-forward-option) word (action) ===
@@ -882,7 +884,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 				return WordsThatMatch(  current_word  ,  vector<string>{"<assetID>"} ) ;
 			}
 		}
-		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
+		if (full_words<4) { // we work on word4 - var2; this one have to get "assetID" variable from otlib
 			if (var1=="<assetID>") {
 	     	return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
 			}
@@ -926,7 +928,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"send"} ) ;
 		}
-		if (full_words<3) { // we work on word3 - var1
+		if (full_words<3) {
 			if (action=="send") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
@@ -946,15 +948,15 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"get", "new", "sign"} ) ;
 		}
-		if (full_words<3) { // we work on word3 - var1
+		if (full_words<3) {
 			if (action=="get") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"contractID"} ); //TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<contractID>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 		}
 	}
 
 	if (topic=="market") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "BLANK"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "[BLANK]"} ) ;
 	}
 
 	if (topic=="mint") {
@@ -970,7 +972,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO otlib
 			}
 			if (action=="mv") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"Where to?"} );
+				return WordsThatMatch(  current_word  ,  vector<string>{"Where to?"} ); // in mail box... will there be other directories?
 			}
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "index"} );
@@ -981,7 +983,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO otlib
 			}
 		}
-		if (full_words<5) { // we work on word3 - var1
+		if (full_words<5) { // we work on word4 - var2
 			if (var2=="<hisnym>") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<ccoptional>"} ); //TODO otlib
 			}
@@ -1038,7 +1040,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 
 	if (topic=="text") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ; //coding method needed
 	}
 
 	if (topic=="voucher") {
