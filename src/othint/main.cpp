@@ -835,7 +835,26 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 
 	if (topic=="nym") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls","new","rm", "info", "edit", "register", "import"} ) ;
+		if (full_words<2) { // we work on word2 - the action:
+			return WordsThatMatch(  current_word  ,  vector<string>{"ls","new","rm", "info", "edit", "register", "import"} ) ;
+		}
+		if (full_words<3) { // we work on word3 - var1
+			if (action=="new") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<name>", ""} ); //TODO Suitable changes to this part - propably after merging with otlib
+			}
+			if (action=="rm") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<name>", "<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
+			}
+			if (action=="info") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
+			}
+			if (action=="edit") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
+			}
+			if (action=="register") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
+			}
+		}
 	}
 
 	if (topic=="asset") {
