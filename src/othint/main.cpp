@@ -831,7 +831,19 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	
 	// === at 2nd (non-forward-option) word (action) ===
 	if (topic=="msg") {
-		return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
+		if (full_words<2) { // we work on word2 - the action:
+			return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
+		}
+		if (full_words<3) { // we work on word3 - var1
+			if (action=="send") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} );
+			}
+		}
+		if (full_words<4) { // we work on word4(?) - var2
+			if (action=="<mynym>") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} );
+			}
+		}
 	}
 
 	if (topic=="msguard") { // testing!
