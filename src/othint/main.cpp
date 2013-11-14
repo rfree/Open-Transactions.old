@@ -847,11 +847,11 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// === at 2nd (non-forward-option) word (action) ===
 	
 	if (topic=="account") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"new", "[BLANK]"} ) ;
 	}
 
 	if (topic=="asset") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"new", "[BLANK]"} ) ;
 	}
 
 	if (topic=="basket") {
@@ -883,13 +883,22 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 	}
-if (topic=="msg") {
+	
+	if (topic=="market") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"[BLANK]"} ) ;
+	}
+	
+	if (topic=="mint") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
+	}
+
+	if (topic=="msg") {
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym> <hisnym>"} ); //TODO otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym> <hisnym> <ccoptional>"} ); //TODO otlib
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where to?"} );
@@ -917,7 +926,7 @@ if (topic=="msg") {
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<name>", "[BLANK]"} ); //TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<name>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<name>", "<nym>"} );//TODO Suitable changes to this part - propably after merging with otlib
@@ -929,16 +938,9 @@ if (topic=="msg") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<nym>"} );//TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="register") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<nym>", "<server>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nym> <server>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
 			}
 		}
-	}
-	if (topic=="market") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"[BLANK]"} ) ;
-	}
-
-	if (topic=="mint") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
 	}
 
 	if (topic=="nym-cred") {
@@ -946,7 +948,7 @@ if (topic=="msg") {
 	}
 
 	if (topic=="server") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "[BLANK]"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new" } ) ;
 	}
 
 	if (topic=="voucher") {
@@ -956,7 +958,6 @@ if (topic=="msg") {
 	return vector<string>(1,"ERROR");
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
-
 
 class cInteractiveShell {
 	public:
