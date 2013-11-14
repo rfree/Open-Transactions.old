@@ -815,7 +815,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// === at 1st (non-forward-option) word (topic) ===
 
 	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
-		return WordsThatMatch(  current_word  ,  vector<string>{"msg","msguard","nym"} + forward_options  ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"msg","msguard","nym", "asset", "account", "market", "basket", "voucher", "cheque" , "server", "mint", "contract", "cash"} + forward_options  ) ;
 	}
 	
 	// === at 2nd (non-forward-option) word (action) ===
@@ -835,9 +835,49 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 
 	if (topic=="nym") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls","new","rm"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls","new","rm", "info", "edit", "register", "import"} ) ;
 	}
 
+	if (topic=="asset") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+	
+	if (topic=="account") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="market") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+	
+	if (topic=="basket") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="voucher") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="cheque") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="server") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="mint") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="contract") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+		
+	if (topic=="cash") {
+		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
+	}
+	
 	return vector<string>(1,"ERROR");
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
