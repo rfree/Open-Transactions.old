@@ -460,6 +460,7 @@ ot [front1,front2...] topic action [--subact] var1,...  [varM,...] [--optNameN[=
 ot <-front options--> <- cCmdname ----------> <---- arguments ------------------------------->
 ot                    <- cCmdname ----------> <---- vars -----> <-- options ----------------->
 ot <--- optional ---> <- mandatory-------------------> <--- optional ------------------------>
+ot <-cmdFrontOpt ---> <- cmdPart -----------> <-------------- cmdArgs ----------------------->
 
 Examples:
 ot  --H0              msg   send              bob a
@@ -802,30 +803,40 @@ vector<string> cHint::AutoComplete(const string &sofar_str) const { // the main 
 
 vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const {
 	bool dbg = false;
-
 	std::istringstream iss(sofar_str);
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
+
+	// exactly 2 elements, with "" for missing elements
+	decltype(sofar) cmdPart;
+	decltype(sofar) cmdArgs;
+	int cmdPartSize, cmdArgsSize;
+	if (sofar.size()<2) {
+		cmdPart = sofar;
+		cmdPartSize = cmdPart.size();
+	}
+	else {
+		cmdPart.insert( cmdPart.begin(), sofar.begin(), sofar.begin()+2 );
+		cmdArgs.insert( cmdArgs.begin(), sofar.begin()+2, sofar.end() );
+		cmdArgsSize = cmdArgs.size();
+	}
+	while (cmdPart.size()<2) cmdPart.push_back("");
+	if (dbg) DBGDisplayVectorEndl(cmdPart,",");
 
 	if (GetLastCharIf(sofar_str)==" ") {
 		ASRT( sofar.size()>=1 );
 		sofar.at( sofar.size()-1 )+=" "; // append the last space - to the last word so that we know it was ended
 	}
 
-	// exactly 2 elements, with "" for missing elements
-	decltype(sofar) namepart( sofar.begin(), sofar.end() );
-	while (namepart.size()<2) namepart.push_back("");
-	if (dbg) DBGDisplayVectorEndl(namepart,",");
-
-	const vector<string> forward_options = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
+	const vector<string> cmdFrontOpt = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
 	const vector<string> all_topics = {"msg","msguard","nym"};
 
-	const string topic  = rtrim( namepart.at(0) );
-	const string action = rtrim( namepart.at(1) );
+	const string topic  =  cmdPart.at(0) ;
+	const string action =  cmdPart.at(1) ;
 	string var1;
-	string var2; 
-	if (namepart.size()>2) var1 = rtrim( namepart.at(2) );
-	if (namepart.size()>3) var2 = rtrim( namepart.at(3) );
+	string var2;
+	if (cmdArgs.size()>0) var1 = cmdArgs.at(0) ;
+	if (cmdArgs.size()>1) var2 = cmdArgs.at(1) ;
 
 	int full_words=0;
 	int started_words=0;
@@ -857,7 +868,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// === at 1st (non-forward-option) word (topic) ===
 
 	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
-		return WordsThatMatch(  current_word  ,  vector<string>{"account", "account-in", "account-out", "asset", "basket", "cash", "cheque", "contract", "market", "mint", "msg", "msguard", "nym", "nym-cred", /*"receipt"??,*/ "server", "text", "voucher"/*, "wallet"??*/} + forward_options  ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"account", "account-in", "account-out", "asset", "basket", "cash", "cheque", "contract", "market", "mint", "msg", "msguard", "nym", "nym-cred", /*"receipt"??,*/ "server", "text", "voucher"/*, "wallet"??*/} + cmdFrontOpt  ) ;
 	}
 
 	// === at 2nd (non-forward-option) word (action) ===
@@ -1100,14 +1111,14 @@ int main(int argc, char* argv[]) {
 			if (argc>=2) {
 				gVar1 = argv[2];
 				nOT::nTests::testcase_complete_1_wrapper();
-				//std::cout << gVar1 << std::endl; 
+				//std::cout << gVar1 << std::endl;
 			} // COMPLETE with it's var1
 			else { std::cerr<<"No string provided for completion."<<std::endl; return 1; }
 		} // COMPLETE
 	} else {
 		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
-	
+
 
 	// return 42; // nope. in C++, the exit code returns YOU
 }
