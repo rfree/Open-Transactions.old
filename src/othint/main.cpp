@@ -822,6 +822,8 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	const string topic  = rtrim( namepart.at(0) );
 	const string action = rtrim( namepart.at(1) );
+	const string var1 = rtrim( namepart.at(2) );
+	const string var2 = rtrim( namepart.at(2) );
 
 	int full_words=0;
 	int started_words=0;
@@ -868,7 +870,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
-			if (action=="<assetID>") {
+			if (var1=="<assetID>") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
 			}
 		}
