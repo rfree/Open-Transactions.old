@@ -289,13 +289,24 @@ std::string ToStr(const T & obj) {
 }
 
 template <class T>
-void DisplayVector(const std::vector<T> &v, const std::string &delim=" ") {
+void DisplayVector(std::ostream & out, const std::vector<T> &v, const std::string &delim=" ") {
+	std::copy( v.begin(), v.end(), std::ostream_iterator<T>(out, delim.c_str()) );
+}
+
+template <class T>
+void DisplayVectorEndl(std::ostream & out, const std::vector<T> &v, const std::string &delim=" ") {
+	DisplayVector(out,v,delim);
+	out << std::endl;
+}
+
+template <class T>
+void DBGDisplayVector(const std::vector<T> &v, const std::string &delim=" ") {
 	std::copy( v.begin(), v.end(), std::ostream_iterator<T>(std::cerr, delim.c_str()) );
 }
 
 template <class T>
-void DisplayVectorEndl(const std::vector<T> &v, const std::string &delim=" ") {
-	DisplayVector(v,delim);
+void DBGDisplayVectorEndl(const std::vector<T> &v, const std::string &delim=" ") {
+	DBGDisplayVector(v,delim);
 	std::cerr << std::endl;
 }
 
@@ -804,7 +815,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) namepart( sofar.begin(), sofar.end() );
 	while (namepart.size()<2) namepart.push_back("");
-	if (dbg) DisplayVectorEndl(namepart,",");
+	if (dbg) DBGDisplayVectorEndl(namepart,",");
 
 	const vector<string> forward_options = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
 	const vector<string> all_topics = {"msg","msguard","nym"};
@@ -846,7 +857,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 
 	// === at 2nd (non-forward-option) word (action) ===
-	
+
 	if (topic=="account") {
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"new", "refresh", "ls", "[BLANK]"} ) ;
@@ -923,11 +934,11 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 	}
-	
+
 	if (topic=="market") {
 		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "[BLANK]"} ) ;
 	}
-	
+
 	if (topic=="mint") {
 		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
 	}
@@ -1171,7 +1182,7 @@ bool testcase_complete_1(const string &sofar) {
 	// TODO verify length (avoid underflow)
 
 	vector<string> out = hint.AutoComplete(line);
-	nOT::nUtil::DisplayVector(out);
+	nOT::nUtil::DisplayVector(std::cout, out);
 
 
 	bool ok = 1;
