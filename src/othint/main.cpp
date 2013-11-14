@@ -822,8 +822,10 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	const string topic  = rtrim( namepart.at(0) );
 	const string action = rtrim( namepart.at(1) );
-	const string var1 = rtrim( namepart.at(2) );
-	const string var2 = rtrim( namepart.at(2) );
+	string var1;
+	string var2; 
+	if (namepart.size()>2) var1 = rtrim( namepart.at(2) );
+	if (namepart.size()>3) var2 = rtrim( namepart.at(3) );
 
 	int full_words=0;
 	int started_words=0;
@@ -862,19 +864,16 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	if (topic=="account") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "refresh", "ls", "BLANK"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "refresh", "ls", "[BLANK]"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"assetID"} ) ;
-			}
-		}
-		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
+				return WordsThatMatch(  current_word  ,  vector<string>{"<assetID>"} ) ;
 			}
 		}
 		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
 			if (var1=="<assetID>") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
+	     	return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
 			}
 		}
 	}
@@ -885,10 +884,10 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="accept") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "paymentID"} ) ;
+				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "<paymentID>"} ) ;
 			}
 			if (action=="ls") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"accountID"} ) ;
+				return WordsThatMatch(  current_word  ,  vector<string>{"<accountID>"} ) ;
 			}
 		}
 	}
@@ -899,11 +898,11 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	if (topic=="asset") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "BLANK"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "[BLANK]"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"assetID"} ) ;
+				return WordsThatMatch(  current_word  ,  vector<string>{"<assetID>"} ) ;
 			}
 		}
 	}
@@ -918,12 +917,12 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"mynym"} ); //TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 		}
 		if (full_words<4) { // we work on word3 - var1
-			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"hisnym"} ); //TODO Suitable changes to this part - propably after merging with otlib
+			if (var1=="send") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 		}
 	}
@@ -957,7 +956,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"mynym"} ); //TODO otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO otlib
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where to?"} );
@@ -967,13 +966,13 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word3 - var1
-			if (action=="mynym") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"hisnym"} ); //TODO otlib
+			if (var1=="<mynym>") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO otlib
 			}
 		}
 		if (full_words<5) { // we work on word3 - var1
-			if (action=="hisnym") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"ccoptional"} ); //TODO otlib
+			if (var2=="<hisnym>") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<ccoptional>"} ); //TODO otlib
 			}
 		}
 	}
@@ -991,26 +990,26 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	if (topic=="nym") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"check", "edit", "export", "import", "info", "ls", "new", "refresh", "register", "rm", "BLANK"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"check", "edit", "export", "import", "info", "ls", "new", "refresh", "register", "rm", "[BLANK]"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"name", "BLANK"} ); //TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"name", "[BLANK]"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="rm") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"name", "nymID"} );//TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"name", "<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="info") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"nymID"} );//TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="edit") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"nymID"} );//TODO Suitable changes to this part - propably after merging with otlib
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="register") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"nymID", "serverID"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>", "<serverID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
 			}
 			if (action=="check") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"nymID"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
+				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
 			}
 		}
 	}
@@ -1024,7 +1023,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}*/
 
 	if (topic=="server") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "BLANK" } ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "[BLANK]" } ) ;
 	}
 
 	if (topic=="text") {
