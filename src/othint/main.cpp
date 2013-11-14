@@ -508,29 +508,40 @@ msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
 msg ls
 msg mv
 msg rm <index>
-nym 		# can display active (default) nym
+nym 			# can display active (default) nym
 nym ls
 nym new
 nym new <name>
 nym rm <name>
-nym rm <nymID>
-nym info <nymID>
-nym edit <nymID>
-nym register <nymID>
+nym rm <nym>
+nym info <nym>
+nym edit <nym>
+nym register <nym> <server>
 nym import
-asset
-account
+nym export
+nym check
+asset			# can display active (default) asset
+asset new
+account		# can display active (default) account
+account new
+server		# can display active (default) server
+server ls
+server new (like newserver)
 market
-basket
-voucher
-cheque
-server
-mint
-contract
-cash
+basket new
+basket ls
+basket exchange
+voucher new
+cheque new
+cash send <mynym> <hisnym>
+mint new
+contract new
+contract get <contractID>
+inbox accept --all
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
+wallet? status
 
 ------------------------------------------------------------------------
 opentxs commands:
