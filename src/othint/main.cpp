@@ -509,24 +509,37 @@ nym ls
 nym new
 nym new <name>
 nym rm <name>
-nym rm <nym>
-nym info <nym>
-nym edit <nym>
-nym register <nym> <server>
+nym rm <nymID>
+nym info <nymID>
+nym edit <nymID>
+nym register <nymID> <serverID>
 nym import
 nym export
-nym check
-nym credential new
-nym credential revoke
-nym credential show
-asset			# can display active (default) asset
-asset new
-account		# can display active (default) account
+nym check <nymID>
+nym refresh
+nym-cred new # change credential to trust?
+nym-cred revoke
+nym-cred show
+asset				# can display active (default) asset
+asset new 	# change to issue?
+asset new <assetName>
+account			# can display active (default) account
+account ls
 account new
-server		# can display active (default) server
+account new <assetID>
+account new <assetID> <accountName>
+account refresh
+account-in ls			# for active account
+account-in ls <accounID>
+account-in accept <paymentID>
+account-in accept --all
+account-out ls
+server			# can display active (default) server
 server ls
-server new (like newserver)
+server add
+server new 	# like newserver
 market
+market ls
 basket new
 basket ls
 basket exchange
@@ -536,11 +549,14 @@ cash send <mynym> <hisnym>
 mint new
 contract new
 contract get <contractID>
-inbox accept --all
+contract sign
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
 wallet? status
+receipt?
+text encode
+text decode
 
 ------------------------------------------------------------------------
 opentxs commands:
