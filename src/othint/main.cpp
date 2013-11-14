@@ -208,8 +208,8 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 // list of thigs from libraries that we pull into namespace nOT::nNewcli
 // we might still need to copy/paste it in few places to make IDEs pick it up correctly
 #define OT_COMMON_USING_NAMESPACE_1 \
-uXXXg std::string; \
-uXing stX::vecXor; \
+using std::string; \
+using std::vector; \
 using std::list; \
 using std::set; \
 using std::map; \
@@ -822,6 +822,8 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	const string topic  = rtrim( namepart.at(0) );
 	const string action = rtrim( namepart.at(1) );
+	const string var1 = rtrim( namepart.at(2) );
+	const string var2 = rtrim( namepart.at(2) );
 
 	int full_words=0;
 	int started_words=0;
@@ -868,8 +870,11 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
-			if (action=="assetID") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"accountname"} ) ;
+			}
+		}
+		if (full_words<4) { // we work on word4? - var2; this one have to get "assetID" variable from library
+			if (var1=="<assetID>") {
+				return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
 			}
 		}
 	}
@@ -1020,6 +1025,22 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	if (topic=="server") {
 		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "BLANK" } ) ;
+	}
+
+	if (topic=="text") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ;
+	}
+
+	if (topic=="voucher") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
+	}
+
+	/*if (topic=="wallet") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"status"} ) ;
+	}*/
+
+	if (topic=="server") {
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "[BLANK]" } ) ;
 	}
 
 	if (topic=="text") {
