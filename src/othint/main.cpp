@@ -425,7 +425,7 @@ First an advance example of magic of OT hints:
   ot msg send bob al<TAB>
 will auto-complete options:
   alice alex alcapone
-In this situatin, bash autocomplete with othint program
+In this situation, bash autocomplete with othint program
 will query the OT server to list your contacts named al...
 
 With respecting your privacy, trying to use remote server only if
@@ -444,11 +444,11 @@ confirmations when also EXECUTING a command that will connect to OT server.
 		silvergrams silvertest silverbob {showing only cached data, last update 3h ago}
 	2. when the command is finished and executed as
 	  ot_quiet mint spawn bob silvergrams 1000<ENTER>
-	it will ask: "Please confirm do you want to NOW connect to OT server aliased BigTest1,
+	it will ask: "Please confirm do you want to connect NOW to OT server aliased BigTest1,
 	with ID=855gusd2dffj2d9uisdfokj233 (unknown/new server), and execute
 	mint-spawn command? Type 2 words: 'unknown spawn' to confirm, or 'no'"
 
-Also name alice is in front (instead alphabet sorting) since it was recentyl/frequently used.
+Also name alice is in front (instead alphabet sorting) since it was recently/frequently used.
 
 All OT commands will be neatly supported in this way.
 
@@ -476,6 +476,7 @@ ot                    msg                     bob  alice # missing subcommand
 ot                    msg   send              bob  # requires at least 2 arguments(*)
 ot                    msg   send              bob  alice           --date=now --date=0 # date is unique
 ot                    msg   send              bob  --hint-cachead=0 # forward command must be in font
+
 (*) possibly such errors will instead allow execution and have the program interactivly ask for missing mandatory vars.
 
 Therefore the syntax is:
@@ -484,7 +485,7 @@ Therefore the syntax is:
 	- subaction will be probably not used but leaving such possibility, then it would be 2..3 words
 
 ARGUMENTS:
-	- front-options are speciall options that must appear in front because they change meaning/parsing
+	- front-options are special options that must appear in front because they change meaning/parsing
 		of everything next - particullary, auto-completion options. Read section [front-options] for details
 
 	- Arguments available depend on the command name.
@@ -501,78 +502,86 @@ ARGUMENTS:
 
 SEE testcases below in functions
 
+#----------------Errors------------------#
 msg     # error: incomplete action
 msg send     # error: missing required options
 msg send <mynym>     # error: missing required options
+#----------------Errors------------------#
 
-msg send <mynym> <hisnym>
-msg send <mynym> <hisnym> --push     # global option
-msg send <mynym> <hisnym> --no-footer     # action option
-msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
-msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
-msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
-msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
-msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push
-msg ls
-msg mv
-msg rm <index>
-msg rm --all
-nym 			# can display active (default) nym
-nym ls
-nym new
-nym new <name>
-nym rm <name>
-nym rm <nymID>
-nym info <nymID>
-nym edit <nymID>
-nym register <nymID> <serverID>
-nym import
-nym export
-nym check <nymID>
-nym refresh
-nym-cred new # change credential to trust?
-nym-cred revoke
-nym-cred show
+#------List of all included commands-----#
+account			# can display active (default) account
+account ls			# list all accounts
+account new			# make new account with UI
+account new <assetID>			# make new account by giving only <assetID>...
+account new <assetID> <accountName>			#... and <accountName>
+account refresh			#	refresh database of private accounts' list
+account-in ls			# for active account
+account-in ls <accountID>			# for specific <accountID>	
+account-in accept <paymentID>				#	accept this particullar payment
+account-in accept --all			# accept all 
+account-out ls
 asset				# can display active (default) asset
 asset new 	# change to issue?
-asset new <assetName>
-account			# can display active (default) account
-account ls
-account new
-account new <assetID>
-account new <assetID> <accountName>
-account refresh
-account-in ls			# for active account
-account-in ls <accounID>
-account-in accept <paymentID>
-account-in accept --all
-account-out ls
-server			# can display active (default) server
-server ls
-server add
-server new 	# like newserver
-market
-market ls
+asset new <assetName>			# set new asset with given <assetName>
 basket new
 basket ls
 basket exchange
-voucher new
-cheque new
 cash send <mynym> <hisnym>
-mint new
+cheque new
 contract new
 contract get <contractID>
 contract sign
+market
+market ls
+mint new
+msg			# should show what options do you have with this topic
+msg send		# should ask you about nyms ?
+msg send <mynym> 		# should take your nym and ask about addressee's name
+msg send <mynym> <hisnym> 		# an example of usage
+msg send <mynym> <hisnym> --push     		# global option
+msg send <mynym> <hisnym> --no-footer     # action option
+msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
+msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
+msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push  	 # example of force send (?) - not sure if it will appear
+msg ls			# list all messages
+msg mv			# move message to different directory in your mail box
+msg rm <index>		# remove message with <index> number
+msg rm --all		# remove all messages from mail box
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
-wallet? status
+nym 			# can display active (default) nym
+nym ls			# list of all nyms
+nym new			# make new nym with UI (it should ask potential user to give the name 
+nym new <name>			# make new nym by giving name without UI
+nym rm <name>			# remove nym with such <name>
+nym rm <nymID>		# remove nym with such <nymID>
+nym info <nymID>		# show information about such <nymID>
+nym edit <nymID>		# allows to edit information about such <nymID>
+nym register <nymID> <serverID>			# register this specific <nymID> to specific <serverID> server
+nym import		# import saved (somewhere?) nyms
+nym export		# export nyms to (outerspace) :) ?
+nym check <nymID>			# returns Public Key of this <nymID> nym
+nym refresh			# refresh nym's list and its included informations
+nym-cred new 			# change credential to trust?
+nym-cred revoke
+nym-cred show			# show all credential to trust?
 receipt?
+server			# can display active (default) server
+server ls			# as above but all servers are listed
+server add		# add new server
+server new 	# like newserver
 text encode
 text decode
+voucher new
+wallet? status
+#------List of all included commands-----#
+
+That's all commands included to OTHint for now.
+(?) means that we're not sure if it will appear in main program, those keywords are implemente but commented for now
 
 ------------------------------------------------------------------------
-opentxs commands:
+older opentxs commands:
 
 acceptall	acceptinbox	acceptinvoices	acceptmoney
 acceptpayments	acceptreceipts	accepttransfers	addasset
@@ -639,9 +648,7 @@ Shortcuts:
 --HL gives hints local          equals --hint-local       equals --hint-remote=1 --hint-cached=5
 --HT gives hints trusted        equals --hint-trusted     equals --hint-remote=3 --hint-cached=5
 --HN gives hints from network   equals --hint-net         equals --hint-remote=5 --hint-cached=5
-
 --HR is forced net reload       equals --hint-reload      equals --hint-remote=9 --hint-cached=0
-
 --HV gives VPNed network        equals --hint-vpn         equals --vpn-all-net --hint-remote=9 --hint-cached=5
 
 VPN:
