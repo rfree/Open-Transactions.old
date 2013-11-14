@@ -835,7 +835,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	}
 
 	if (topic=="nym") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"aaa1","aaa2","ab"} ) ;
+		return WordsThatMatch(  current_word  ,  vector<string>{"ls","new","rm"} ) ;
 	}
 
 	return vector<string>(1,"ERROR");
