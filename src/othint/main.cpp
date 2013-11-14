@@ -208,8 +208,8 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 // list of thigs from libraries that we pull into namespace nOT::nNewcli
 // we might still need to copy/paste it in few places to make IDEs pick it up correctly
 #define OT_COMMON_USING_NAMESPACE_1 \
-uXXXg std::string; \
-uXing stX::vecXor; \
+using std::string; \
+using std::vector; \
 using std::list; \
 using std::set; \
 using std::map; \
