@@ -495,6 +495,8 @@ msg send <mynym>     # error: missing required options
 msg send <mynym> <hisnym>
 msg send <mynym> <hisnym>
 msg send <mynym> <hisnym>
+
+
 msg send <mynym> <hisnym>
 msg send <mynym> <hisnym> --push     # global option
 msg send <mynym> <hisnym> --no-footer     # action option
@@ -512,9 +514,53 @@ nym new
 nym new <name>
 nym rm <name>
 nym rm <nymID>
+nym info <nymID>
+nym edit <nymID>
+nym register <nymID>
+nym import
+asset
+account
+market
+basket
+voucher
+cheque
+server
+mint
+contract
+cash
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
+
+------------------------------------------------------------------------
+opentxs commands:
+
+acceptall	acceptinbox	acceptinvoices	acceptmoney
+acceptpayments	acceptreceipts	accepttransfers	addasset
+addserver	addsignature	balance		buyvoucher
+cancel		changepw	checknym	clearexpired
+clearrecords	confirm		credentials	decode
+decrypt		delmail		deloutmail	deposit
+discard		editacct	editasset	editnym
+editserver	encode		encrypt		exchange
+expired		exportcash	exportnym	getboxreceipt
+getcontract	getmarkets	getmyoffers	getoffers
+importcash	importnym	inbox		issueasset
+killoffer	killplan	mail		newacct
+newasset	newbasket	newcred		newkey
+newnym		newoffer	newserver	outbox
+outmail		outpayment	pass_decrypt	pass_encrypt
+paydividend	payinvoice	payments	propose
+records		refresh		refreshacct	refreshnym
+register	revokecred	sendcash	sendcheque
+sendinvoice	sendmsg		sendvoucher	showaccounts
+showacct	showassets	showbasket	showcred
+showincoming	showmarkets	showmint	showmyoffers
+shownym		shownyms	showoffers	showoutgoing
+showpayment	showpurse	showservers	sign
+stat		transfer	trigger		verifyreceipt
+verifysig	withdraw	writecheque	writeinvoice
+------------------------------------------------------------------------
 
 [front-options] usage is for example:
 If you type -HN in front of options, then Hints will use Network (-HN) to autocomplete, typing
@@ -777,9 +823,9 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 		return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 	}
 
-	if (topic=="msguard") {
+	if (topic=="msguard") { // testing!
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  , vector<string>{"info","start","sYYY"} ); // <-- TODO
+			return WordsThatMatch(  current_word  , vector<string>{"info","start","stop"} ); // <-- TODO
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="start") {
