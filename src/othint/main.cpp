@@ -19,21 +19,21 @@
  *
  * 	Where applicable (under given jurisdiction's law system),
  * 	we want to give away our code as CC0 (Creative Commons 0);
- * 	However, some parts of code might be not fully ours to licence/decide 
- * 	(from point of view of given law system), 
- * 	because they are connecting to other work in some ways. 
+ * 	However, some parts of code might be not fully ours to licence/decide
+ * 	(from point of view of given law system),
+ * 	because they are connecting to other work in some ways.
  *
- * 	In any such unclear cases, the general Open Transaction licence as 
- * 	published by FellowTraveller on GitHub should be applied if possible 
+ * 	In any such unclear cases, the general Open Transaction licence as
+ * 	published by FellowTraveller on GitHub should be applied if possible
  * 	(because it clarifies how to deal with linking to work like Lucre code,
  * 	OpenSSL code, and so on).
  *
  * 	We also allow this code to be released to Public Domain, but again,
- * 	we do not verify how is that possible in given law system. 
+ * 	we do not verify how is that possible in given law system.
  *
- * 	In ANY CASE, we take absolutely NO legal responsibility about 
- * 	licensing, sharing, using this code (nor patent nor copyright nor 
- * 	any other law related issues that it might have) e.g. in your	country. 
+ * 	In ANY CASE, we take absolutely NO legal responsibility about
+ * 	licensing, sharing, using this code (nor patent nor copyright nor
+ * 	any other law related issues that it might have) e.g. in your	country.
  *
  * 	We are not lawyers, and it is up to only You to find out what
  * 	laws apply for your case. Do not use any of this code if you don't
@@ -198,8 +198,8 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <stdexcept>
 
 // for the super advanced trim ;)
-#include <algorithm> 
-#include <functional> 
+#include <algorithm>
+#include <functional>
 #include <cctype>
 #include <locale>
 
@@ -233,17 +233,17 @@ int gGlobalVariable; // g - global variable
 class cFooBar {
 private:
 	static int sStaticVariable; // s - static variable
-	
+
 	int mFooBarBaz; // m - variable, member of class
 
 	int Fooberize();
 	int DerpTheHerp();
-	
+
 public:
 	cFooBar(int x)
 	: mFooBarBaz(x)
 	{}
-	
+
 	inline int Foo() {
 		int abc=42;
 		return abc;
@@ -255,7 +255,7 @@ int cFooBar::sStaticVariable = 0;
 struct cSimpleParam {
 	int x;
 	int y;
-	
+
 	cSimpleParam(int x, int y)
 	: x(x), y(y)
 	{}
@@ -363,7 +363,7 @@ void Assert(bool result, const std::string &stamp) {
 
 namespace nOper { // nOT::nUtil::nOper
 // cool shortcut operators, like vector + vecotr operator working same as string (appending)
-// isolated to namespace because it's unorthodox ide to implement this 
+// isolated to namespace because it's unorthodox ide to implement this
 
 using namespace std;
 
@@ -411,7 +411,7 @@ using nOT::nUtil::ToStr;
 === Introduction ===
 
 First an advance example of magic of OT hints:
-  ot msg send bob al<TAB> 
+  ot msg send bob al<TAB>
 will auto-complete options:
   alice alex alcapone
 In this situatin, bash autocomplete with othint program
@@ -419,27 +419,27 @@ will query the OT server to list your contacts named al...
 
 With respecting your privacy, trying to use remote server only if
 data was not cached, and only asking servers that you trust (the --HT option)
-that is the default. Start with "ot --H0" to make sure there will be 0 network 
+that is the default. Start with "ot --H0" to make sure there will be 0 network
 activity, no servers will be asked:
   ot --H0 msg send bob a<TAB>
 will auto-complete with data that can be given without causing network traffic.
 
-ot_secure: 
+ot_secure:
 If it's more convinient, we might provide separate command: "ot_net", "ot_secure"
 with other level of discretion in the hinting process as well with say more
 confirmations when also EXECUTING a command that will connect to OT server.
   ot_quiet mint spawn bob silve<TAB>
 	1. will NOT ask any server about the list of currenies silve... will use cache
 		silvergrams silvertest silverbob {showing only cached data, last update 3h ago}
-	2. when the command is finished and executed as 
+	2. when the command is finished and executed as
 	  ot_quiet mint spawn bob silvergrams 1000<ENTER>
-	it will ask: "Please confirm do you want to NOW connect to OT server aliased BigTest1, 
-	with ID=855gusd2dffj2d9uisdfokj233 (unknown/new server), and execute 
+	it will ask: "Please confirm do you want to NOW connect to OT server aliased BigTest1,
+	with ID=855gusd2dffj2d9uisdfokj233 (unknown/new server), and execute
 	mint-spawn command? Type 2 words: 'unknown spawn' to confirm, or 'no'"
 
 Also name alice is in front (instead alphabet sorting) since it was recentyl/frequently used.
 
-All OT commands will be neatly supported in this way. 
+All OT commands will be neatly supported in this way.
 
 
 === Commands are in form ===
@@ -454,9 +454,9 @@ Examples:
 ot  --H0              msg   send              bob a
 ot                    msg   send              bob alice            --attach scan.jpeg
 ot                    msg   send              bob alice carol      --attach scan.jpeg
-ot                    msg   send              bob alice carol      -v -v -v 
-ot  --hint-private    msg   send              bob alice carol      -v -v -v 
-ot  --hint-cached     msg   send              bob alice carol      -v -v -v 
+ot                    msg   send              bob alice carol      -v -v -v
+ot  --hint-private    msg   send              bob alice carol      -v -v -v
+ot  --hint-cached     msg   send              bob alice carol      -v -v -v
 ot  --hint-cached     msg   help
 
 Examples of SYNTAX ERRORS:
@@ -470,7 +470,7 @@ Therefore the syntax is:
 [front-options] 2 words of command name, 0..N mandatory variables, 0..M extra variables, any options
 
 	- subaction will be probably not used but leaving such possibility, then it would be 2..3 words
-	
+
 ARGUMENTS:
 	- front-options are speciall options that must appear in front because they change meaning/parsing
 		of everything next - particullary, auto-completion options. Read section [front-options] for details
@@ -484,7 +484,7 @@ ARGUMENTS:
 	- Options can be unique or can repeat. Options can have no value/data,
 		or can have one.This gives 2*2 = 4 kinds of options: uniq, uniqData,
 		repeat, repeatData.
-		
+
 	- Options can be both global and comming from selected action/subaction.
 
 SEE testcases below in functions
@@ -520,6 +520,9 @@ nym register <nym> <server>
 nym import
 nym export
 nym check
+nym credential new
+nym credential revoke
+nym credential show
 asset			# can display active (default) asset
 asset new
 account		# can display active (default) account
@@ -581,7 +584,7 @@ ot -H0 .... will make sure you will not ask OT servers, just use data cached
 ot -HR .... will force othint to refresh all information from servers. Option useful if you want fresh information from servers in real time. Slow and dagerous for privacy.
 
 The exact planned options are 2 settings: accessing remote and accessing cache.
-	--hint-remote=V set's the privacy to level 0..9. 0=never ask remote severs for data needed for 
+	--hint-remote=V set's the privacy to level 0..9. 0=never ask remote severs for data needed for
 	this autocompletion, 9 freely ask (less secure, because remote server see that we compose a command).
 	1=local server (e.g. localhost that was marked as trusted)
 	3=trusted servers (e.g. several servers you configure as trusted)
@@ -589,16 +592,16 @@ The exact planned options are 2 settings: accessing remote and accessing cache.
 	9=you fully ask the server owners and consent to possiblity of them (or their ISP, hosting) learning
 	what you are planning to do
 
-	--hint-cached=V set's the usage of cached data. 0=revalidate now all data from server. 
+	--hint-cached=V set's the usage of cached data. 0=revalidate now all data from server.
 	5=normal reasonable use of cache
 	8=only cached data, unless we have no choice, 9=only cached data even if it causes an error
 
 --hint-remote=0 implies --hint-cached=9 as we are not allowed to touch remote server at all
 --hint-cached=0 implied --hints-remote=0 as we are ordering to touch remote server so we are not working in private mode
 
---hint-remote=0 --hint-cached=0 is disallowed syntax, 
-even though some commands that indeed do not need neither cached nor remote data could work, 
-like "ot --hint-remote=0 --hint-cached=0 msg help" 
+--hint-remote=0 --hint-cached=0 is disallowed syntax,
+even though some commands that indeed do not need neither cached nor remote data could work,
+like "ot --hint-remote=0 --hint-cached=0 msg help"
 or "ot --hint-remote=0 --hint-cached=0 msg draft"
 but for clarity it will be an error because likelly someone confused the options.
 But then, --hint-allow-strange option will allow such syntax, if it appears in front of option causing this
@@ -618,13 +621,13 @@ Shortcuts:
 
 VPN:
 option --vpn-all-net will force hint autocompletion (and also the actuall commands, unless later
-canceled with other options) to use only VPN or similar secure networking. Details will be 
+canceled with other options) to use only VPN or similar secure networking. Details will be
 configured, it could be e.g. a VPN network, or possibly other secured (private) network facility.
 It is guarnateed that if such secure network fails to work, then no network will be touched
 and program will not leak any activity to open network (LAN, Internet, etc)
 --HV might be most comfortable and yet quite secure option, usable e.g. from hotels.
 
-VPN forced: 
+VPN forced:
 Global configuration option could force to always use VPN (append --vpn-all-net)
 then use "ot --HN" will not auto-complete on <TAB> but show:
   {can not use --HN because your configuration disabled it, please try --HV}
@@ -687,7 +690,7 @@ msg_send_complete() {
 class argument_info {
 	// klasa mowi jaki to argument  np ze to argument  "mynym" i ze ma byc stringiem albo ze ma byc integerem albo ze to tylko boolean
 	// oraz dostarcza klasa !!! do auto complete jakas
-	
+
 	string mName; // "mynym" "hisnym" (nawet te argumenty, ktore maja okreslona kolejnosc wiec niby nie maja nazwy, beda jak mialy dla jasnosci i np generowania tekstu help"
 
 	// inne mName to bedzie np "cc"  dla opcji --cc ktora juz wymaga nazwy
@@ -779,14 +782,14 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	std::istringstream iss(sofar_str);
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
-	
+
 	if (GetLastCharIf(sofar_str)==" ") {
 		ASRT( sofar.size()>=1 );
 		sofar.at( sofar.size()-1 )+=" "; // append the last space - to the last word so that we know it was ended
 	}
-	
+
 	// exactly 2 elements, with "" for missing elements
-	decltype(sofar) namepart( sofar.begin(), sofar.end() ); 
+	decltype(sofar) namepart( sofar.begin(), sofar.end() );
 	while (namepart.size()<2) namepart.push_back("");
 	if (dbg) DisplayVectorEndl(namepart,",");
 
@@ -804,13 +807,13 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	for (auto rec : sofar) {
 		if (rec!="") started_words++;
 		if (last_word_pending) { full_words++; last_word_pending=0; }
-		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it 
+		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
 		// still as finished word if there is a word after this one
 		++nr;
 	}
 	string current_word="";
 	if (full_words < started_words) current_word = sofar.at(full_words);
-	if (dbg) { cerr << "full_words=" << full_words << " started_words="<<started_words 
+	if (dbg) { cerr << "full_words=" << full_words << " started_words="<<started_words
 		<< " topic="<<topic << " action="<<action
 		<< " current_word="<<current_word << endl;
 	}
@@ -819,16 +822,16 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// (and return - via referenced argument)
 
 	// * possib variable - short for "possibilities"
-	
+
 	// TODO support discarding forward-opion flags
 	// ...
-	
+
 	// === at 1st (non-forward-option) word (topic) ===
 
 	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
 		return WordsThatMatch(  current_word  ,  vector<string>{"msg","msguard","nym", "asset", "account", "market", "basket", "voucher", "cheque" , "server", "mint", "contract", "cash"} + forward_options  ) ;
 	}
-	
+
 	// === at 2nd (non-forward-option) word (action) ===
 	if (topic=="msg") {
 		if (full_words<2) { // we work on word2 - the action:
@@ -883,43 +886,43 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	if (topic=="asset") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-	
+
 	if (topic=="account") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="market") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-	
+
 	if (topic=="basket") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="voucher") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="cheque") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="server") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="mint") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="contract") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-		
+
 	if (topic=="cash") {
 		return WordsThatMatch(  current_word  ,  vector<string>{""} ) ;
 	}
-	
+
 	return vector<string>(1,"ERROR");
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
@@ -971,7 +974,7 @@ int main(int argc, char* argv[]) {
 			else { std::cerr<<"No string provided for completion."<<std::endl; return 1; }
 		} // COMPLETE
 	} else {
-		std::cerr<<"No arguments given."<<std::endl; return 1; 
+		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
 
 	// return 42; // nope. in C++, the exit code returns YOU
@@ -1080,11 +1083,11 @@ bool testcase_complete_1(const string &sofar) {
 	string line(sofar);
 	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
 	// TODO verify length (avoid underflow)
-	
+
 	vector<string> out = hint.AutoComplete(line);
 	nOT::nUtil::DisplayVector(out);
-	
-	
+
+
 	bool ok = 1;
 
 	return ok;
@@ -1134,13 +1137,13 @@ bool testcase_cxx11_memory() {
 
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
 	long int number_errors = 0; // long :o
-	
+
 	vector<bool (*)(void)> vectorOfFunctions;
 	vector<bool (*)(void)>::iterator it;
 	// creating vector of pointers to test functions
 	vectorOfFunctions.push_back(&testcase_namespace_pollution);
 	vectorOfFunctions.push_back(&testcase_cxx11_memory);
-	
+
 	bool result = true;
 	for(it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
 		result = (*it)();
@@ -1154,7 +1157,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 		//cout << "Some tests were not completed." << endl;
 	}
 	// testcase_complete_1(); // quiet.
-	
+
 	return true;
 }
 
