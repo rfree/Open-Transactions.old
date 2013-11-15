@@ -458,9 +458,9 @@ All OT commands will be neatly supported in this way.
 ot [front1,front2...] topic action [--subact] var1,...  [varM,...] [--optNameN[=[optArgN]]...]
 
 ot <-front options--> <- cCmdname ----------> <---- arguments ------------------------------->
-ot                    <- cCmdname ----------> <---- vars -----> <-- options ----------------->
+ot                    <- cmd name ----------> <---- vars -----> <-- options ----------------->
 ot <--- optional ---> <- mandatory-------------------> <--- optional ------------------------>
-ot <-cmdFrontOpt ---> <- cmdPart -----------> <-------------- cmdArgs ----------------------->
+ot <-- cmdFrontOpt -> <- cmdPart -----------> <-------------- cmdArgs ----------------------->
 
 Examples:
 ot  --H0              msg   send              bob a
