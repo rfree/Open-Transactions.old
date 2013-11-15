@@ -203,6 +203,11 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <cctype>
 #include <locale>
 
+#ifdef __unix__
+// GNU Readline
+#include <readline/readline.h>
+#endif
+
 // OTNewcliCmdline
 
 // list of thigs from libraries that we pull into namespace nOT::nNewcli
