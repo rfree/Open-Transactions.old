@@ -204,8 +204,17 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <locale>
 
 #ifdef __unix__
-// GNU Readline
-#include <readline/readline.h>
+	#ifdef OT_ALLOW_GNU_LIBRARIES
+		#include <readline/readline.h> // GNU Readline
+		#define LIBRARY_STATUS_GNU_READLINE 1
+		#define LIBRARY_STATUS_GNU_READLINE__S "Included"
+	#else
+		#define LIBRARY_STATUS_GNU_READLINE 0
+		#define LIBRARY_STATUS_GNU_READLINE__S "Disabled, because GNU was disabled at compilation time (readline requires GPL licence)"
+	#endif
+#else
+	#define LIBRARY_STATUS_GNU_READLINE 0
+	#define LIBRARY_STATUS_GNU_READLINE__S "Disabled, because this was not a UNIX compatible compilation (readline works on UNIX and alike)"
 #endif
 
 // OTNewcliCmdline
@@ -521,9 +530,9 @@ account new <assetID>			# make new account by giving only <assetID>...
 account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
 account-in ls			# for active account
-account-in ls <accountID>			# for specific <accountID>	
+account-in ls <accountID>			# for specific <accountID>
 account-in accept <paymentID>				#	accept this particullar payment
-account-in accept --all			# accept all 
+account-in accept --all			# accept all
 account-out ls
 asset				# can display active (default) asset
 asset new 	# change to issue?
@@ -557,7 +566,7 @@ msguard start
 msguard stop
 nym 			# can display active (default) nym
 nym ls			# list of all nyms
-nym new			# make new nym with UI (it should ask potential user to give the name 
+nym new			# make new nym with UI (it should ask potential user to give the name
 nym new <name>			# make new nym by giving name without UI
 nym rm <name>			# remove nym with such <name>
 nym rm <nymID>		# remove nym with such <nymID>

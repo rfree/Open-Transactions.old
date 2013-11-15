@@ -3,3 +3,4 @@
 COMPILER="$HOME/.local/bin/compile-cxx"
 
 $COMPILER -std=c++11 main.cpp -o othint -lreadline && echo "Starting program:" && ./othint --complete-shell ; echo "Done."
+
