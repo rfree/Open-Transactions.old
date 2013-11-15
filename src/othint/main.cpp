@@ -817,15 +817,12 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) cmdPart;
 	decltype(sofar) cmdArgs;
-	int cmdPartSize, cmdArgsSize;
 	if (sofar.size()<2) {
 		cmdPart = sofar;
-		cmdPartSize = cmdPart.size();
 	}
 	else {
 		cmdPart.insert( cmdPart.begin(), sofar.begin(), sofar.begin()+2 );
 		cmdArgs.insert( cmdArgs.begin(), sofar.begin()+2, sofar.end() );
-		cmdArgsSize = cmdArgs.size();
 	}
 	while (cmdPart.size()<2) cmdPart.push_back("");
 	if (dbg) DBGDisplayVectorEndl(cmdPart,",");
@@ -840,10 +837,6 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 
 	const string topic  =  cmdPart.at(0) ;
 	const string action =  cmdPart.at(1) ;
-	string var1;
-	string var2;
-	if (cmdArgs.size()>0) var1 = cmdArgs.at(0) ;
-	if (cmdArgs.size()>1) var2 = cmdArgs.at(1) ;
 
 	int full_words=0;
 	int started_words=0;
@@ -872,7 +865,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 	// TODO support discarding forward-opion flags
 	// ...
 
-	// === at 1st (non-forward-option) word (topic) ===
+	// === at 1st (non-front-option) word (topic) ===
 
 	if (full_words<1) { // at 1st word (topic) -> show all level 1 cmdnames
 
@@ -892,7 +885,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word4 - var2; this one have to get "assetID" variable from otlib
-			if (var1=="<assetID>") {
+			if (cmdArgs.at(0)=="<assetID>") {
 	     	return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
 			}
 		}
@@ -941,7 +934,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word3 - var1
-			if (var1=="send") {
+			if (cmdArgs.at(0)=="send") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
 		}
@@ -986,12 +979,12 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 			}
 		}
 		if (full_words<4) { // we work on word3 - var1
-			if (var1=="<mynym>") {
+			if (cmdArgs.at(0)=="<mynym>") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO otlib
 			}
 		}
 		if (full_words<5) { // we work on word4 - var2
-			if (var2=="<hisnym>") {
+			if (cmdArgs.at(1)=="<hisnym>") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<ccoptional>"} ); //TODO otlib
 			}
 		}
@@ -1088,7 +1081,7 @@ void cInteractiveShell::run() {
 		std::string line;
 		cout << "\n\nCommand: Press ENTER to show auto-completion for the command. Type q or quit (and press ENTER) to quit." << endl;
 		cout << "commandline-part> " << std::flush;
-		getline(cin,line);
+		getline(cin,line,'\t');
 		if (line == "q") break;
 		if (line == "quit") break;
 		std::string cmdline;
