@@ -817,6 +817,7 @@ class cHint {
 		vector<string> BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const; // return command lines tree that is possible from this place
 };
 
+
 vector<string> cHint::AutoComplete(const string &sofar_str) const { // the main function to auto-complete
 	auto possible = BuildTreeOfCommandlines(sofar_str,false);
 	return possible;
