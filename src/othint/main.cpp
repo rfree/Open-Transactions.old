@@ -206,6 +206,7 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #ifdef __unix__
 	#ifdef OT_ALLOW_GNU_LIBRARIES
 		#include <readline/readline.h> // GNU Readline
+		#include <readline/history.h>
 		#define LIBRARY_STATUS_GNU_READLINE 1
 		#define LIBRARY_STATUS_GNU_READLINE__S "Included"
 	#else
@@ -1096,6 +1097,7 @@ vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show
 class cInteractiveShell {
 	public:
 		void run();
+		void runReadline(const char * sofar);
 };
 
 void cInteractiveShell::run() {
@@ -1111,6 +1113,34 @@ void cInteractiveShell::run() {
 		cout << "Auto-complete for '" << cmdline << "': " << endl;
 		nOT::nTests::testcase_complete_1(cmdline);
 	}
+}
+
+static char** completionReadlineWrapper( const char * sofar , int start,  int end){
+	string line(sofar);
+	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
+	// TODO verify length (avoid underflow)
+	nOT::nOTHint::cHint hint;
+	vector<string> out = hint.AutoComplete(line);
+	std::vector<const char*> vc;
+	std::transform(out.begin(), out.end(), std::back_inserter(vc), mem_fn( &string::c_str ));
+	char** matches = (char **)NULL;
+	matches = const_cast<char**> (&vc.front());
+	return matches;
+}
+
+void cInteractiveShell::runReadline(const char * sofar) {
+	char *buf;
+	//rl_bind_key('\t',rl_abort);//disable auto-complete
+	rl_attempted_completion_function = completionReadlineWrapper;
+
+	while((buf = readline("commandline-part> "))!=NULL) {
+		if (strcmp(buf,"quit")==0)
+			break;
+		rl_bind_key('\t',rl_complete);
+		if (buf[0]!=0)
+			add_history(buf);
+		}
+	free(buf);
 }
 
 
@@ -1129,7 +1159,7 @@ int main(int argc, char* argv[]) {
 		std::string arg1 = argv[1];
 		if (arg1=="--complete-shell") {
 			nOT::nOTHint::cInteractiveShell shell;
-			shell.run();
+			shell.runReadline(argv[1]);
 		} // SHELL
 		else if (arg1=="--complete-one") {
 			if (argc>=2) {
