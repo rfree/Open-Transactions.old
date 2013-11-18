@@ -824,6 +824,13 @@ vector<string> cHint::AutoComplete(const string &sofar_str) const { // the main 
 }
 
 vector<string> cHint::BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const {
+
+	nOT::nNewcli::Newcli newcli;
+	newcli.assign(sofar_str);
+	newcli.parse();
+
+}
+
 	bool dbg = false;
 	std::istringstream iss(sofar_str);
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
