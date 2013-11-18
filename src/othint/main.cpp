@@ -1117,7 +1117,7 @@ void cInteractiveShell::run() {
 
 static char** completionReadlineWrapper( const char * sofar , int start,  int end){
 	string line(sofar);
-	char** matches = (char **)NULL;
+	// char** matches = (char **)NULL;
 	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
 	// TODO verify length (avoid underflow)
 
@@ -1129,7 +1129,11 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 		cout << *vc.front() << endl;
 		//matches = const_cast<char**> (&vc.front());
 	}
-	char* cmd[] ={"hello"};
+	//char* cmd[] = { strdup("hello") , NULL};
+	typedef char *p_char;
+	char **cmd = new p_char [2];
+	cmd[0] = strdup("hellp");
+	cmd[1] = NULL;
 	return cmd;
 }
 
@@ -1137,12 +1141,11 @@ void cInteractiveShell::runReadline(const char * sofar) {
 	char *buf;
 	//rl_bind_key('\t',rl_abort);//disable auto-complete
 	rl_attempted_completion_function = completionReadlineWrapper;
-	//rl_completion_entry_function = completionReadlineWrapper;
 	while((buf = readline("commandline-part> "))!=NULL) {
 		if (strcmp(buf,"quit")==0)
 			break;
-		rl_bind_key('\t',rl_complete);
-		if (buf[0]!=0)
+			rl_bind_key('\t',rl_complete);
+			if (buf[0]!=0)
 			add_history(buf);
 		}
 	free(buf);
