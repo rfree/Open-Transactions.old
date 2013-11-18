@@ -1117,14 +1117,18 @@ void cInteractiveShell::run() {
 
 static char** completionReadlineWrapper( const char * sofar , int start,  int end){
 	string line(sofar);
+	char** matches = (char **)NULL;
 	line.erase (0,3); // need to erase 'ot' word from intput string // TODO erase it before, length of argv[0] could differ, e.g. "ot_secure"
 	// TODO verify length (avoid underflow)
-	nOT::nOTHint::cHint hint;
-	vector<string> out = hint.AutoComplete(line);
-	std::vector<const char*> vc;
-	std::transform(out.begin(), out.end(), std::back_inserter(vc), mem_fn( &string::c_str ));
-	char** matches = (char **)NULL;
-	matches = const_cast<char**> (&vc.front());
+
+	if (start == 0){
+		nOT::nOTHint::cHint hint;
+		vector<string> out = hint.AutoComplete(line);
+		std::vector<const char*> vc;
+		std::transform(out.begin(), out.end(), std::back_inserter(vc), mem_fn( &string::c_str ));
+		cout << *vc.front() << endl;
+		//matches = const_cast<char**> (&vc.front());
+	}
 	return matches;
 }
 
