@@ -1129,14 +1129,15 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 		cout << *vc.front() << endl;
 		//matches = const_cast<char**> (&vc.front());
 	}
-	return matches;
+	char* cmd[] ={"hello"};
+	return cmd;
 }
 
 void cInteractiveShell::runReadline(const char * sofar) {
 	char *buf;
 	//rl_bind_key('\t',rl_abort);//disable auto-complete
 	rl_attempted_completion_function = completionReadlineWrapper;
-
+	//rl_completion_entry_function = completionReadlineWrapper;
 	while((buf = readline("commandline-part> "))!=NULL) {
 		if (strcmp(buf,"quit")==0)
 			break;
@@ -1146,7 +1147,6 @@ void cInteractiveShell::runReadline(const char * sofar) {
 		}
 	free(buf);
 }
-
 
 }; // namespace nOTHint
 }; // namespace nOT
