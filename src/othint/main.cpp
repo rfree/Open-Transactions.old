@@ -809,7 +809,15 @@ using std::endl;
 using namespace nOT::nUtil;
 using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operators. It's appen, as in strings! :)
 
-class cHint {
+// Data for hinting, e.g. cached or local information.
+class cHintData {
+};
+
+// ====================================================================
+
+// The Manager to access OT-hint (autocompletion) functionality
+class cHintManager {
+
 	public:
 
 		vector<string> AutoComplete(const string &sofar_str) const; // the main function to auto-complete
