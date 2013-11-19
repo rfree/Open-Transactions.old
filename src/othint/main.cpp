@@ -811,7 +811,19 @@ using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operato
 
 // Data for hinting, e.g. cached or local information.
 class cHintData {
+	public:
+		vector<string> mNymsMy;
+		bool mNymsMy_loaded;
+
+		cHintData();
 };
+
+cHintData::cHintData() {
+	// test1
+	// test2
+
+}
+
 
 // ====================================================================
 
