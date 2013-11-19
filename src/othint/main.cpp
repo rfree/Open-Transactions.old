@@ -1156,7 +1156,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 class cInteractiveShell {
 	public:
 		void run();
-		void runReadline(const char * sofar);
+		void runReadline();
 };
 
 void cInteractiveShell::run() {
@@ -1202,7 +1202,7 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 	cerr << "completions_size=" << completions_size << endl;
 
 	typedef char *p_char;
-	char **cmd = new p_char[completions_size + 1];
+	char **cmd = (char**)malloc(sizeof(p_char) * (completions_size + 1));
 	decltype(completions_size) pos = 0;
 	for (auto rec : completions) {
 		cerr << " to pos=" << pos << " [ " << rec << " ] "  <<endl;
@@ -1215,8 +1215,8 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 }
 
 // http://www.delorie.com/gnu/docs/readline/rlman_28.html
-void cInteractiveShell::runReadline(const char * sofar) {
-	char *buf;
+void cInteractiveShell::runReadline() {
+	char *buf = NULL;
 	rl_attempted_completion_function = completionReadlineWrapper;
 	rl_bind_key('\t',rl_complete);
 	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
@@ -1237,6 +1237,7 @@ void cInteractiveShell::runReadline(const char * sofar) {
 			add_history(buf);
 		}
 		cout << "Command was: " << cmd << endl;
+		nOT::nTests::testcase_complete_1(cmd);
 		// ... TODO run it
 	}
 	if (buf) { free(buf); buf=NULL; }
@@ -1255,9 +1256,10 @@ int main(int argc, char* argv[]) {
 
 	if (argc>=1) {
 		std::string arg1 = argv[1];
+
 		if (arg1=="--complete-shell") {
 			nOT::nOTHint::cInteractiveShell shell;
-			shell.runReadline(argv[1]);
+			shell.runReadline();
 		} // SHELL
 		else if (arg1=="--complete-one") {
 			if (argc>=2) {
