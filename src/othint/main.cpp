@@ -862,22 +862,19 @@ class cHintManager {
 };
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
-	const std::string cut_begining="ot "; // minimal begining
+	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.size();
-	cerr << "cut_begining_size=" << cut_begining_size << endl;
 	if (sofar_str.length() < cut_begining_size) return vector<string>{ cut_begining };
 
 	// TODO optimize, avoid copy?
 	std::string line = sofar_str;
-	cerr<<"1 line="<<line<<endl;
 	line.erase(0, cut_begining_size);
-	cerr<<"2 line="<<line<<endl;
 
 	return AutoComplete(line);
 }
 
 vector<string> cHintManager::AutoComplete(const string &sofar_str) const { // the main function to auto-complete
-	cerr << "COMPLETE for sofar=[" << sofar_str << "]." << endl;
+	// cerr << "COMPLETE for sofar=[" << sofar_str << "]." << endl;
 	auto possible = BuildTreeOfCommandlines(sofar_str,false);
 	return possible;
 }
@@ -1149,15 +1146,23 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		return WordsThatMatch(  current_word  ,  vector<string>{"status"} ) ;
 	}*/
 
-	return vector<string>(1,"ERROR");
+	return vector<string>(0,"");
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
 
 class cInteractiveShell {
 	public:
+		cInteractiveShell();
 		void run();
 		void runReadline();
+
+	protected:
+		bool dbg;
 };
+
+cInteractiveShell::cInteractiveShell()
+:dbg(false)
+{ }
 
 void cInteractiveShell::run() {
 	while(1) {
@@ -1174,22 +1179,15 @@ void cInteractiveShell::run() {
 	}
 }
 
+extern bool my_rl_wrapper_debug; // external
+
+bool my_rl_wrapper_debug; // external
+
 static char** completionReadlineWrapper( const char * sofar , int start,  int end) {
 	// char** matches = (char **)NULL;
+	bool dbg = my_rl_wrapper_debug;
 
-/*
-	if (start == 0){
-		nOT::nOTHint::cHintManager hint;
-		vector<string> out = hint.AutoComplete(line);
-		std::vector<const char*> vc;
-		std::transform(out.begin(), out.end(), std::back_inserter(vc), mem_fn( &string::c_str ));
-		cout << *vc.front() << endl;
-		//matches = const_cast<char**> (&vc.front());
-	}
-	//char* cmd[] = { strdup("hello") , NULL};
-	*/
-
-	cerr << "\nsofar="<<sofar<<" start="<<start<<" end="<<end<< "rl_line_buffer="<<rl_line_buffer<<endl;
+	if (dbg) cerr << "\nsofar="<<sofar<<" start="<<start<<" end="<<end<< "rl_line_buffer="<<rl_line_buffer<<endl;
 
 	string line;
 	if (rl_line_buffer) line = rl_line_buffer;
@@ -1197,15 +1195,19 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 	nOT::nOTHint::cHintManager hint;
 	vector <string> completions = hint.AutoCompleteEntire(line);
 	auto completions_size = completions.size();
-	DBGDisplayVectorEndl(completions);
+	if (dbg) DBGDisplayVectorEndl(completions);
 
-	cerr << "completions_size=" << completions_size << endl;
+	if (dbg) cerr << "completions_size=" << completions_size << endl;
+
+	if (! completions_size) {
+		return NULL;
+	}
 
 	typedef char *p_char;
 	char **cmd = (char**)malloc(sizeof(p_char) * (completions_size + 1));
 	decltype(completions_size) pos = 0;
 	for (auto rec : completions) {
-		cerr << " to pos=" << pos << " [ " << rec << " ] "  <<endl;
+		if (dbg) cerr << " to pos=" << pos << " [ " << rec << " ] "  <<endl;
 		cmd[pos] = strdup( rec.c_str() );
 		++pos;
 	}
@@ -1217,6 +1219,7 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 // http://www.delorie.com/gnu/docs/readline/rlman_28.html
 void cInteractiveShell::runReadline() {
 	char *buf = NULL;
+	my_rl_wrapper_debug = dbg;
 	rl_attempted_completion_function = completionReadlineWrapper;
 	rl_bind_key('\t',rl_complete);
 	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
@@ -1225,22 +1228,27 @@ void cInteractiveShell::runReadline() {
 		if (buf) { free(buf); buf=NULL; }
 		// do NOT use buf variable below.
 
-		cout << "Word was: " << word << endl;
+		if (dbg) cout << "Word was: " << word << endl;
 		std::string cmd;
 		if (rl_line_buffer) cmd = rl_line_buffer; // save the full command into string
-		cout << "Command was: " << cmd << endl;
+		if (dbg) cout << "Command was: " << cmd << endl;
 
 		if (cmd=="quit") break;
 		if (cmd=="q") break;
 
 		if (cmd.length()) {
-			add_history(buf);
+			add_history(cmd.c_str());
 		}
 		cout << "Command was: " << cmd << endl;
+
+		cout << "Auto completion for (" << cmd << ") is: ";
 		nOT::nTests::testcase_complete_1(cmd);
+		cout << endl;
+
 		// ... TODO run it
 	}
 	if (buf) { free(buf); buf=NULL; }
+	clear_history(); // http://cnswww.cns.cwru.edu/php/chet/readline/history.html#IDX11
 }
 
 }; // namespace nOTHint
@@ -1382,7 +1390,7 @@ bool testcase_complete_1(const string &sofar) {
 	// TODO verify length (avoid underflow)
 
 	vector<string> out = hint.AutoComplete(line);
-	nOT::nUtil::DisplayVector(std::cout, out);
+	nOT::nUtil::DisplayVector(std::cout, out); // testcase
 
 
 	bool ok = 1;
