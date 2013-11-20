@@ -296,6 +296,9 @@ namespace nUtil {
 
 OT_COMMON_USING_NAMESPACE_1;
 
+class cLogger {
+};
+
 template <class T>
 std::string ToStr(const T & obj) {
 	std::ostringstream oss;
@@ -864,7 +867,11 @@ class cHintManager {
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.size();
-	if (sofar_str.length() < cut_begining_size) return vector<string>{ cut_begining };
+	if (sofar_str.length() < cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
+
+	std::string ot = sofar_str.substr(0,cut_begining_size); // separate out the part that is know to has correct size and should be "ot"
+	if (ot!=cut_begining) return vector<string>{}; // nothing matches, not command ot...
+
 
 	// TODO optimize, avoid copy?
 	std::string line = sofar_str;
@@ -876,6 +883,7 @@ vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 vector<string> cHintManager::AutoComplete(const string &sofar_str) const { // the main function to auto-complete
 	// cerr << "COMPLETE for sofar=[" << sofar_str << "]." << endl;
 	auto possible = BuildTreeOfCommandlines(sofar_str,false);
+//	DBGDisplayVectorEndl(possible);
 	return possible;
 }
 
@@ -1051,7 +1059,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO otlib
 			}
 			if (action=="mv") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"Where to?"} ); // in mail box... will there be other directories?
+				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
 			}
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "index"} );
@@ -1183,6 +1191,17 @@ extern bool my_rl_wrapper_debug; // external
 
 bool my_rl_wrapper_debug; // external
 
+// [null-trem-cstr] definition: as defined by readline, the format of null-term-cstr is:
+// dynamic array, null terminated, of dynamic c-strings.
+// caller is responsible for deallocation of the pointed strings data (using free) as well as the array itself
+// (using free).
+// it can be NULL for 0 element array
+// exmple:
+// NULL - empty array
+// { strdup("foo") , NULL } - 1 record array
+// { strdup("foo") , strdup("bar", NULL } - 2 record array
+
+// return all completions, in [null-term-cstr] format (we allocate, caller deallocates this memory)
 static char** completionReadlineWrapper( const char * sofar , int start,  int end) {
 	// char** matches = (char **)NULL;
 	bool dbg = my_rl_wrapper_debug;
@@ -1216,11 +1235,41 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 	return cmd;
 }
 
+// When readline will call us to complete "ot m" then our function will be called with number=0,
+// then it should cache possibilities of endings "msg" "mint" "msguard", and return 0th (first) one.
+// Next it will be called with other number (probably 1,2,3..) and return N-th possibility.
+// Function is non-reentrant also in the meaing that it can not be called in interlace, e.g.
+// ("ot m",0) then ("ot m",1) then ("ot x",0) and suddenly back to ("ot x",2) without reinitialization
+// (done with number=0) is an error (at least currently, in future we might cache various completion
+// arrays, or recalculate on change)
+static char* completionReadlineWrapper1(const char *sofar , int number) {
+	rl_ding();
+	char **opts = completionReadlineWrapper(sofar,0,-999);
+	if (number==3) return NULL;
+	// TODO fix mem... free.. or refactor
+
+	if (opts) {
+		if (number==0) return opts[0];
+		if (opts[0]!=NULL) {
+			if (number==1) if (opts[1]!=NULL) return opts[1];
+		}
+		if (opts[1]!=NULL) {
+			if (number==2) if (opts[2]!=NULL) return opts[2];
+		}
+		if (opts[2]!=NULL) {
+			if (number==3) if (opts[3]!=NULL) return opts[3];
+		}
+	}
+	return NULL;
+}
+
+
 // http://www.delorie.com/gnu/docs/readline/rlman_28.html
 void cInteractiveShell::runReadline() {
 	char *buf = NULL;
 	my_rl_wrapper_debug = dbg;
-	rl_attempted_completion_function = completionReadlineWrapper;
+//	rl_attempted_completion_function = completionReadlineWrapper;
+	rl_completion_entry_function = completionReadlineWrapper1;
 	rl_bind_key('\t',rl_complete);
 	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
 		std::string word;
