@@ -692,6 +692,27 @@ Full caching with --H0 or --HL is most secure, there is no home like localhost :
 */
 
 
+// more rich information about a nym
+class cNyminfo {
+	public:
+		cNyminfo(std::string name);
+
+		operator const std::string&() const;
+
+	public:
+		string mName;
+		int mScore;
+};
+
+cNyminfo::cNyminfo(std::string name)
+: mName(name), mScore(0)
+{ }
+
+cNyminfo::operator const string&() const {
+	return mName;
+}
+
+
 class cCmdname { // holds (2)-part name of command like "msg","send"
 	// represents name of one command, including the (1)-2-3 components e.g. msg,send or msg,export,msg
 	// "msg send"
@@ -815,12 +836,14 @@ using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operato
 // Data for hinting, e.g. cached or local information.
 class cHintData {
 	public:
-		vector<string> mNymsMy;
+		vector<nNewcli::cNyminfo> mNymsMy;
+		vector<string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
+
 		bool mNymsMy_loaded;
 
 		cHintData();
 
-		const vector<string> & getNymsMy();
+		const vector<string> getNymsMy();
 };
 
 cHintData::cHintData()
@@ -829,21 +852,36 @@ cHintData::cHintData()
 }
 
 
-const vector<string> & cHintData::getNymsMy() {
+const vector<string> cHintData::getNymsMy() {
 	if (!mNymsMy_loaded) {
 		try {
+			mNymsMy_loaded=0; // to mark that we start to delete data/data is inconsistent
 			mNymsMy.clear();
+			mNymsMy_str.clear();
+
 			ifstream plik("nyms.txt");
+			long int sum=0, count=0;
 			while (plik.good() && (!plik.eof())) {
 				string name;  double score;
 				plik >> name >> score;
-				mNymsMy.push_back(name);
+				nNewcli::cNyminfo nym(name);
+				nym.mScore=score;
+				mNymsMy.push_back( nym );
+				sum+=score; ++count;
+			}
+			double avg = sum/double(count);
+
+			for (auto nym_info: mNymsMy ) {
+				if (nym_info.mScore > avg/2) {
+					//cerr << nym_info.mScore << " vs " << avg/2 << endl;
+					mNymsMy_str.push_back( nym_info );
+				}
 			}
 		}
 		catch(...) { }
 		mNymsMy_loaded = true;
 	}
-	return mNymsMy;
+	return mNymsMy_str;
 }
 
 
@@ -857,12 +895,20 @@ const vector<string> & cHintData::getNymsMy() {
 class cHintManager {
 
 	public:
+		cHintManager();
+
 		vector<string> AutoComplete(const string &sofar_str) const; // the main function to auto-complete. The command line after "ot ", e.g. "msg send al"
 		vector<string> AutoCompleteEntire(const string &sofar_str) const; // the same, but takes entire command line including "ot ", e.g. "ot msg send al"
 
 	protected:
 		vector<string> BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const; // return command lines tree that is possible from this place
+
+		unique_ptr<cHintData> mHintData;
 };
+
+cHintManager::cHintManager()
+: mHintData(new cHintData)
+{ }
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot"; // minimal begining
@@ -871,7 +917,6 @@ vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 
 	std::string ot = sofar_str.substr(0,cut_begining_size); // separate out the part that is know to has correct size and should be "ot"
 	if (ot!=cut_begining) return vector<string>{}; // nothing matches, not command ot...
-
 
 	// TODO optimize, avoid copy?
 	std::string line = sofar_str;
@@ -1056,7 +1101,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<mynym>"} ); //TODO otlib
+				return WordsThatMatch(  current_word  ,  mHintData->getNymsMy() ); //TODO otlib
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
@@ -1270,7 +1315,7 @@ void cInteractiveShell::runReadline() {
 		if (cmd=="q") break;
 
 		if (cmd.length()) {
-	//		add_history(cmd.c_str()); // TODO (leaks memory...)
+			add_history(cmd.c_str()); // TODO (leaks memory...) but why
 		}
 		cout << "Command was: " << cmd << endl;
 

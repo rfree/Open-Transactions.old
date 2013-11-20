@@ -2,8 +2,10 @@ rafal 1000
 dorota 1000
 piotr 1000
 leszek 2000
-lukasz 2100
+lukasz 3100
 test1 50
 test2 100
 ok1 1200
 bad1 300
+bad2 300
+bad3 300
