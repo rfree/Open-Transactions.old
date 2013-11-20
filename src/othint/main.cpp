@@ -1203,25 +1203,11 @@ bool my_rl_wrapper_debug; // external
 
 // return all completions, in [null-term-cstr] format (we allocate, caller deallocates this memory)
 static char** completionReadlineWrapper( const char * sofar , int start,  int end) {
+	// code moved/merged with completionReadlineWrapper1
 	// char** matches = (char **)NULL;
-	bool dbg = my_rl_wrapper_debug;
+	return NULL;
 
-	if (dbg) cerr << "\nsofar="<<sofar<<" start="<<start<<" end="<<end<< "rl_line_buffer="<<rl_line_buffer<<endl;
-
-	string line;
-	if (rl_line_buffer) line = rl_line_buffer;
-
-	nOT::nOTHint::cHintManager hint;
-	vector <string> completions = hint.AutoCompleteEntire(line);
-	auto completions_size = completions.size();
-	if (dbg) DBGDisplayVectorEndl(completions);
-
-	if (dbg) cerr << "completions_size=" << completions_size << endl;
-
-	if (! completions_size) {
-		return NULL;
-	}
-
+	/*
 	typedef char *p_char;
 	char **cmd = (char**)malloc(sizeof(p_char) * (completions_size + 1));
 	decltype(completions_size) pos = 0;
@@ -1231,8 +1217,8 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 		++pos;
 	}
 	cmd[completions_size] = NULL; // to the last element. array is up to completions_size+1 indeed.
-
 	return cmd;
+	*/
 }
 
 // When readline will call us to complete "ot m" then our function will be called with number=0,
@@ -1243,24 +1229,22 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 // (done with number=0) is an error (at least currently, in future we might cache various completion
 // arrays, or recalculate on change)
 static char* completionReadlineWrapper1(const char *sofar , int number) {
-	rl_ding();
-	char **opts = completionReadlineWrapper(sofar,0,-999);
-	if (number==3) return NULL;
-	// TODO fix mem... free.. or refactor
+	bool dbg = my_rl_wrapper_debug;
+	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
 
-	if (opts) {
-		if (number==0) return opts[0];
-		if (opts[0]!=NULL) {
-			if (number==1) if (opts[1]!=NULL) return opts[1];
-		}
-		if (opts[1]!=NULL) {
-			if (number==2) if (opts[2]!=NULL) return opts[2];
-		}
-		if (opts[2]!=NULL) {
-			if (number==3) if (opts[3]!=NULL) return opts[3];
-		}
-	}
-	return NULL;
+	string line;
+	if (rl_line_buffer) line = rl_line_buffer; // get full line. TODO: consider cursor position
+
+	nOT::nOTHint::cHintManager hint;
+	vector <string> completions = hint.AutoCompleteEntire(line); // <--
+	// TODO cache the result! across number=...
+	auto completions_size = completions.size();
+	if (dbg) DBGDisplayVectorEndl(completions);
+	if (dbg) cerr << "completions_size=" << completions_size << endl;
+	if (! completions_size) return NULL; // <--- RET
+
+	if (number==completions_size) return NULL;
+	return strdup( completions.at(number).c_str() ); // caller must free() this memory
 }
 
 
@@ -1286,7 +1270,7 @@ void cInteractiveShell::runReadline() {
 		if (cmd=="q") break;
 
 		if (cmd.length()) {
-			add_history(cmd.c_str());
+	//		add_history(cmd.c_str()); // TODO (leaks memory...)
 		}
 		cout << "Command was: " << cmd << endl;
 
