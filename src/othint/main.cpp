@@ -203,6 +203,8 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <cctype>
 #include <locale>
 
+
+
 #ifdef __unix__
 	#ifdef OT_ALLOW_GNU_LIBRARIES
 		#include <readline/readline.h> // GNU Readline
@@ -1339,7 +1341,7 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 int main(int argc, char* argv[]) {
 	nOT::nTests::testcase_run_all_tests();
 
-	if (argc>=1) {
+	if (argc>1) {
 		std::string arg1 = argv[1];
 
 		if (arg1=="--complete-shell") {
@@ -1347,7 +1349,7 @@ int main(int argc, char* argv[]) {
 			shell.runReadline();
 		} // SHELL
 		else if (arg1=="--complete-one") {
-			if (argc>=2) {
+			if (argc>2) {
 				gVar1 = argv[2];
 				nOT::nTests::testcase_complete_1_wrapper();
 				//std::cout << gVar1 << std::endl;
