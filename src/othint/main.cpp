@@ -964,7 +964,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 	}
 
-	const vector<string> cmdFrontOpt = {"--HO","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
+	const vector<string> cmdFrontOpt = {"--H0","--HL","--HT","--HV","--hint-remote","--hint-cached","--vpn-all-net"};
 	const vector<string> all_topics = {"msg","msguard","nym"};
 
 	const string topic  =  cmdPart.at(0) ;
@@ -1276,10 +1276,9 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 static char* completionReadlineWrapper1(const char *sofar , int number) {
 	bool dbg = my_rl_wrapper_debug;
 	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
-
 	string line;
+	//cerr << endl << "completionReadlineWrapper1 call" << endl;
 	if (rl_line_buffer) line = rl_line_buffer; // get full line. TODO: consider cursor position
-
 	nOT::nOTHint::cHintManager hint;
 	vector <string> completions = hint.AutoCompleteEntire(line); // <--
 	// TODO cache the result! across number=...
