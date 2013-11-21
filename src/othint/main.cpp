@@ -806,10 +806,10 @@ OT_COMMON_USING_NAMESPACE
 
 using namespace nOT::nUtil;
 
-bool testcase_namespace_pollution();
-bool testcase_cxx11_memory();
-bool testcase_complete_1(const std::string &sofar);
-bool testcase_complete_1_wrapper();
+int main_start(int argc, const char* argv[]); // some tests will execute the main... e.g. against errors in args parsing
+
+bool testcase_complete_1(const std::string &sofar); // TODO ... testcase or really used???
+bool testcase_complete_1_wrapper(); // TODO ... testcase or really used???
 
 bool testcase_run_all_tests();
 
@@ -1219,6 +1219,7 @@ cInteractiveShell::cInteractiveShell()
 :dbg(false)
 { }
 
+
 void cInteractiveShell::run() {
 	while(1) {
 		std::string line;
@@ -1338,10 +1339,27 @@ void cInteractiveShell::runReadline() {
 
 std::string gVar1; // to keep program input argument for testcase_complete_1
 // ====================================================================
-int main(int argc, char* argv[]) {
-	nOT::nTests::testcase_run_all_tests();
 
-	if (argc>1) {
+
+int main(int argc, const char * const argv) {
+	try {
+		nOT::nTests::testcase_run_all_tests();
+	} catch(...) {
+		std::cerr << "The testcases code thrown an exception!!!" << std::endl;
+	}
+
+	int ret = nOT::nTests::main_start(argc, argv);
+	return ret;
+}
+
+// int pole(const int r) { 	r=3; }
+
+int nOT::nTests::main_start(int argc, const char const * const argv) {
+	argv = NULL;
+	argv[2] = strdup("...");
+	argv[2][4] = "x";
+
+	if (argc>=1) { // <-- error is here
 		std::string arg1 = argv[1];
 
 		if (arg1=="--complete-shell") {
@@ -1360,8 +1378,7 @@ int main(int argc, char* argv[]) {
 		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
 
-
-	// return 42; // nope. in C++, the exit code returns YOU
+	return 0;
 }
 // ====================================================================
 
@@ -1519,26 +1536,69 @@ bool testcase_cxx11_memory() {
 	return true;
 }
 
+bool testcase_fail1() {
+	return false;
+}
+
+bool testcase_run_main_0_args() {
+	int argc = 1;
+	typedef const char * char_p;
+	char_p * argv  = new char_p[1];
+	argv[0] = "prograname";
+
+	try {
+		main_start(argc, argv); // ... ok? TODO
+	}
+	catch(...) {
+		if (argv) { delete argv[]; argv=nullptr; }
+	}
+
+
+
+	return true;
+}
+
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
 	long int number_errors = 0; // long :o
 
-	vector<bool (*)(void)> vectorOfFunctions;
-	vector<bool (*)(void)>::iterator it;
-	// creating vector of pointers to test functions
-	vectorOfFunctions.push_back(&testcase_namespace_pollution);
-	vectorOfFunctions.push_back(&testcase_cxx11_memory);
+	struct cTestCaseNamed {
+		cTestCaseNamed( bool (*_func)(void) , const string &_name)
+		:func(_func), name(_name) // XXX
+		{
+		}
 
-	bool result = true;
-	for(it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
-		result = (*it)();
-		if(result == false)
+		bool (*func)(void);
+		string name;
+	};
+	vector<cTestCaseNamed> vectorOfFunctions;
+
+	// [stringification], [macro-semicolon-trick]
+ 	#define xstr(s) str(s)
+  #define str(s) #s
+	#define AddFunction(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) ) );   } while(0)
+	AddFunction(testcase_namespace_pollution);
+	AddFunction(testcase_cxx11_memory);
+	AddFunction(testcase_fail1);
+	AddFunction(testcase_run_main_0_args);
+	#undef AddFunction
+	#undef xstr
+	#undef str
+
+	int nr=0;
+	for(auto it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
+		const cTestCaseNamed &test = *it;
+		bool result = (   test.func   )();
+		if (result == false) {
 			number_errors++;
+			cerr<<"Test number #" << nr << " " << test.name  <<  " failed:" << endl;
+		}
+		++nr;
 	}
 	if (number_errors == 0){
 		//cout << "All tests completed successfully." << endl;
 	}
-	else{
-		//cout << "Some tests were not completed." << endl;
+	else {
+		cerr << "Some tests were not completed." << endl;
 	}
 	// testcase_complete_1(); // quiet.
 
