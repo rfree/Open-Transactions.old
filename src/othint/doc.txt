@@ -1,0 +1,9 @@
+
+=== CODING STYLE ===
+
+[stringification]
+http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
+
+[macro-semicolon-trick]
+http://stackoverflow.com/a/163366
+
