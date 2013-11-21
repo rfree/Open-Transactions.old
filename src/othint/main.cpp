@@ -1537,21 +1537,19 @@ bool testcase_fail1() {
 }
 
 
-bool testcase_run_main_args() {
-	bool ok=true;
-	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname"} ) ) ok=false;
-
-	// TODO: 	helper_testcase_run_main_with_arguments( vec... "programname","--complete-one");
-	// TODO: 	helper_testcase_run_main_with_arguments( vec... "programname","--complete-one","ot msg sen");
-
-	return ok;
-}
-
-bool helper_testcase_run_main_with_arguments() {
-	int argc = 1; // <--
+bool helper_testcase_run_main_with_arguments( vector<string> tab ) {
+	int argc = tab.size(); // <--
 	typedef char * char_p;
 	char_p * argv  = new char_p[argc]; // C++ style new[]
-	argv[0] = strdup("prograname"); // C style strdup/free
+
+	cerr << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
+	size_t nr=0;
+	for(auto rec:tab) {
+		argv[nr] = strdup(rec.c_str()); // C style strdup/free
+		++nr;
+		cerr << "'" << rec << "' ";
+	}
+	cerr << endl;
 
 	bool ok=true;
 	try {
@@ -1559,10 +1557,18 @@ bool helper_testcase_run_main_with_arguments() {
 	}
 	catch(const std::exception &e) {
 		ok=false;
-		cerr<<"Catched exception " << e.what() << endl;
+		cerr <<  __FUNCTION__ << " *** Catched exception " << e.what() << endl;
 	}
 	for (int i=0; i<argc; ++i) { free( argv[i] ); argv[i]=NULL; } // free!
 	delete []argv; argv=nullptr;
+	return ok;
+}
+
+bool testcase_run_main_args() {
+	bool ok=true;
+	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname","--complete-one", "ot msg sen"} ) ) ok=false;
+	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname","--complete-one"} ) ) ok=false;
+	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname"} ) ) ok=false;
 
 	return ok;
 }
