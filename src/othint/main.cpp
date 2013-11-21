@@ -806,7 +806,7 @@ OT_COMMON_USING_NAMESPACE
 
 using namespace nOT::nUtil;
 
-int main_start(int argc, const char* argv[]); // some tests will execute the main... e.g. against errors in args parsing
+int main_start(int argc, char **argv); // some tests will execute the main... e.g. against errors in args parsing
 
 bool testcase_complete_1(const std::string &sofar); // TODO ... testcase or really used???
 bool testcase_complete_1_wrapper(); // TODO ... testcase or really used???
@@ -1341,7 +1341,7 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 // ====================================================================
 
 
-int main(int argc, const char * const argv) {
+int main(int argc, char **argv) {
 	try {
 		nOT::nTests::testcase_run_all_tests();
 	} catch(...) {
@@ -1354,12 +1354,8 @@ int main(int argc, const char * const argv) {
 
 // int pole(const int r) { 	r=3; }
 
-int nOT::nTests::main_start(int argc, const char const * const argv) {
-	argv = NULL;
-	argv[2] = strdup("...");
-	argv[2][4] = "x";
-
-	if (argc>=1) { // <-- error is here
+int nOT::nTests::main_start(int argc, char **argv) {
+	if (argc>=1) { // <-- error is here ??? XXX
 		std::string arg1 = argv[1];
 
 		if (arg1=="--complete-shell") {
@@ -1542,18 +1538,18 @@ bool testcase_fail1() {
 
 bool testcase_run_main_0_args() {
 	int argc = 1;
-	typedef const char * char_p;
-	char_p * argv  = new char_p[1];
-	argv[0] = "prograname";
+	typedef char * char_p;
+	char_p * argv  = new char_p[1]; // C++ style new[]
+	argv[0] = strdup("prograname"); // C style strdup/free
 
 	try {
 		main_start(argc, argv); // ... ok? TODO
 	}
 	catch(...) {
-		if (argv) { delete argv[]; argv=nullptr; }
+		if (argv) { delete []argv; argv=nullptr; }
 	}
-
-
+	for (int i=0; i<argc; ++i) { free( argv[i] ); argv[i]=NULL; } // free!
+	delete []argv; argv=nullptr;
 
 	return true;
 }
