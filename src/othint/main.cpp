@@ -1355,7 +1355,7 @@ int main(int argc, char **argv) {
 // int pole(const int r) { 	r=3; }
 
 int nOT::nTests::main_start(int argc, char **argv) {
-	if (argc>=1) { // <-- error is here ??? XXX
+	if (argc>1) { // <-- error is here ??? XXX
 		std::string arg1 = argv[1];
 
 		if (arg1=="--complete-shell") {
@@ -1563,6 +1563,7 @@ bool helper_testcase_run_main_with_arguments( vector<string> tab ) {
 	delete []argv; argv=nullptr;
 	return ok;
 }
+
 
 bool testcase_run_main_args() {
 	bool ok=true;
