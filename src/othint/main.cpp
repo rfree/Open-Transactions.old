@@ -1536,22 +1536,35 @@ bool testcase_fail1() {
 	return false;
 }
 
-bool testcase_run_main_0_args() {
-	int argc = 1;
+
+bool testcase_run_main_args() {
+	bool ok=true;
+	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname"} ) ) ok=false;
+
+	// TODO: 	helper_testcase_run_main_with_arguments( vec... "programname","--complete-one");
+	// TODO: 	helper_testcase_run_main_with_arguments( vec... "programname","--complete-one","ot msg sen");
+
+	return ok;
+}
+
+bool helper_testcase_run_main_with_arguments() {
+	int argc = 1; // <--
 	typedef char * char_p;
-	char_p * argv  = new char_p[1]; // C++ style new[]
+	char_p * argv  = new char_p[argc]; // C++ style new[]
 	argv[0] = strdup("prograname"); // C style strdup/free
 
+	bool ok=true;
 	try {
 		main_start(argc, argv); // ... ok? TODO
 	}
-	catch(...) {
-		if (argv) { delete []argv; argv=nullptr; }
+	catch(const std::exception &e) {
+		ok=false;
+		cerr<<"Catched exception " << e.what() << endl;
 	}
 	for (int i=0; i<argc; ++i) { free( argv[i] ); argv[i]=NULL; } // free!
 	delete []argv; argv=nullptr;
 
-	return true;
+	return ok;
 }
 
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
@@ -1575,7 +1588,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
 	AddFunction(testcase_fail1);
-	AddFunction(testcase_run_main_0_args);
+	AddFunction(testcase_run_main_args);
 	#undef AddFunction
 	#undef xstr
 	#undef str
