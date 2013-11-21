@@ -1,4 +1,38 @@
 
+=== GIT BRANCH ===
+
+branch pr-xxx - pull request
+branch (non-master) - whatever
+
+rfree/master/ - code should be nice and complile (in future)
+*/master/ - usually complile, compile when requesting cool
+
+=== GIT ===
+
+[new] starting new functionality
+[ok] code works
+[good] code works and completed some small goal or milestone
+
+[doc] documentation change
+[git] git organisation change, dirs, .gitignore etc
+
+[bug] known bug
+[bugfix] fixing some bug
+
+...works, a bug was fixed: [bugfix] / [ok]
+...works, some functionality was completed: [good] / [ok]
+
+write, ok
+write, ok
+write, HIDDEN BUG
+commit as "[ok] new addressbook" - (hidden bug is there)
+write, ok
+commit as "[ok] new logo"
+discovered bug! Write code to show it, write doc, etc...
+commit as "[bug] addressbook segfaults on long name" (reporting founded bug)
+write, fixed the bug...
+commit as "[bugfix] address book fixed"
+
 === CODING STYLE ===
 
 [stringification]
