@@ -1401,8 +1401,8 @@ void cInteractiveShell::runEditline() {
 		if (dbg) cout << "Word was: " << word << endl;
 		std::string cmd;
 		if (rl_line_buffer) cmd = rl_line_buffer; // save the full command into string
+		cmd = cmd.substr(0, cmd.length()-1); // remove \n
 		if (dbg) cout << "Command was: " << cmd << endl;
-
 		if (cmd=="quit") break;
 		if (cmd=="q") break;
 
