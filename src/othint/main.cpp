@@ -827,10 +827,10 @@ using namespace nOT::nUtil;
 
 struct cTestCaseCfg {
 	std::ostream &ossErr;
-	bool debugActive;
+	bool debug;
 
-	cTestCaseCfg(std::ostream &ossErr, bool debugActive)
-	: ossErr(ossErr) , debugActive(debugActive)
+	cTestCaseCfg(std::ostream &ossErr, bool debug)
+	: ossErr(ossErr) , debug(debug)
 	{ }
 };
 
@@ -1652,24 +1652,29 @@ bool testcase_cxx11_memory(const cTestCaseCfg &testCfg) {
 }
 
 bool testcase_fail1(const cTestCaseCfg &testCfg) {
-	testCfg.ossErr<<"This special testcase will always FAIL, on purpose of testing the testcases framework."<<endl;
+	if (testCfg.debug) testCfg.ossErr<<"This special testcase will always FAIL, on purpose of testing the testcases framework."<<endl;
 	return false;
 }
 
+bool testcase_fail2(const cTestCaseCfg &testCfg) {
+	if (testCfg.debug) testCfg.ossErr<<"This special testcase will always FAIL, on purpose of testing the testcases framework."<<endl;
+	throw std::runtime_error("This test always fails.");
+}
 
 bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vector<string> tab ) {
 	int argc = tab.size(); // <--
 	typedef char * char_p;
 	char_p * argv  = new char_p[argc]; // C++ style new[]
 
-	cerr << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
+	bool dbg = testCfg.debug;   auto &err = testCfg.ossErr;
+	if (dbg) err << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
 	size_t nr=0;
 	for(auto rec:tab) {
 		argv[nr] = strdup(rec.c_str()); // C style strdup/free
 		++nr;
-		cerr << "'" << rec << "' ";
+		if( dbg) err << "'" << rec << "' ";
 	}
-	cerr << endl;
+	if (dbg) err << endl;
 
 	bool ok=true;
 	try {
@@ -1677,13 +1682,21 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	}
 	catch(const std::exception &e) {
 		ok=false;
-		cerr << "\n *** in " << __FUNCTION__ << " catched exception: " << e.what() << endl;
+		testCfg.ossErr << "\n *** in " << __FUNCTION__ << " catched exception: " << e.what() << endl;
 	}
 	for (int i=0; i<argc; ++i) { free( argv[i] ); argv[i]=NULL; } // free!
 	delete []argv; argv=nullptr;
 	return ok;
 }
 
+// Separate functions for failing tests:
+bool testcase_run_main_args_fail1(const cTestCaseCfg &testCfg) {
+	bool ok=true; const string programName="othint";
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{} ) ) ok=false;
+	return ok;
+}
+
+// All this tests should succeed:
 bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	bool ok=true;
 	const string programName="othint";
@@ -1691,35 +1704,45 @@ bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot msg sen"} ) ) ok=false;
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one"} ) ) ok=false;
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName} ) ) ok=false;
-	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{} ) ) ok=false;
 
 	return ok;
 }
 
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
+	cerr << "=== test cases, unit tests ============================================" << endl;
+
 	long int number_errors = 0; // long :o
 
-	cTestCaseCfg testCfg(cerr, true);
+	std::ostringstream quiet_oss;
+
+	cTestCaseCfg testCfg(cerr, false);
+	cTestCaseCfg testCfgQuiet(quiet_oss, false); // to quiet down the tests
 
 	struct cTestCaseNamed {
-		cTestCaseNamed( tTestCaseFunction func  , const string &name)
-		:mFunc(func), mName(name) // XXX
+		cTestCaseNamed( tTestCaseFunction func  , const string &name, bool expectedOutcome)
+		:mFunc(func), mName(name) , mExpectedOutcome(expectedOutcome) // XXX
 		{
 		}
 
 		tTestCaseFunction mFunc;
 		string mName;
+		bool mExpectedOutcome; // must succeed or fail?
 	};
 	vector<cTestCaseNamed> vectorOfFunctions;
 
 	// [stringification], [macro-semicolon-trick]
 	#define xstr(s) str(s)
 	#define str(s) #s
-	#define AddFunction(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) ) );   } while(0)
+	#define AddFunction(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) , true ));   } while(0)
+	#define AddFunctionMustFail(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) , false ));   } while(0)
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
 	AddFunction(testcase_run_main_args);
-	AddFunction(testcase_fail1); // only for testing of this test code
+
+	AddFunctionMustFail(testcase_fail1); // only for testing of this test code
+	AddFunctionMustFail(testcase_fail2); // only for testing of this test code
+	AddFunctionMustFail(testcase_run_main_args_fail1);
+
 	#undef AddFunction
 	#undef xstr
 	#undef str
@@ -1729,10 +1752,20 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	int nr=0;
 	for(auto it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
 		const cTestCaseNamed &test = *it;
-		bool result = (   test.mFunc   )( testCfg ); // <--- run the test with config testCfg
-		if (result == false) {
+		bool result = 0;
+		string exception_msg;
+		try {
+			cTestCaseCfg & config = ( (test.mExpectedOutcome == 0) ? testCfg : testCfgQuiet); // if test should fail - quiet it
+			result = (   test.mFunc   )( config ); // <--- run the test with config
+		} catch(const std::exception &e) { exception_msg = e.what(); }
+
+		bool as_expected = (result == test.mExpectedOutcome);
+
+		if (!as_expected) {
 			number_errors++;
-			std::ostringstream msgOss; msgOss << "test #" << nr << " " << test.mName  <<  " failed!";
+			std::ostringstream msgOss; msgOss << "test #" << nr << " " << test.mName  <<  " failed";
+			if (exception_msg.size()) msgOss << " [what: " << exception_msg << "]";
+			msgOss<<"!";
 			string msg = msgOss.str();
 			cerr << " *** " << msg << endl;
 			failure_details << " " << msg << " ";
@@ -1746,6 +1779,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	else {
 		cerr << "*** Some tests were not completed! (" << failure_details.str() << ")" << endl;
 	}
+	cerr << "=== test cases, unit tests - done =====================================" << endl;
 
 	return number_errors==0;
 }
