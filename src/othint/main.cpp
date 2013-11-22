@@ -1439,10 +1439,10 @@ int main(int argc, char **argv) {
 		nOT::nTests::testcase_run_all_tests();
 	}
 	catch(const std::exception &e) {
-		std::cerr << "The testcases code thrown an exception: " << e.what() << std::endl;
+		std::cerr << "\n*** The testcases code thrown an exception: " << e.what() << std::endl;
 	}
 	catch(...) {
-		std::cerr << "The testcases code thrown an UNKNOWN exception!" << std::endl;
+		std::cerr << "\n*** The testcases code thrown an UNKNOWN exception!" << std::endl;
 	}
 
 	int ret = nOT::nTests::main_start(argc, argv);
@@ -1454,8 +1454,9 @@ int main(int argc, char **argv) {
 
 int nOT::nTests::main_start(int argc, char **argv) {
 	vector<string> args;
-
-	if (! (argc>=1)) throw new std::runtime_error("Main program called with 0 arguments (not even program name).");
+	if (! (argc>=1)) {
+		throw std::runtime_error("Main program called with 0 arguments (not even program name).");
+	}
 	args.reserve(argc-1); for (int i=1; i<argc; ++i) args.push_back(argv[i]); // from 1 - skip program name
 
 	size_t nr=0;
@@ -1676,7 +1677,7 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	}
 	catch(const std::exception &e) {
 		ok=false;
-		cerr <<  __FUNCTION__ << " *** Catched exception " << e.what() << endl;
+		cerr << "\n *** in " << __FUNCTION__ << " catched exception: " << e.what() << endl;
 	}
 	for (int i=0; i<argc; ++i) { free( argv[i] ); argv[i]=NULL; } // free!
 	delete []argv; argv=nullptr;
