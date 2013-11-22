@@ -156,7 +156,10 @@ Example: "ot msg send bob a<TAB>" will ask remote OT and auto-complete alice.
 
 Usage:
 	./othint --complete-one "ot msg send ali"
+	./othint --one "ot msg send ali"
 	./othint --complete-shell
+	./othint --shell
+	./othint --devel # test various things etc
 
 This subproject is separated out of OT, and uses C++11 and few other modern coding style changes.
 
@@ -1434,8 +1437,12 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 int main(int argc, char **argv) {
 	try {
 		nOT::nTests::testcase_run_all_tests();
-	} catch(...) {
-		std::cerr << "The testcases code thrown an exception!!!" << std::endl;
+	}
+	catch(const std::exception &e) {
+		std::cerr << "The testcases code thrown an exception: " << e.what() << std::endl;
+	}
+	catch(...) {
+		std::cerr << "The testcases code thrown an UNKNOWN exception!" << std::endl;
 	}
 
 	int ret = nOT::nTests::main_start(argc, argv);
@@ -1444,13 +1451,34 @@ int main(int argc, char **argv) {
 
 // int pole(const int r) { 	r=3; }
 
+
 int nOT::nTests::main_start(int argc, char **argv) {
-	if (argc>1) { // <-- error is here ??? XXX
+	vector<string> args;
+
+	if (! (argc>=1)) throw new std::runtime_error("Main program called with 0 arguments (not even program name).");
+	args.reserve(argc-1); for (int i=1; i<argc; ++i) args.push_back(argv[i]); // from 1 - skip program name
+
+	size_t nr=0;
+	for(auto arg: args) {
+		if (arg=="--complete-shell") {
+			nOT::nOTHint::cInteractiveShell shell;
+			shell.runEditline();
+		}
+		else if (arg=="--complete-one") {
+			string v;  bool ok=1;  try { v=args.at(nr+1); } catch(...) { ok=0; }
+			if (ok) {
+				nOT::nTests::testcase_complete_1(v);
+			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl; }
+		}
+
+		++nr;
+	}
+
+/*
+	if (argc>1) {
 		std::string arg1 = argv[1];
 
 		if (arg1=="--complete-shell") {
-			nOT::nOTHint::cInteractiveShell shell;
-			shell.runEditline();
 		} // SHELL
 		else if (arg1=="--complete-one") {
 			if (argc>2) {
@@ -1463,7 +1491,7 @@ int nOT::nTests::main_start(int argc, char **argv) {
 	} else {
 		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
-
+*/
 	return 0;
 }
 // ====================================================================
