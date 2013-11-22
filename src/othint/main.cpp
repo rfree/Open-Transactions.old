@@ -1329,7 +1329,8 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
 	string line;
 	//cerr << endl << "completionReadlineWrapper1 call" << endl;
-	if (rl_line_buffer) line = rl_line_buffer; // get full line. TODO: consider cursor position
+	if (rl_line_buffer) line = rl_line_buffer;
+	line = line.substr(0, rl_point); // Complete from cursor position
 	nOT::nOTHint::cHintManager hint;
 	vector <string> completions = hint.AutoCompleteEntire(line); // <--
 	// TODO cache the result! across number=...
