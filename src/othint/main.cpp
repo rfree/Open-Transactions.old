@@ -155,7 +155,7 @@ Description: See [Description_of_auto_completion] below
 Example: "ot msg send bob a<TAB>" will ask remote OT and auto-complete alice.
 
 Usage:
-  ./othint --complete-one "ot msg send ali"
+	./othint --complete-one "ot msg send ali"
 	./othint --complete-shell
 
 This subproject is separated out of OT, and uses C++11 and few other modern coding style changes.
@@ -205,22 +205,36 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 
 #include <string.h>
 
-#include <editline/readline.h>
-#include <editline/history.h>
-#ifdef __unix__
-	#ifdef OT_ALLOW_GNU_LIBRARIES
-		//#include <readline/readline.h> // GNU Readline
-		//#include <readline/history.h>
-		#define LIBRARY_STATUS_GNU_READLINE 1
-		#define LIBRARY_STATUS_GNU_READLINE__S "Included"
-	#else
-		#define LIBRARY_STATUS_GNU_READLINE 0
-		#define LIBRARY_STATUS_GNU_READLINE__S "Disabled, because GNU was disabled at compilation time (readline requires GPL licence)"
-	#endif
-#else
-	#define LIBRARY_STATUS_GNU_READLINE 0
-	#define LIBRARY_STATUS_GNU_READLINE__S "Disabled, because this was not a UNIX compatible compilation (readline works on UNIX and alike)"
+// detecting and including proper version of readline or it's replacement
+#ifndef CFG_USE_READLINE // should we use readline?
+	#define CFG_USE_READLINE 1 // default
 #endif
+
+#if CFG_USE_READLINE
+	#ifdef __unix__
+		#ifdef OT_ALLOW_GNU_LIBRARIES
+			// #include <readline/readline.h> // GNU Readline
+			// #include <readline/history.h>
+			// #define LIBRARY_STATUS_READLINE 1
+			// #define LIBRARY_STATUS_READLINE_KIND "gnu readline"
+			// #define LIBRARY_STATUS_READLINE__S "Included"
+		#else
+			// #define LIBRARY_STATUS_READLINE 0
+			// #define LIBRARY_STATUS_READLINE__S "Disabled, because GNU was disabled at compilation time (readline requires GPL licence)"
+		#endif
+		#include <editline/readline.h> // apt-get install libedit-dev
+		#include <editline/history.h>
+		#define LIBRARY_STATUS_READLINE 1
+		#define LIBRARY_STATUS_READLINE_KIND "editline"
+		#define LIBRARY_STATUS_READLINE__S "Included"
+	#else // not unix
+		#define LIBRARY_STATUS_READLINE 0
+		#define LIBRARY_STATUS_READLINE__S "Disabled because this was not a UNIX compatible compilation (TODO: do support MinGWEditline for windows)"
+	#endif // not unix
+#else // not use readline
+	#define LIBRARY_STATUS_READLINE 0
+	#define LIBRARY_STATUS_READLINE__S "Disabled at compile option"
+#endif // not use readline
 
 // OTNewcliCmdline
 
@@ -364,19 +378,19 @@ std::string GetLastCharIf(const std::string & str) { // TODO unicode?
 // TODO --- Vvvv  and #include
 // trim from start
 std::string &ltrim_in_place(std::string &s) {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-        return s;
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+	return s;
 }
 
 // trim from end
 std::string &rtrim_in_place(std::string &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-        return s;
+	s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+	return s;
 }
 
 /*// trim from both ends
 std::string &trim_in_place(std::string &s) {
-        return ltrim(rtrim(s));
+	return ltrim(rtrim(s));
 }*/
 
 std::string rtrim(const std::string &s) {
@@ -918,7 +932,6 @@ class cHintManager {
 
 	protected:
 		vector<string> BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const; // return command lines tree that is possible from this place
-
 		unique_ptr<cHintData> mHintData;
 };
 
@@ -1334,8 +1347,8 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 void cInteractiveShell::runReadline() {
 	char *buf = NULL;
 	my_rl_wrapper_debug = dbg;
-//	rl_attempted_completion_function = completionReadlineWrapper;
-	//rl_completion_entry_function = completionReadlineWrapper1;
+	// rl_attempted_completion_function = completionReadlineWrapper;
+	// rl_completion_entry_function = completionReadlineWrapper1;
 	rl_bind_key('\t',rl_complete);
 	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
 		std::string word;
@@ -1641,7 +1654,6 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	return ok;
 }
 
-
 bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	bool ok=true;
 	const string programName="othint";
@@ -1671,8 +1683,8 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	vector<cTestCaseNamed> vectorOfFunctions;
 
 	// [stringification], [macro-semicolon-trick]
- 	#define xstr(s) str(s)
-  #define str(s) #s
+	#define xstr(s) str(s)
+	#define str(s) #s
 	#define AddFunction(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) ) );   } while(0)
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
