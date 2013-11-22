@@ -203,12 +203,14 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <cctype>
 #include <locale>
 
+#include <string.h>
 
-
+#include <editline/readline.h>
+#include <editline/history.h>
 #ifdef __unix__
 	#ifdef OT_ALLOW_GNU_LIBRARIES
-		#include <readline/readline.h> // GNU Readline
-		#include <readline/history.h>
+		//#include <readline/readline.h> // GNU Readline
+		//#include <readline/history.h>
 		#define LIBRARY_STATUS_GNU_READLINE 1
 		#define LIBRARY_STATUS_GNU_READLINE__S "Included"
 	#else
@@ -1222,6 +1224,7 @@ class cInteractiveShell {
 		cInteractiveShell();
 		void run();
 		void runReadline();
+		void runEditline();
 
 	protected:
 		bool dbg;
@@ -1281,6 +1284,26 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 	*/
 }
 
+void * xmalloc (int size)
+{
+	void *buf;
+
+	buf = malloc (size);
+	if (!buf) {
+			fprintf (stderr, "Error: Out of memory. Exiting.'n");
+			exit (1);
+	}
+	return buf;
+}
+
+char * dupstr (char* s) {
+	char *r;
+
+	r = (char*) xmalloc ((strlen (s) + 1));
+	strcpy (r, s);
+	return (r);
+}
+
 // When readline will call us to complete "ot m" then our function will be called with number=0,
 // then it should cache possibilities of endings "msg" "mint" "msguard", and return 0th (first) one.
 // Next it will be called with other number (probably 1,2,3..) and return N-th possibility.
@@ -1312,7 +1335,48 @@ void cInteractiveShell::runReadline() {
 	char *buf = NULL;
 	my_rl_wrapper_debug = dbg;
 //	rl_attempted_completion_function = completionReadlineWrapper;
-	rl_completion_entry_function = completionReadlineWrapper1;
+	//rl_completion_entry_function = completionReadlineWrapper1;
+	rl_bind_key('\t',rl_complete);
+	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
+		std::string word;
+		if (buf) word=buf; // if not-null buf, then assign
+		if (buf) { free(buf); buf=NULL; }
+		// do NOT use buf variable below.
+
+		if (dbg) cout << "Word was: " << word << endl;
+		std::string cmd;
+		if (rl_line_buffer) cmd = rl_line_buffer; // save the full command into string
+		if (dbg) cout << "Command was: " << cmd << endl;
+
+		if (cmd=="quit") break;
+		if (cmd=="q") break;
+
+		if (cmd.length()) {
+			add_history(cmd.c_str()); // TODO (leaks memory...) but why
+		}
+		cout << "Command was: " << cmd << endl;
+
+		cout << "Auto completion for (" << cmd << ") is: ";
+		nOT::nTests::testcase_complete_1(cmd);
+		cout << endl;
+
+		// ... TODO run it
+	}
+	if (buf) { free(buf); buf=NULL; }
+	clear_history(); // http://cnswww.cns.cwru.edu/php/chet/readline/history.html#IDX11
+}
+
+char ** completion (const char* text, int start, int end __attribute__((__unused__))){
+	char **matches;
+	matches = (char **)NULL;
+	matches = rl_completion_matches (text, completionReadlineWrapper1);
+	return (matches);
+}
+
+void cInteractiveShell::runEditline() {
+	char *buf = NULL;
+	my_rl_wrapper_debug = dbg;
+	rl_attempted_completion_function = completion;
 	rl_bind_key('\t',rl_complete);
 	while((buf = readline("commandline-part> "))!=NULL) { // <--- readline()
 		std::string word;
@@ -1372,7 +1436,7 @@ int nOT::nTests::main_start(int argc, char **argv) {
 
 		if (arg1=="--complete-shell") {
 			nOT::nOTHint::cInteractiveShell shell;
-			shell.runReadline();
+			shell.runEditline();
 		} // SHELL
 		else if (arg1=="--complete-one") {
 			if (argc>2) {
