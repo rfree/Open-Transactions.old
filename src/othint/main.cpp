@@ -806,12 +806,24 @@ OT_COMMON_USING_NAMESPACE
 
 using namespace nOT::nUtil;
 
-int main_start(int argc, char **argv); // some tests will execute the main... e.g. against errors in args parsing
+struct cTestCaseCfg {
+	std::ostream &ossErr;
+	bool debugActive;
+
+	cTestCaseCfg(std::ostream &ossErr, bool debugActive)
+	: ossErr(ossErr) , debugActive(debugActive)
+	{ }
+};
+
+bool testcase_run_all_tests();
+
+int main_start(int argc, char **argv); // some tests will execute the main... e.g. against errors in args parsing TODO move to namespace
 
 bool testcase_complete_1(const std::string &sofar); // TODO ... testcase or really used???
 bool testcase_complete_1_wrapper(); // TODO ... testcase or really used???
 
-bool testcase_run_all_tests();
+typedef bool ( * tTestCaseFunction )(const cTestCaseCfg &) ;
+// ^- tTestCaseFunction is a function:  bool ....(const cTestCaseCfg &)
 
 } // nTests
 } // nOT
@@ -1496,7 +1508,7 @@ bool testcase_complete_1_wrapper(){
 
 // ==================================================================
 // ==================================================================
-bool testcase_namespace_pollution() {
+bool testcase_namespace_pollution(const cTestCaseCfg &testCfg) {
 	class a {
 	};
 
@@ -1516,7 +1528,7 @@ bool testcase_namespace_pollution() {
 	return true;
 }
 
-bool testcase_cxx11_memory() {
+bool testcase_cxx11_memory(const cTestCaseCfg &testCfg) {
 	using namespace nOT::nNewcli;
 	using namespace nOT::nOTHint;
 
@@ -1532,12 +1544,13 @@ bool testcase_cxx11_memory() {
 	return true;
 }
 
-bool testcase_fail1() {
+bool testcase_fail1(const cTestCaseCfg &testCfg) {
+	testCfg.ossErr<<"This special testcase will always FAIL, on purpose of testing the testcases framework."<<endl;
 	return false;
 }
 
 
-bool helper_testcase_run_main_with_arguments( vector<string> tab ) {
+bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vector<string> tab ) {
 	int argc = tab.size(); // <--
 	typedef char * char_p;
 	char_p * argv  = new char_p[argc]; // C++ style new[]
@@ -1565,11 +1578,14 @@ bool helper_testcase_run_main_with_arguments( vector<string> tab ) {
 }
 
 
-bool testcase_run_main_args() {
+bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	bool ok=true;
-	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname","--complete-one", "ot msg sen"} ) ) ok=false;
-	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname","--complete-one"} ) ) ok=false;
-	if (!	helper_testcase_run_main_with_arguments( vector<string>{"programname"} ) ) ok=false;
+	const string programName="othint";
+
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot msg sen"} ) ) ok=false;
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one"} ) ) ok=false;
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName} ) ) ok=false;
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{} ) ) ok=false;
 
 	return ok;
 }
@@ -1577,14 +1593,16 @@ bool testcase_run_main_args() {
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
 	long int number_errors = 0; // long :o
 
+	cTestCaseCfg testCfg(cerr, true);
+
 	struct cTestCaseNamed {
-		cTestCaseNamed( bool (*_func)(void) , const string &_name)
-		:func(_func), name(_name) // XXX
+		cTestCaseNamed( tTestCaseFunction func  , const string &name)
+		:mFunc(func), mName(name) // XXX
 		{
 		}
 
-		bool (*func)(void);
-		string name;
+		tTestCaseFunction mFunc;
+		string mName;
 	};
 	vector<cTestCaseNamed> vectorOfFunctions;
 
@@ -1594,31 +1612,36 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	#define AddFunction(XXX) do {   vectorOfFunctions.push_back( cTestCaseNamed( & XXX , str(XXX) ) );   } while(0)
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
-	AddFunction(testcase_fail1);
 	AddFunction(testcase_run_main_args);
+	AddFunction(testcase_fail1); // only for testing of this test code
 	#undef AddFunction
 	#undef xstr
 	#undef str
 
+	std::ostringstream failure_details;
+
 	int nr=0;
 	for(auto it = vectorOfFunctions.begin(); it != vectorOfFunctions.end(); ++it) { // Calling all test functions
 		const cTestCaseNamed &test = *it;
-		bool result = (   test.func   )();
+		bool result = (   test.mFunc   )( testCfg ); // <--- run the test with config testCfg
 		if (result == false) {
 			number_errors++;
-			cerr<<"Test number #" << nr << " " << test.name  <<  " failed:" << endl;
+			std::ostringstream msgOss; msgOss << "test #" << nr << " " << test.mName  <<  " failed!";
+			string msg = msgOss.str();
+			cerr << " *** " << msg << endl;
+			failure_details << " " << msg << " ";
 		}
 		++nr;
 	}
-	if (number_errors == 0){
+
+	if (number_errors == 0) {
 		//cout << "All tests completed successfully." << endl;
 	}
 	else {
-		cerr << "Some tests were not completed." << endl;
+		cerr << "*** Some tests were not completed! (" << failure_details.str() << ")" << endl;
 	}
-	// testcase_complete_1(); // quiet.
 
-	return true;
+	return number_errors==0;
 }
 
 } // nTests
