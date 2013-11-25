@@ -13,8 +13,18 @@ If want to use ccmake (curses gui):
 Or Qt gui:
 	# aptitude install cmake-gui
 
-Build:
-	$ cmake . ( or $ ccmake . )
+Build with default configuration:
+
+	$ cmake .
 	$ make
+
+With locally installed editline and compiler wrapper:
+
+	$ cmake . -DLOCAL_EDITLINE=ON -DWITH_WRAPPER=ON
+	$ make
+
+With ccmake can easly change options in gui:
+	$ ccmake . (configure [c] and generate [g] in gui)
+	make
 ========================================================================
 
