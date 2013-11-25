@@ -14,7 +14,7 @@ Or Qt gui:
 	# aptitude install cmake-gui
 
 Build:
-	$ cmake . (or $ ccmake .)
+	$ cmake . ( or $ ccmake . )
 	$ make
 ========================================================================
 
