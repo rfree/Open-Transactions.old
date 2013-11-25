@@ -1300,26 +1300,6 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 	*/
 }
 
-void * xmalloc (int size)
-{
-	void *buf;
-
-	buf = malloc (size);
-	if (!buf) {
-			fprintf (stderr, "Error: Out of memory. Exiting.'n");
-			exit (1);
-	}
-	return buf;
-}
-
-char * dupstr (char* s) {
-	char *r;
-
-	r = (char*) xmalloc ((strlen (s) + 1));
-	strcpy (r, s);
-	return (r);
-}
-
 // When readline will call us to complete "ot m" then our function will be called with number=0,
 // then it should cache possibilities of endings "msg" "mint" "msguard", and return 0th (first) one.
 // Next it will be called with other number (probably 1,2,3..) and return N-th possibility.
