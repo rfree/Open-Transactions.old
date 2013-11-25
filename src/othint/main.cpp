@@ -943,7 +943,7 @@ cHintManager::cHintManager()
 { }
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
-	const std::string cut_begining="ot"; // minimal begining
+	const std::string cut_begining="ot "; // minimal begining
 	const int cut_begining_size = cut_begining.size();
 	if (sofar_str.length() < cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
@@ -1331,18 +1331,20 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 	bool dbg = my_rl_wrapper_debug;
 	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
 	string line;
-	//cerr << endl << "completionReadlineWrapper1 call" << endl;
 	if (rl_line_buffer) line = rl_line_buffer;
 	line = line.substr(0, rl_point); // Complete from cursor position
 	nOT::nOTHint::cHintManager hint;
 	vector <string> completions = hint.AutoCompleteEntire(line); // <--
 	// TODO cache the result! across number=...
+	if (!completions.size()) completions.push_back(""); // Not proper way of disabling filename autocompletion!
 	auto completions_size = completions.size();
 	if (dbg) DBGDisplayVectorEndl(completions);
 	if (dbg) cerr << "completions_size=" << completions_size << endl;
-	if (! completions_size) return NULL; // <--- RET
-
-	if (number==completions_size) return NULL;
+	// if (! completions_size) return NULL; // <--- RET
+	if (number==completions_size){ // stop
+		//rl_bind_key('\t', rl_insert);
+		return NULL;
+	}
 	return strdup( completions.at(number).c_str() ); // caller must free() this memory
 }
 
