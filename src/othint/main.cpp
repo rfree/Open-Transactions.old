@@ -403,6 +403,19 @@ std::string rtrim(const std::string &s) {
 }
 // TODO ltrim trim
 
+std::string cEscapeString(const std::string &s) {
+	std::ostringstream  newStr;
+        for(auto c: s) {
+                if(c >=32 && c <= 126)
+                        newStr<<c;
+                        else {
+                        newStr<<"\\"<< (int) c;
+                        }
+                }
+        
+	return newStr.str();
+}
+
 // ASRT - assert. Name like ASSERT() was too long, and ASS() was just... no.
 // Use it like this: ASRT( x>y );  with the semicolon at end, a clever trick forces this syntax :)
 #define ASRT(x) do { if (!(x)) Assert(false, OT_CODE_STAMP); } while(0)
@@ -1690,6 +1703,22 @@ bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	return ok;
 }
 
+// All this tests should succeed:
+bool testcase_run_cEscapeString(const cTestCaseCfg &testCfg) {
+	bool ok=true;
+	std::string test = "Test";
+        std::string shouldBe = "T\\3st";
+        test[1] = 3;
+        std::string out = cEscapeString(test);
+        if(out!=shouldBe) {
+                ok = false;
+                if (testCfg.debug) 
+                testCfg.ossErr<<"Bad Test cEscapeString: test string "<<test << " out " << out << " should be " <<shouldBe <<endl;
+                }
+        
+	return ok;
+}
+
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
 	cerr << "=== test cases, unit tests ============================================" << endl;
 
@@ -1720,6 +1749,8 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
 	AddFunction(testcase_run_main_args);
+        AddFunction(testcase_run_cEscapeString);
+        
 
 	AddFunctionMustFail(testcase_fail1); // only for testing of this test code
 	AddFunctionMustFail(testcase_fail2); // only for testing of this test code
