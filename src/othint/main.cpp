@@ -405,12 +405,12 @@ std::string rtrim(const std::string &s) {
 
 std::string cEscapeString(const std::string &s) {
 	std::ostringstream  newStr;
-        for(auto c: s) {
-                if(c >=32 && c <= 126)
-                        newStr<<c;
-                        else {
-                        newStr<<"\\"<< (int) c;
-                        }
+        for(int i = 0; i < s.length();i++) {
+                if(s[i] >=32 && s[i] <= 126)
+                        newStr<<s[i];
+                        else 
+                        newStr<<"\\"<< (int) s[i];
+                        
                 }
         
 	return newStr.str();
