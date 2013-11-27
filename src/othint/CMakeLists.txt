@@ -1,8 +1,15 @@
 cmake_minimum_required (VERSION 2.6)
 project (othint)
 file(GLOB othint_SRC
+	"*.h"
+	"*.hpp"
 	"*.cpp"
 )
+
+include_directories("$ENV{HOME}/.local/include/ot/otapi")
+include_directories("$ENV{HOME}/.local/include/ot/otlib")
+add_library( libotapi SHARED IMPORTED )
+set_target_properties( libotapi PROPERTIES IMPORTED_LOCATION "$ENV{HOME}/.local/lib")
 
 option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" OFF)
 option(WITH_WRAPPER "Build with wrapper" OFF)

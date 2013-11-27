@@ -208,6 +208,10 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 
 #include <string.h>
 
+// OT
+#include "OTAPI.h"
+
+
 // detecting and including proper version of readline or it's replacement
 #ifndef CFG_USE_READLINE // should we use readline?
 	#define CFG_USE_READLINE 1 // default
@@ -408,11 +412,10 @@ std::string cEscapeString(const std::string &s) {
         for(int i = 0; i < s.length();i++) {
                 if(s[i] >=32 && s[i] <= 126)
                         newStr<<s[i];
-                        else 
+                        else
                         newStr<<"\\"<< (int) s[i];
-                        
                 }
-        
+
 	return newStr.str();
 }
 
@@ -1448,6 +1451,8 @@ int main(int argc, char **argv) {
 
 
 int nOT::nTests::main_start(int argc, char **argv) {
+	//OT_API *api = OTAPI_Wrap::OTAPI();
+
 	vector<string> args;
 	if (! (argc>=1)) {
 		throw std::runtime_error("Main program called with 0 arguments (not even program name).");
@@ -1712,10 +1717,10 @@ bool testcase_run_cEscapeString(const cTestCaseCfg &testCfg) {
         std::string out = cEscapeString(test);
         if(out!=shouldBe) {
                 ok = false;
-                if (testCfg.debug) 
+                if (testCfg.debug)
                 testCfg.ossErr<<"Bad Test cEscapeString: test string "<<test << " out " << out << " should be " <<shouldBe <<endl;
                 }
-        
+
 	return ok;
 }
 
@@ -1750,7 +1755,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	AddFunction(testcase_cxx11_memory);
 	AddFunction(testcase_run_main_args);
         AddFunction(testcase_run_cEscapeString);
-        
+
 
 	AddFunctionMustFail(testcase_fail1); // only for testing of this test code
 	AddFunctionMustFail(testcase_fail2); // only for testing of this test code
