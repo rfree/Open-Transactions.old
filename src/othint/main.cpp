@@ -451,6 +451,27 @@ vector<T> & operator+=(vector<T> &a, const vector<T> &b) {
 } // nUtil
 } // nOT
 
+namespace nOT {
+namespace nUse {
+		class cUseOT {
+		public:
+		cUseOT() 	{
+		OTAPI_Wrap::AppInit(); // Init OTAPI
+		std::cout <<"loading wallet: ";
+		if(OTAPI_Wrap::LoadWallet())
+		std::cout <<"wallet was loaded "<<std::endl;
+		else
+		std::cout <<"error while loanding wallet "<<std::endl;
+		}
+
+	~cUseOT() 	{
+		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
+		}
+
+	};
+	cUseOT useOT;
+} // nUse
+} // nOT
 // ====================================================================
 
 // TODO: move to own file
@@ -1433,7 +1454,7 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 
 int main(int argc, char **argv) {
 	// demo of OT
-	try {
+	/*try {
 				nOT::nTests::exampleOfOT();
 		}
 	catch(const std::exception &e) {
@@ -1441,7 +1462,7 @@ int main(int argc, char **argv) {
 	}
 	catch(...) {
 		std::cerr << "\n*** The exampleOfOT code thrown an UNKNOWN exception!" << std::endl;
-	}
+	}*/
 
 	try {
 		nOT::nTests::testcase_run_all_tests();
@@ -1453,7 +1474,6 @@ int main(int argc, char **argv) {
 		std::cerr << "\n*** The testcases code thrown an UNKNOWN exception!" << std::endl;
 	}
 
-	OTAPI_Wrap::AppCleanup(); // OTAPI cleanup
 	int ret = nOT::nTests::main_start(argc, argv);
 	return ret;
 }
