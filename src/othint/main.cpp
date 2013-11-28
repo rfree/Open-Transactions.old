@@ -331,6 +331,17 @@ std::string ToStr(const T & obj) {
 	return oss.str();
 }
 
+std::string cSpaceFromEscape(const std::string &s) {
+	std::ostringstream  newStr;
+        for(int i = 0; i < s.length();i++) {
+                if(s[i] == '\\' && s[i+1] ==32)
+                 newStr<<" ";
+                 else
+                 newStr<<s[i];
+                }
+	return newStr.str();
+}
+
 template <class T>
 void DisplayVector(std::ostream & out, const std::vector<T> &v, const std::string &delim=" ") {
 	std::copy( v.begin(), v.end(), std::ostream_iterator<T>(out, delim.c_str()) );
@@ -362,10 +373,25 @@ bool CheckIfBegins(const std::string & beggining, const std::string & all) {
 	}
 }
 
+
+std::string cEscapeFromSpace(const std::string &s) {
+	std::ostringstream  newStr;
+        for(int i = 0; i < s.length();i++) {
+                if(s[i] ==32)
+                 newStr<<"\\"<< " ";
+                 else
+                 newStr<<s[i];
+                }
+	return newStr.str();
+}
+
 vector<string> WordsThatMatch(const std::string & sofar, const vector<string> & possib) {
 	vector<string> ret;
 	for ( auto rec : possib) { // check of possibilities
-		if (CheckIfBegins(sofar,rec)) ret.push_back(rec); // this record matches
+		if (CheckIfBegins(sofar,rec)) {
+			rec = cEscapeFromSpace(rec);
+			ret.push_back(rec); // this record matches
+		}
 	}
 	return ret;
 }
@@ -419,6 +445,7 @@ std::string cEscapeString(const std::string &s) {
 	return newStr.str();
 }
 
+
 // ASRT - assert. Name like ASSERT() was too long, and ASS() was just... no.
 // Use it like this: ASRT( x>y );  with the semicolon at end, a clever trick forces this syntax :)
 #define ASRT(x) do { if (!(x)) Assert(false, OT_CODE_STAMP); } while(0)
@@ -451,27 +478,7 @@ vector<T> & operator+=(vector<T> &a, const vector<T> &b) {
 } // nUtil
 } // nOT
 
-namespace nOT {
-namespace nUse {
-		class cUseOT {
-		public:
-		cUseOT() 	{
-		OTAPI_Wrap::AppInit(); // Init OTAPI
-		std::cout <<"loading wallet: ";
-		if(OTAPI_Wrap::LoadWallet())
-		std::cout <<"wallet was loaded "<<std::endl;
-		else
-		std::cout <<"error while loanding wallet "<<std::endl;
-		}
 
-	~cUseOT() 	{
-		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
-		}
-
-	};
-	cUseOT useOT;
-} // nUse
-} // nOT
 // ====================================================================
 
 // TODO: move to own file
@@ -854,6 +861,56 @@ class cCmdlineInfo {
 // ########################################################################
 // ########################################################################
 
+namespace nOT {
+namespace nUse {
+		class cUseOT {
+		public:
+
+		nUtil::vector<nOT::nNewcli::cNyminfo> mNymsMy;
+		nUtil::vector<std::string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
+
+		bool mNymsMy_loaded;
+
+		cUseOT() : mNymsMy_loaded(false) 	{
+		OTAPI_Wrap::AppInit(); // Init OTAPI
+		std::cout <<"loading wallet: ";
+		if(OTAPI_Wrap::LoadWallet())
+		std::cout <<"wallet was loaded "<<std::endl;
+		else
+		std::cout <<"error while loanding wallet "<<std::endl;
+		}
+
+		~cUseOT() 	{
+		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
+		}
+
+		const nUtil::vector<std::string> getNymsMy() {
+			if (!mNymsMy_loaded) {
+				try {
+				mNymsMy_loaded=0; // to mark that we start to delete data/data is inconsistent
+				mNymsMy.clear();
+				mNymsMy_str.clear();
+
+				for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
+					std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+					std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+
+					mNymsMy_str.push_back(nym_Name);
+					}
+			}
+			catch(...) { }
+			mNymsMy_loaded = true;
+			}
+		return mNymsMy_str;
+		}
+
+	};
+
+
+	cUseOT useOT;
+} // nUse
+} // nOT
+
 
 namespace nOT {
 namespace nTests {
@@ -1169,7 +1226,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  mHintData->getNymsMy() ); //TODO otlib
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
@@ -1432,6 +1489,7 @@ void cInteractiveShell::runEditline() {
 		}
 		cout << "Command was: " << cmd << endl;
 
+
 		cout << "Auto completion for (" << cmd << ") is: ";
 		nOT::nTests::testcase_complete_1(cmd);
 		cout << endl;
@@ -1630,6 +1688,13 @@ bool testcase_complete_1(const string &sofar) {
 	// TODO verify length (avoid underflow)
 
 	vector<string> out = hint.AutoComplete(line);
+
+	//Convert each Escape on Space
+	int i = 0;
+	for(auto rec:out)	{
+		out[i] = cSpaceFromEscape(rec);
+		i++;
+		}
 	nOT::nUtil::DisplayVector(std::cout, out); // testcase
 
 
