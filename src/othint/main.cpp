@@ -1434,7 +1434,26 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 
 int main(int argc, char **argv) {
 	OTAPI_Wrap::AppInit(); // Init OTAPI
-	std::cout << "time: " << OTAPI_Wrap::GetTime() << std::endl;
+	std::string 	SERVER_ID = "1";
+
+	const std::string   	USER_ID;
+	const std::string   	strCA_FILE;
+
+	const std::string  	strKEY_FILE;
+	const std::string  	strKEY_PASSWORD;
+
+	bool wallet = OTAPI_Wrap::LoadWallet();
+
+	//bool connected  = OTAPI_Wrap::ConnectServer 	( SERVER_ID,USER_ID,strCA_FILE,strKEY_FILE,strKEY_PASSWORD);
+	std::cout << "wallet " << wallet << std::endl;
+	std::cout << "nym count: " << OTAPI_Wrap::GetNymCount () << std::endl;
+
+	for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
+			std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+			std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+			std::cout <<"nym id "<<  nym_ID <<" nym name "<< nym_Name << std::endl;
+			}
+
 	try {
 		nOT::nTests::testcase_run_all_tests();
 	}
