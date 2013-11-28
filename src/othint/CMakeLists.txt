@@ -8,8 +8,12 @@ file(GLOB othint_SRC
 
 include_directories("$ENV{HOME}/.local/include/ot/otapi")
 include_directories("$ENV{HOME}/.local/include/ot/otlib")
+
 add_library( libotapi SHARED IMPORTED )
 set_target_properties( libotapi PROPERTIES IMPORTED_LOCATION "$ENV{HOME}/.local/lib")
+
+add_library( libot SHARED IMPORTED )
+set_target_properties( libot PROPERTIES IMPORTED_LOCATION "$ENV{HOME}/.local/lib")
 
 option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" OFF)
 option(WITH_WRAPPER "Build with wrapper" OFF)
