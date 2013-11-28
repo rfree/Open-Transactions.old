@@ -5,15 +5,11 @@ file(GLOB othint_SRC
 	"*.hpp"
 	"*.cpp"
 )
+set(CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
+include_directories("${CMAKE_PREFIX_PATH}/include/ot/otapi")
+include_directories("${CMAKE_PREFIX_PATH}/include/ot/otlib")
 
-include_directories("$ENV{HOME}/.local/include/ot/otapi")
-include_directories("$ENV{HOME}/.local/include/ot/otlib")
 
-add_library( libotapi SHARED IMPORTED )
-set_target_properties( libotapi PROPERTIES IMPORTED_LOCATION "$ENV{HOME}/.local/lib")
-
-add_library( libot SHARED IMPORTED )
-set_target_properties( libot PROPERTIES IMPORTED_LOCATION "$ENV{HOME}/.local/lib")
 
 option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" OFF)
 option(WITH_WRAPPER "Build with wrapper" OFF)
@@ -23,13 +19,18 @@ if (WITH_WRAPPER)
 	set(CMAKE_CC_COMPILER "$HOME/.local/bin/compile-cc")
 endif (WITH_WRAPPER)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0")
+SET(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 ")
+SET(CMAKE_EXE_LINKER_FLAGS "-L${CMAKE_PREFIX_PATH}/lib -lotapi -lot") #TODO:  Find a proper way to link ot libraries
+#add_library( otapi SHARED IMPORTED )
+#set_target_properties( otapi PROPERTIES IMPORTED_LOCATION "${CMAKE_PREFIX_PATH}/lib")
+#add_library( ot SHARED IMPORTED )
+#set_target_properties( ot PROPERTIES IMPORTED_LOCATION "${CMAKE_PREFIX_PATH}/lib")
+
 add_executable(othint ${othint_SRC})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/") # Add folder with cmake modules
 
 if (LOCAL_EDITLINE)
-	set(CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
 	find_package(EditlineLocal)
 	if (EDITLINE_FOUND)
 		include_directories(${EDITLINE_INCLUDE_DIR})
