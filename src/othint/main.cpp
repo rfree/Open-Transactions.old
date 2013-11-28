@@ -870,21 +870,31 @@ namespace nUse {
 		nUtil::vector<std::string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
 
 		bool mNymsMy_loaded;
+		bool OTAPI_loaded;
 
-		cUseOT() : mNymsMy_loaded(false) 	{
+		cUseOT() : mNymsMy_loaded(false), OTAPI_loaded(false) 	{
+
+		}
+
+		~cUseOT() 	{
+			if(OTAPI_loaded)
+		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
+		}
+
+		void Init()	{
 		OTAPI_Wrap::AppInit(); // Init OTAPI
-		std::cout <<"loading wallet: ";
+		std::cout <<"Init loading wallet: ";
 		if(OTAPI_Wrap::LoadWallet())
 		std::cout <<"wallet was loaded "<<std::endl;
 		else
 		std::cout <<"error while loanding wallet "<<std::endl;
-		}
-
-		~cUseOT() 	{
-		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
+		OTAPI_loaded = true;
 		}
 
 		const nUtil::vector<std::string> getNymsMy() {
+			if(!OTAPI_loaded)
+			Init();
+
 			if (!mNymsMy_loaded) {
 				try {
 				mNymsMy_loaded=0; // to mark that we start to delete data/data is inconsistent
