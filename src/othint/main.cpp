@@ -210,7 +210,7 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 
 // OT
 #include "OTAPI.h"
-
+//#include "OT_ME.h"
 
 // detecting and including proper version of readline or it's replacement
 #ifndef CFG_USE_READLINE // should we use readline?
@@ -601,6 +601,8 @@ account			# can display active (default) account
 *account new <assetID>			# make new account by giving only <assetID>...
 /account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
+*account rm <accountName>			# delete account
+/account rn <oldAccountName>	<newAccountName>		# rename account
 account-in ls			# for active account
 account-in ls <accountID>			# for specific <accountID>
 account-in accept <paymentID>				#	accept this particullar payment
@@ -932,6 +934,17 @@ namespace nUse {
 			return accounts;
 		}
 
+		const nUtil::vector<std::string> getAccountIDs() {
+			if(!OTAPI_loaded)
+				Init();
+
+			vector<std::string> accountsIDs;
+			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
+				accountsIDs.push_back(OTAPI_Wrap::GetAccountWallet_ID (i));
+			}
+			return accountsIDs;
+		}
+
 		const std::string getAccountId(const std::string & accountName) {
 			if(!OTAPI_loaded)
 				Init();
@@ -940,7 +953,7 @@ namespace nUse {
 				if(OTAPI_Wrap::GetAccountWallet_Name ( OTAPI_Wrap::GetAccountWallet_ID (i))==accountName)
 				return OTAPI_Wrap::GetAccountWallet_ID (i);
 			}
-			return NULL;
+			return "";
 		}
 
 		const nUtil::vector<std::string> getAssets() {
@@ -962,26 +975,57 @@ namespace nUse {
 				if(OTAPI_Wrap::GetAssetType_Name ( OTAPI_Wrap::GetAssetType_ID (i))==assetName)
 					return OTAPI_Wrap::GetAssetType_ID (i);
 			}
-			return NULL;
+			return "";
 		}
 
-		const std::string SetAccountWallet_Name(const std::string & accountName, const std::string & NewAccountName) { //TODO: passing to function: const std::string & nymName, const std::string & signerNymName,
+		const std::string SetAccountWallet_NameByName(const std::string & oldAccountName, const std::string & newAccountName) {
+
+				SetAccountWallet_Name (getAccountId(oldAccountName), newAccountName);
+			return "";
+		}
+
+		const std::string SetAccountWallet_Name(const std::string & accountID, const std::string & NewAccountName) { //TODO: passing to function: const std::string & nymName, const std::string & signerNymName,
 			if(!OTAPI_loaded)
 				Init();
-				 OTAPI_Wrap::SetAccountWallet_Name ( getAccountId(accountName), getAccountId(accountName), ACCT_NEW_NAME )
-			return NULL;
+
+				OTAPI_Wrap::SetAccountWallet_Name (accountID, mUserID, NewAccountName);
+			return "";
 		}
 
 		void createAssetAccount(const std::string & assetName, const std::string & newAccountName) {
 			if(!OTAPI_loaded)
 				Init();
 
-			OTAPI_Wrap::createAssetAccount(mServerID, mUserID, getAssetId(assetName));
+			int32_t status = OTAPI_Wrap::createAssetAccount(mServerID, mUserID, getAssetId(assetName));
+
+			std::string strResponse = OTAPI_Wrap::PopMessageBuffer 	( status,mServerID,mUserID );
+
+			std::string qstrID = OTAPI_Wrap::Message_GetNewAcctID(strResponse);
+
+        if (qstrID.length()==0) {
+						std::cerr<<"Failed trying to get the new account's ID from the server response."<<std::endl;
+            return;
+            }
+			SetAccountWallet_Name(qstrID,newAccountName);
+			// inBox and OutBox must be get from server because without it account not work properly
+			// example if you can't delete account without inbox and outbox
+			int32_t  inBoxInt = OTAPI_Wrap::getInbox 	(mServerID,mUserID,getAccountId(newAccountName));
+			int32_t outBoxInt = OTAPI_Wrap::getOutbox 	(mServerID,mUserID,getAccountId(newAccountName));
+
+
 		}
 
 		std::string deleteAssetAccount(const std::string & accountName) {
 			if(!OTAPI_loaded)
 				Init();
+
+			/*if(!OTAPI_Wrap::Wallet_CanRemoveAccount (getAccountId(accountName))) {
+						// inBox and OutBox must be get from server because without it account not work properly
+			// example if you can't delete account without inbox and outbox
+			int32_t  inBoxInt = OTAPI_Wrap::getInbox 	(mServerID,mUserID,getAccountId(accountName));
+			int32_t outBoxInt = OTAPI_Wrap::getOutbox 	(mServerID,mUserID,getAccountId(accountName));
+			}
+*/
 
 			if(OTAPI_Wrap::deleteAssetAccount(mServerID, mUserID, getAccountId(accountName))==-1)
 				return "Error while deleting account";
@@ -1218,8 +1262,9 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	// === at 2nd (non-forward-option) word (action) ===
 
 	if (topic=="account") {
+
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm","rn"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
@@ -1234,24 +1279,65 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
 			}
+			if (action=="rn") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
+			}
 		}
+
 		if (full_words<4) { // we work on word4 - var2; account name
 			if (action=="new") {
 				vector<std::string> v = nOT::nUse::useOT.getAssets();
 				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
-					//std::cout <<"type new account name";
-					return vector<string>{"type new account name"};
+					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
+				}
+				else {
+					std::cerr <<"new account name already exists, choose other name ";
+					return vector<string>{""};
 				}
 			}
 			if (action=="rm") {
+
 				vector<std::string> v = nOT::nUse::useOT.getAccounts();
 				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
 					//std::cout <<"type new account name";
 					;
 					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
 				}
+				else {
+					std::cerr <<"no account with this name ";
+					return vector<string>{""};
+				}
+			}
+
+			if (action=="rn") {
+				std::cerr <<"type new account name";
+				return vector<string>{""};
 			}
 		}
+		if (full_words<5) { // we work on word4 - var2; account name
+			if (action=="new") {
+						vector<std::string> v = nOT::nUse::useOT.getAssets();
+							if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+						nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
+						return vector<string>{""};
+						}
+			}
+			if (action=="rn") {
+
+						vector<std::string> v = nOT::nUse::useOT.getAssets();
+						if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
+
+						nOT::nUse::useOT.SetAccountWallet_NameByName(cmdArgs.at(0), cmdArgs.at(1));
+						return vector<string>{""};
+					}
+					else {
+						std::cerr <<"new account name already exists, choose other name ";
+						return vector<string>{""};
+					}
+				}
+
+		}
+
 	}
 
 	if (topic=="account-in") {
