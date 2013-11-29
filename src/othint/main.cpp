@@ -591,12 +591,15 @@ msg send     # error: missing required options
 msg send <mynym>     # error: missing required options
 #----------------Errors------------------#
 
+[*] - done
+[/] - in progress
+
 #------List of all included commands-----#
 account			# can display active (default) account
-account ls			# list all accounts
-account new			# make new account with UI
-account new <assetID>			# make new account by giving only <assetID>...
-account new <assetID> <accountName>			#... and <accountName>
+*account ls			# list all accounts
+*account new			# make new account with UI
+*account new <assetID>			# make new account by giving only <assetID>...
+/account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
 account-in ls			# for active account
 account-in ls <accountID>			# for specific <accountID>
@@ -863,11 +866,15 @@ class cCmdlineInfo {
 
 namespace nOT {
 namespace nUse {
+
+	using std::vector;
 		class cUseOT {
+			std::string mServerID = "r1fUoHwJOWCuK3WBAAySjmKYqsG6G2TYIxdqY6YNuuG";
+			std::string mUserID = "DYEB6U7dcpbwdGrftPnslNKz76BDuBTFAjiAgKaiY2n";
 		public:
 
-		nUtil::vector<nOT::nNewcli::cNyminfo> mNymsMy;
-		nUtil::vector<std::string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
+		vector<nOT::nNewcli::cNyminfo> mNymsMy;
+		vector<std::string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
 
 		bool mNymsMy_loaded;
 		bool OTAPI_loaded;
@@ -893,7 +900,7 @@ namespace nUse {
 
 		const nUtil::vector<std::string> getNymsMy() {
 			if(!OTAPI_loaded)
-			Init();
+				Init();
 
 			if (!mNymsMy_loaded) {
 				try {
@@ -912,6 +919,74 @@ namespace nUse {
 			mNymsMy_loaded = true;
 			}
 		return mNymsMy_str;
+		}
+
+		const nUtil::vector<std::string> getAccounts() {
+			if(!OTAPI_loaded)
+				Init();
+
+			vector<std::string> accounts;
+			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
+				accounts.push_back(OTAPI_Wrap::GetAccountWallet_Name ( OTAPI_Wrap::GetAccountWallet_ID (i)));
+			}
+			return accounts;
+		}
+
+		const std::string getAccountId(const std::string & accountName) {
+			if(!OTAPI_loaded)
+				Init();
+
+			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
+				if(OTAPI_Wrap::GetAccountWallet_Name ( OTAPI_Wrap::GetAccountWallet_ID (i))==accountName)
+				return OTAPI_Wrap::GetAccountWallet_ID (i);
+			}
+			return NULL;
+		}
+
+		const nUtil::vector<std::string> getAssets() {
+			if(!OTAPI_loaded)
+				Init();
+
+			vector<std::string> assets;
+			for(int i = 0 ; i < OTAPI_Wrap::GetAssetTypeCount ();i++) {
+				assets.push_back(OTAPI_Wrap::GetAssetType_Name ( OTAPI_Wrap::GetAssetType_ID (i)));
+			}
+			return assets;
+		}
+
+		const std::string getAssetId(const std::string & assetName) {
+			if(!OTAPI_loaded)
+				Init();
+
+			for(int i = 0 ; i < OTAPI_Wrap::GetAssetTypeCount ();i++) {
+				if(OTAPI_Wrap::GetAssetType_Name ( OTAPI_Wrap::GetAssetType_ID (i))==assetName)
+					return OTAPI_Wrap::GetAssetType_ID (i);
+			}
+			return NULL;
+		}
+
+		const std::string SetAccountWallet_Name(const std::string & accountName, const std::string & NewAccountName) { //TODO: passing to function: const std::string & nymName, const std::string & signerNymName,
+			if(!OTAPI_loaded)
+				Init();
+				 OTAPI_Wrap::SetAccountWallet_Name ( getAccountId(accountName), getAccountId(accountName), ACCT_NEW_NAME )
+			return NULL;
+		}
+
+		void createAssetAccount(const std::string & assetName, const std::string & newAccountName) {
+			if(!OTAPI_loaded)
+				Init();
+
+			OTAPI_Wrap::createAssetAccount(mServerID, mUserID, getAssetId(assetName));
+		}
+
+		std::string deleteAssetAccount(const std::string & accountName) {
+			if(!OTAPI_loaded)
+				Init();
+
+			if(OTAPI_Wrap::deleteAssetAccount(mServerID, mUserID, getAccountId(accountName))==-1)
+				return "Error while deleting account";
+			else
+				return "";
 		}
 
 	};
@@ -1144,16 +1219,37 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	if (topic=="account") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "refresh", "ls", "[BLANK]"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<assetID>"} ) ;
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
+			}
+			if (action=="ls") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
+			}
+			if (action=="refresh") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ) ;
+			}
+			if (action=="rm") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
 			}
 		}
-		if (full_words<4) { // we work on word4 - var2; this one have to get "assetID" variable from otlib
-			if (cmdArgs.at(0)=="<assetID>") {
-	     	return WordsThatMatch(  current_word  ,  vector<string>{"<accountname>"} ) ;
+		if (full_words<4) { // we work on word4 - var2; account name
+			if (action=="new") {
+				vector<std::string> v = nOT::nUse::useOT.getAssets();
+				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+					//std::cout <<"type new account name";
+					return vector<string>{"type new account name"};
+				}
+			}
+			if (action=="rm") {
+				vector<std::string> v = nOT::nUse::useOT.getAccounts();
+				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+					//std::cout <<"type new account name";
+					;
+					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
+				}
 			}
 		}
 	}
@@ -1178,7 +1274,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	if (topic=="asset") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "[BLANK]"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
