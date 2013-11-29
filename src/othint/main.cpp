@@ -602,7 +602,7 @@ account			# can display active (default) account
 /account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
 *account rm <accountName>			# delete account
-/account rn <oldAccountName>	<newAccountName>		# rename account
+*account rn <oldAccountName>	<newAccountName>		# rename account
 account-in ls			# for active account
 account-in ls <accountID>			# for specific <accountID>
 account-in accept <paymentID>				#	accept this particullar payment
