@@ -1311,8 +1311,8 @@ ot [front] nym del $mynym [--a] [--b] [--c]
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot"; // minimal begining
-	const int cut_begining_size = cut_begining.size();
-	if (sofar_str.length() < cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
+	const int cut_begining_size = cut_begining.length();
+	if (sofar_str.length() <= cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
 	std::string ot = sofar_str.substr(0,cut_begining_size); // separate out the part that is know to has correct size and should be "ot"
 	if (ot!=cut_begining) return vector<string>{}; // nothing matches, not command ot...
