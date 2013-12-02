@@ -15,8 +15,8 @@ option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" OFF)
 option(WITH_WRAPPER "Build with wrapper" OFF)
 
 if (WITH_WRAPPER)
-	set(CMAKE_CXX_COMPILER "$HOME/.local/bin/compile-cxx")
-	set(CMAKE_CC_COMPILER "$HOME/.local/bin/compile-cc")
+	set(CMAKE_CXX_COMPILER "$ENV{HOME}/.local/bin/compile-cxx")
+	set(CMAKE_CC_COMPILER "$ENV{HOME}/.local/bin/compile-cc")
 endif (WITH_WRAPPER)
 
 SET(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 ")
