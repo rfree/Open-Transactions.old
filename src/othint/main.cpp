@@ -1833,6 +1833,7 @@ int main(int argc, char **argv) {
 
 int nOT::nTests::main_main(int argc, char **argv) {
 	vector<string> args;
+	int status = 0;
 	if (! (argc>=1)) {
 		throw std::runtime_error("Main program called with 0 arguments (not even program name).");
 	}
@@ -1847,8 +1848,13 @@ int nOT::nTests::main_main(int argc, char **argv) {
 		else if (arg=="--complete-one") {
 			string v;  bool ok=1;  try { v=args.at(nr+1); } catch(...) { ok=0; }
 			if (ok) {
-				nOT::nTests::testcase_complete_1(v);
-			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl; }
+				if(!nOT::nTests::testcase_complete_1(v))	{
+					cerr<<"Bad testcase_complete_1 for arguments '"<<arg<<"'"<<endl;
+					status = 1;
+			}
+
+			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl;
+			status = 1; }
 		}
 
 		++nr;
@@ -1872,7 +1878,7 @@ int nOT::nTests::main_main(int argc, char **argv) {
 		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
 */
-	return 0;
+	return status;
 }
 // ====================================================================
 
@@ -1990,7 +1996,7 @@ bool testcase_complete_1(const string &sofar) {
 	nOT::nUtil::DisplayVector(std::cout, out); // testcase
 
 
-	bool ok = 1;
+	bool ok = 0;
 
 	return ok;
 }
@@ -2052,11 +2058,16 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	typedef char * char_p;
 	char_p * argv  = new char_p[argc]; // C++ style new[]
 
+
+
 	bool dbg = testCfg.debug;   auto &err = testCfg.ossErr;
 	if (dbg) err << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
+
+	cerr << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
 	size_t nr=0;
 	for(auto rec:tab) {
 		argv[nr] = strdup(rec.c_str()); // C style strdup/free
+		cerr << " argv " << argv[nr] <<std::endl;
 		++nr;
 		if( dbg) err << "'" << rec << "' ";
 	}
@@ -2064,7 +2075,11 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 
 	bool ok=true;
 	try {
-		main_main(argc, argv); // ... ok? TODO
+		  ok = main_main(argc, argv)==0 ; // ... ok? TODO
+
+		  if (!ok) err << "BAD TEST " << __FUNCTION__ << " with " << argc << " argument(s): ";
+
+
 	}
 	catch(const std::exception &e) {
 		ok=false;
@@ -2085,7 +2100,12 @@ bool testcase_run_main_args_fail1(const cTestCaseCfg &testCfg) {
 // All this tests should succeed:
 bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	bool ok=true;
+
 	const string programName="othint";
+
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot accunt new game\\ toke_ns TEST_CASE"} ) ) ok=false;
+
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot accunt rm TEST_CA_SE"} ) ) ok=false;
 
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot msg sen"} ) ) ok=false;
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one"} ) ) ok=false;
@@ -2116,7 +2136,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 
 	std::ostringstream quiet_oss;
 
-	cTestCaseCfg testCfg(cerr, false);
+	cTestCaseCfg testCfg(cerr, true);
 	cTestCaseCfg testCfgQuiet(quiet_oss, false); // to quiet down the tests
 
 	struct cTestCaseNamed {
