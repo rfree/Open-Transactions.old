@@ -328,11 +328,11 @@ cNullstream g_nullstream; // a stream that does nothing (eats/discards data)
 
 #define _dbg3(X) do { nOT::nUtil::current_logger.write_stream(20) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
 #define _dbg2(X) do { nOT::nUtil::current_logger.write_stream(30) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
-#define _dbg1(X) do { nOT::nUtil::current_logger.write_stream(40) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
-#define _info(X) do { nOT::nUtil::current_logger.write_stream(50) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
-#define _note(X) do { nOT::nUtil::current_logger.write_stream(70) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
-#define _warn(X) do { nOT::nUtil::current_logger.write_stream(90) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
-#define _erro(X) do { nOT::nUtil::current_logger.write_stream(100) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _dbg1(X) do { nOT::nUtil::current_logger.write_stream(40) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // details
+#define _info(X) do { nOT::nUtil::current_logger.write_stream(50) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // more boring info
+#define _note(X) do { nOT::nUtil::current_logger.write_stream(70) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // interesting event
+#define _warn(X) do { nOT::nUtil::current_logger.write_stream(90) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // some problem
+#define _erro(X) do { nOT::nUtil::current_logger.write_stream(100) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // error - report
 
 const char* ShortenTheFile(const char *s) {
 	const char *p = s;
@@ -1213,6 +1213,17 @@ cHintManager::cHintManager()
 
 void cHintManager::TestNewFunction_Tree() { // testing new code [wip]
 	_info("Working on this="<<(void*)this);
+/*
+
+ot msg send
+ot msg ls
+ot msg new
+
+ot nym ls
+ot nym new
+ot [front] nym del $mynym [--a] [--b] [--c]
+
+*/
 }
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
