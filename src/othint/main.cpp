@@ -382,7 +382,7 @@ std::string cSpaceFromEscape(const std::string &s) {
 	std::ostringstream  newStr;
         for(int i = 0; i < s.length();i++) {
                 if(s[i] == '\\' && s[i+1] ==32)
-                 newStr<<" ";
+                 newStr<<"";
                  else
                  newStr<<s[i];
                 }
@@ -939,7 +939,7 @@ namespace nUse {
 
 		void Init()	{
 		OTAPI_Wrap::AppInit(); // Init OTAPI
-		std::cout <<"Init loading wallet: ";
+		std::cout <<std::endl<<"Init loading wallet: ";
 		if(OTAPI_Wrap::LoadWallet())
 		std::cout <<"wallet was loaded "<<std::endl;
 		else
@@ -1245,47 +1245,41 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 }
 */
-	bool dbg = true;
-	std::istringstream iss(sofar_str);
-	//vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
-	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
+	bool dbg = false;
 
-	vector<string> sofar;
 	string sofar_str_tmp = sofar_str;
-	while(sofar_str_tmp.length())	{
-		int cutAt = 0;
 
+	if (dbg) { cerr << endl<< "sofar_str "<< sofar_str;};
 
-		if(dbg) {cerr<<endl<<" sofar_str_tmp.find(E ,cutAt) "<< sofar_str_tmp.find("\\ ",cutAt);}
-		if(dbg) {cerr<<endl<<" sofar_str_tmp.find( ,cutAt) "<< sofar_str_tmp.find(" ",cutAt);}
-		while(sofar_str_tmp.find("\\ ",cutAt)+1== sofar_str_tmp.find(" ",cutAt)) {
-			cutAt = sofar_str_tmp.find(" ",cutAt+1);
-			if(dbg) {cerr<<endl<<" cutAt n "<< cutAt;}
-			if(dbg) {cerr<<endl<<" sofar_str_tmp.find(E ,cutAt) "<< sofar_str_tmp.find("\\ ",cutAt);}
-			if(dbg) {cerr<<endl<<" sofar_str_tmp.find( ,cutAt) "<< sofar_str_tmp.find(" ",cutAt);}
+  string esc ("\\ ");
 
-			}
-		if(cutAt!=-1)	{
-
-				if(dbg) {cerr<<endl<<" find_first_of 1 "<< cutAt;}
-
-				sofar.push_back(sofar_str_tmp.substr(0,cutAt));
-
-				sofar_str_tmp = sofar_str_tmp.erase(0,cutAt+1);
-				if(dbg) {cerr<<endl<<" sofar_str_tmp 1 "<< sofar_str_tmp;}
-				}
-		else
-				{
-				sofar.push_back(sofar_str_tmp);
-				sofar_str_tmp = "";
-				if(dbg) {cerr<<endl<<" sofar_str_tmp 2 "<< sofar_str_tmp;}
-				}
-
-		if(dbg) {cerr<<endl<<" word "<< sofar[sofar.size()-1];}
-		if(dbg) {cerr<<endl<<" sofar_str_tmp "<< sofar_str_tmp;}
-
+  string newEsc = "#x#";
+  while(sofar_str_tmp.find(esc)!=std::string::npos) {
+		sofar_str_tmp.replace(sofar_str_tmp.find(esc),esc.length(),newEsc);
+		if (dbg) { cerr << endl<< "sofar_str_tmp "<< sofar_str_tmp;};
 		}
 
+
+
+	std::istringstream iss(sofar_str_tmp);
+
+	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
+
+	if (dbg) { cerr << endl<< "sofar.size()  "<< sofar.size();};
+
+	for (auto& rec : sofar) {
+		  if(rec.find(newEsc)!=std::string::npos) {
+				//first back to Escape
+				rec = rec.replace(rec.find(newEsc),newEsc.length(),esc);
+				//second remove Escape
+				rec = cSpaceFromEscape(rec);
+				}
+			}
+
+
+		for (auto& rec : sofar) {
+		  	if (dbg) { cerr << endl<< "rec "<< rec;};
+			}
 
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) cmdPart;
@@ -1323,7 +1317,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	for (auto rec : sofar) {
 		if (rec!="") started_words++;
 		if (last_word_pending) { full_words++; last_word_pending=0; }
-		if (GetLastCharIf(rec)==" " && prev_char!="\\") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
+		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
 		// still as finished word if there is a word after this one
 		++nr;
 		prev_char = rec;
@@ -1379,11 +1373,12 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<4) { // we work on word4 - var2; account name
 			if (action=="new") {
 				vector<std::string> v = nOT::nUse::useOT.getAssets();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+				if (std::find(v.begin(), v.end(), cSpaceFromEscape(cmdArgs.at(0))) != v.end()){
 					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 				}
 				else {
-					std::cerr <<"new account name already exists, choose other name ";
+					std::cerr <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
+					DBGDisplayVectorEndl(v,",");
 					return vector<string>{""};
 				}
 			}
@@ -1408,11 +1403,15 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<5) { // we work on word4 - var2; account name
 			if (action=="new") {
-						vector<std::string> v = nOT::nUse::useOT.getAssets();
-							if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
-						nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
-						return vector<string>{""};
-						}
+						vector<std::string> v = nOT::nUse::useOT.getAccounts();
+							if (std::find(v.begin(), v.end(), cmdArgs.at(1)) == v.end()){
+								nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
+								}
+								else {
+								std::cerr <<"name " <<cmdArgs.at(1) << " already exists, choose other name ";
+								return vector<string>{""};
+								}
+
 			}
 			if (action=="rn") {
 
@@ -1795,6 +1794,7 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 
 
 int main(int argc, char **argv) {
+	/*
 	{
 		_note("Will test new functions and exit");
 		nOT::nOTHint::cHintManager hint;
@@ -1802,7 +1802,7 @@ int main(int argc, char **argv) {
 		_note("That is all, goodby");
 		return 0;
 	}
-
+*/
 	// demo of OT
 	/*try {
 				nOT::nTests::exampleOfOT();
