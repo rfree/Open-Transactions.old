@@ -27,6 +27,7 @@ endif ()
 
 if (EDITLINE_FOUND)
 	if (NOT EDITLINE_FIND_QUIETLY)
+		message(STATUS "Editline include directory: ${EDITLINE_INCLUDE_DIR}")
 		message(STATUS "Editline libraries found: ${EDITLINE_LIBRARIES}")
 	endif ()
 else ()
