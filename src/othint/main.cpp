@@ -315,6 +315,82 @@ std::string GetObjectName() {	return GetObjectName_global_string; }
 
 #define OT_CODE_STAMP ( nOT::nUtil::ToStr("[") + nOT::nUtil::ShortenTheFile(__FILE__) + nOT::nUtil::ToStr("+") + nOT::nUtil::ToStr(__LINE__) + nOT::nUtil::ToStr(" ") + nOT::nUtil::ToStr(GetObjectName()) + nOT::nUtil::ToStr("::") + nOT::nUtil::ToStr(__FUNCTION__) + nOT::nUtil::ToStr("]"))
 
+namespace nOT {
+
+OT_COMMON_USING_NAMESPACE_1; // <=== namespaces
+
+/*
+
+Commandline-Functor - Cmdfunc
+Commandline-Functor(s) are expressions that are expected to have certain value, e.g. one of your nyms (mynym).
+
+Consider following command line:
+	ot msg send mynym hisnym [ccnym]
+	ot msg send $get_mynym $get_somenym [$get_somenym_o]
+get_mynym is a Cmdfunc, and this one for example links to cUse::getNymsMy
+
+They are defined in code in order to have following functions:
+- othint - completion, e.g. mynym provides list of possible your nyms
+- othint - parsing/verification, checking if the so-far entered command line is vali
+- otcli  - parsing/verification, verifying the value from cmd line and checking if it is valid
+- help - in either program it could be good to show name/description of given argument and generate doc
+- testcase - they could produce various example command lines with valid data filled in
+- code - heaving in-memory representation with tree of possible commands, with functors (named functions) could
+	have other uses in future C++ code.
+
+Cmdfunc in this C++ code are functions (methods), that take some extra data e.g. state of entire command line (usable in some cases),
+and return possible data (mainly some vector of strings).
+
+Syntax:
+cCmdfuncReturn is the returnded data, mainly some vector of strings
+cCmdfuncInput is the additional input data, that some functors might use
+Functors will exist as member functions in various objects (mainly in cUse) called cCmdfuncProvider
+- tCommandlineFunction is the functor type
+- cCmdfuncProvider is the class that contains said members being pointed to by tCommandlineFunction
+
+*/
+
+// this class provides methods that can be plugged into command line parsing,
+// e.g. that take state of command line,
+// and return possible words that could be used in command line
+
+class cCmdfuncProvider;
+
+struct cCmdfuncReturn {
+	vector<string> mWord;
+};
+
+struct cCmdfuncInput {
+	public:
+		const string& mSoFar; // the string with so-far provided command line
+		cCmdfuncInput(const string &soFar);
+};
+cCmdfuncInput::cCmdfuncInput(const string &soFar) : mSoFar(soFar) { }
+
+// tCmdfuncPtr - pointer to the Cmdfunc:
+typedef cCmdfuncReturn (cCmdfuncProvider::*tCmdfuncPtr)(cCmdfuncInput);
+
+class cCmdfunc { // the main Cmdfunc object - contains the pointer to member function doing the work, name, etc
+	public:
+		cCmdfunc( tCmdfuncPtr fun , const string & name);
+	protected:
+		tCmdfuncPtr mFun; // <---- PTR ! function
+		const string mName;
+};
+cCmdfunc::cCmdfunc( tCmdfuncPtr fun , const string & name)
+: mFun(fun), mName(name) { }
+
+// ====================================================================
+
+class cCmdfuncProvider {
+	public:
+};
+
+}; // nOT
+
+// ====================================================================
+
+
 // TODO: move to utils
 namespace nOT {
 namespace nUtil {
@@ -350,11 +426,13 @@ class cLogger {
 
 		std::ostream &write_stream(int level) { if (mStream) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
 		std::string icon(int level) const;
+		void setDebugLevel(int level) { mLevel = level; }
 	protected:
 		std::ostream *mStream; // pointing only
+		int mLevel;
 };
 
-cLogger::cLogger() : mStream(NULL) { mStream = & std::cout; }
+cLogger::cLogger() : mStream(NULL), mLevel(90) { mStream = & std::cout; }
 
 cLogger current_logger;
 
@@ -917,9 +995,14 @@ namespace nOT {
 namespace nUse {
 
 	using std::vector;
+	// TODO more uses - as in the macro.. OT_COMMON_USING_NAMESPACE
+
+
 		class cUseOT {
+
 			std::string mServerID = "r1fUoHwJOWCuK3WBAAySjmKYqsG6G2TYIxdqY6YNuuG";
 			std::string mUserID = "DYEB6U7dcpbwdGrftPnslNKz76BDuBTFAjiAgKaiY2n";
+
 		public:
 
 		vector<nOT::nNewcli::cNyminfo> mNymsMy;
@@ -1247,6 +1330,7 @@ vector<string> cHintManager::AutoComplete(const string &sofar_str) const { // th
 //	DBGDisplayVectorEndl(possible);
 	return possible;
 }
+
 
 vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const {
 /*
@@ -1763,15 +1847,58 @@ void cInteractiveShell::runEditline() {
 std::string gVar1; // to keep program input argument for testcase_complete_1
 // ====================================================================
 
+bool LoadScript_Main(const std::string &thefile_name) { // here we temporarly call in source code that is totall experimental (taken from git branches)
+// returns true if we should continue with the main program
+	using std::string;
+	std::string cmd="";
+	std::ifstream thefile( thefile_name.c_str() );
+	bool anything=false; // did we run any speciall test
+	bool force_continue=false; // should we continue to main program forcefully
+	bool read_anything=false;
+	while (  (!thefile.eof()) && (thefile.good())  ) {
+		getline(thefile, cmd);
+		_dbg2("cmd="+cmd);
+		if (!read_anything) { read_anything=true; _dbg1("Started reading data from "+thefile_name); }
+		if (cmd=="quit") {
+			_note("COMMAND: "<<cmd<<" - QUIT");
+			return false;
+		}
+		else if (cmd=="tree") {
+			_note("Will test new functions and exit");
+			_note("TTTTTTTT");
+			nOT::nOTHint::cHintManager hint;
+			hint.TestNewFunction_Tree();
+			_note("That is all, goodby");
+		}
+		else if ((cmd=="hello")) {
+			_note("COMMAND: Hello world.");
+		}
+		else if ((cmd=="continue")||(cmd=="cont")) {
+			_dbg1("Will continue");
+			force_continue = true;
+		}
+	} // entire file
+	bool will_continue = (!anything) || force_continue ;
+	if (!will_continue) _note("Will exit then.");
+	return will_continue;
+} // LocalDeveloperCommands()
+
+void LoadScript(const std::string &script_filename) {
+	try {
+		LoadScript_Main(script_filename);
+	}
+	catch(const std::exception &e) {
+		_erro("\n*** In SCRIPT "+script_filename+" The testcases code thrown an exception: " << e.what());
+	}
+	catch(...) {
+		_erro("\n*** In SCRIPT "+script_filename+" The testcases code thrown an UNKNOWN exception!");
+	}
+}
+
+// ====================================================================
 
 int main(int argc, char **argv) {
-	{
-		_note("Will test new functions and exit");
-		nOT::nOTHint::cHintManager hint;
-		hint.TestNewFunction_Tree();
-		_note("That is all, goodby");
-		return 0;
-	}
+	LoadScript("autostart-dev.local");
 
 	// demo of OT
 	/*try {
@@ -1794,7 +1921,18 @@ int main(int argc, char **argv) {
 		_erro("\n*** The testcases code thrown an UNKNOWN exception!");
 	}
 
-	int ret = nOT::nTests::main_main(argc, argv);
+	int ret=1;
+	try {
+		LoadScript_Main("autostart.local"); // move to main_main() probably
+		ret = nOT::nTests::main_main(argc, argv);
+	}
+	catch(const std::exception &e) {
+		_erro("\n*** The testcases code thrown an exception: " << e.what());
+	}
+	catch(...) {
+		_erro("\n*** The testcases code thrown an UNKNOWN exception!");
+	}
+
 	return ret;
 }
 
