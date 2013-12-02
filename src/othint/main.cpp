@@ -1216,7 +1216,7 @@ void cHintManager::TestNewFunction_Tree() { // testing new code [wip]
 }
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
-	const std::string cut_begining="ot "; // minimal begining
+	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.size();
 	if (sofar_str.length() < cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
@@ -1245,10 +1245,47 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 }
 */
-	bool dbg = false;
+	bool dbg = true;
 	std::istringstream iss(sofar_str);
-	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
+	//vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
+
+	vector<string> sofar;
+	string sofar_str_tmp = sofar_str;
+	while(sofar_str_tmp.length())	{
+		int cutAt = 0;
+
+
+		if(dbg) {cerr<<endl<<" sofar_str_tmp.find(E ,cutAt) "<< sofar_str_tmp.find("\\ ",cutAt);}
+		if(dbg) {cerr<<endl<<" sofar_str_tmp.find( ,cutAt) "<< sofar_str_tmp.find(" ",cutAt);}
+		while(sofar_str_tmp.find("\\ ",cutAt)+1== sofar_str_tmp.find(" ",cutAt)) {
+			cutAt = sofar_str_tmp.find(" ",cutAt+1);
+			if(dbg) {cerr<<endl<<" cutAt n "<< cutAt;}
+			if(dbg) {cerr<<endl<<" sofar_str_tmp.find(E ,cutAt) "<< sofar_str_tmp.find("\\ ",cutAt);}
+			if(dbg) {cerr<<endl<<" sofar_str_tmp.find( ,cutAt) "<< sofar_str_tmp.find(" ",cutAt);}
+
+			}
+		if(cutAt!=-1)	{
+
+				if(dbg) {cerr<<endl<<" find_first_of 1 "<< cutAt;}
+
+				sofar.push_back(sofar_str_tmp.substr(0,cutAt));
+
+				sofar_str_tmp = sofar_str_tmp.erase(0,cutAt+1);
+				if(dbg) {cerr<<endl<<" sofar_str_tmp 1 "<< sofar_str_tmp;}
+				}
+		else
+				{
+				sofar.push_back(sofar_str_tmp);
+				sofar_str_tmp = "";
+				if(dbg) {cerr<<endl<<" sofar_str_tmp 2 "<< sofar_str_tmp;}
+				}
+
+		if(dbg) {cerr<<endl<<" word "<< sofar[sofar.size()-1];}
+		if(dbg) {cerr<<endl<<" sofar_str_tmp "<< sofar_str_tmp;}
+
+		}
+
 
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) cmdPart;
@@ -1259,9 +1296,11 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	else {
 		cmdPart.insert( cmdPart.begin(), sofar.begin(), sofar.begin()+2 );
 		cmdArgs.insert( cmdArgs.begin(), sofar.begin()+2, sofar.end() );
+
 	}
 	while (cmdPart.size()<2) cmdPart.push_back("");
-	if (dbg) DBGDisplayVectorEndl(cmdPart,",");
+	if (dbg) { cerr << endl<< "parts "; DBGDisplayVectorEndl(cmdPart,",");};
+	if (dbg) { cerr << endl<< "args "; DBGDisplayVectorEndl(cmdArgs,",");}
 
 	if (GetLastCharIf(sofar_str)==" ") {
 		if( sofar.size()>=1 ) { // if there is any last-word element:
@@ -1280,18 +1319,20 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	bool last_word_pending=false;
 	size_t nr=0;
+	string prev_char;
 	for (auto rec : sofar) {
 		if (rec!="") started_words++;
 		if (last_word_pending) { full_words++; last_word_pending=0; }
-		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
+		if (GetLastCharIf(rec)==" " && prev_char!="\\") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
 		// still as finished word if there is a word after this one
 		++nr;
+		prev_char = rec;
 	}
 	string current_word="";
 	if (full_words < started_words) current_word = sofar.at(full_words);
-	if (dbg) { cerr << "full_words=" << full_words << " started_words="<<started_words
+	if (dbg) { cerr << endl<< "full_words=" << full_words << " started_words="<<started_words
 		<< " topic="<<topic << " action="<<action
-		<< " current_word="<<current_word << endl;
+		<< " current_word="<<current_word <<endl;
 	}
 
 	// TODO produce the object of parsed commandline by the way of parsing current sofar string
