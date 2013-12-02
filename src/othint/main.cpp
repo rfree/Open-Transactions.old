@@ -313,7 +313,7 @@ extern std::string GetObjectName_global_string; // extern to h
 std::string GetObjectName_global_string="(global)"; // definition/initialization
 std::string GetObjectName() {	return GetObjectName_global_string; }
 
-#define OT_CODE_STAMP ( ToStr("[") + ToStr(__FILE__) + ToStr(" +") + ToStr(__LINE__) + ToStr(" as ") + ToStr(__FUNCTION__) + (" of ") + ToStr(GetObjectName() + ToStr("]")) )
+#define OT_CODE_STAMP ( nOT::nUtil::ToStr("[") + nOT::nUtil::ShortenTheFile(__FILE__) + nOT::nUtil::ToStr("+") + nOT::nUtil::ToStr(__LINE__) + nOT::nUtil::ToStr(" ") + nOT::nUtil::ToStr(GetObjectName()) + nOT::nUtil::ToStr("::") + nOT::nUtil::ToStr(__FUNCTION__) + nOT::nUtil::ToStr("]"))
 
 // TODO: move to utils
 namespace nOT {
@@ -321,8 +321,55 @@ namespace nUtil {
 
 OT_COMMON_USING_NAMESPACE_1;
 
-class cLogger {
+struct cNullstream : std::ostream {
+    cNullstream() : std::ios(0), std::ostream(0) {}
 };
+cNullstream g_nullstream; // a stream that does nothing (eats/discards data)
+
+#define _dbg3(X) do { nOT::nUtil::current_logger.write_stream(20) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _dbg2(X) do { nOT::nUtil::current_logger.write_stream(30) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _dbg1(X) do { nOT::nUtil::current_logger.write_stream(40) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _info(X) do { nOT::nUtil::current_logger.write_stream(50) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _note(X) do { nOT::nUtil::current_logger.write_stream(70) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _warn(X) do { nOT::nUtil::current_logger.write_stream(90) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+#define _erro(X) do { nOT::nUtil::current_logger.write_stream(100) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
+
+const char* ShortenTheFile(const char *s) {
+	const char *p = s;
+	const char *a = s;
+	while (*p) {
+		++p;
+		if ((*p)=='/') a=p;
+	}
+	return a;
+}
+
+class cLogger {
+	public:
+		cLogger();
+
+		std::ostream &write_stream(int level) { if (mStream) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
+		std::string icon(int level) const;
+	protected:
+		std::ostream *mStream; // pointing only
+};
+
+cLogger::cLogger() : mStream(NULL) { mStream = & std::cout; }
+
+cLogger current_logger;
+
+std::string cLogger::icon(int level) const {
+	if (level >= 100) return "@@";
+	if (level >=  90) return "!!";
+	if (level >=  70) return "##";
+	if (level >=  50) return "ii";
+	if (level >=  40) return "d ";
+	if (level >=  30) return "  ";
+	if (level >=  20) return "  ";
+	return "  ";
+}
+
+// ====================================================================
 
 template <class T>
 std::string ToStr(const T & obj) {
@@ -1059,7 +1106,7 @@ struct cTestCaseCfg {
 
 bool testcase_run_all_tests();
 
-int main_start(int argc, char **argv); // some tests will execute the main... e.g. against errors in args parsing TODO move to namespace
+int main_main(int argc, char **argv); // some tests will execute the main... e.g. against errors in args parsing TODO move to namespace
 
 bool testcase_complete_1(const std::string &sofar); // TODO ... testcase or really used???
 bool testcase_complete_1_wrapper(); // TODO ... testcase or really used???
@@ -1155,6 +1202,8 @@ class cHintManager {
 		vector<string> AutoComplete(const string &sofar_str) const; // the main function to auto-complete. The command line after "ot ", e.g. "msg send al"
 		vector<string> AutoCompleteEntire(const string &sofar_str) const; // the same, but takes entire command line including "ot ", e.g. "ot msg send al"
 
+		void TestNewFunction_Tree(); // testing new code [wip]
+
 	protected:
 		vector<string> BuildTreeOfCommandlines(const string &sofar_str, bool show_all) const; // return command lines tree that is possible from this place
 		unique_ptr<cHintData> mHintData;
@@ -1163,6 +1212,10 @@ class cHintManager {
 cHintManager::cHintManager()
 : mHintData(new cHintData)
 { }
+
+void cHintManager::TestNewFunction_Tree() { // testing new code [wip]
+}
+
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot "; // minimal begining
@@ -1703,6 +1756,14 @@ std::string gVar1; // to keep program input argument for testcase_complete_1
 
 
 int main(int argc, char **argv) {
+	{
+		_note("Will test new functions and exit");
+		nOT::nOTHint::cHintManager hint;
+		hint.TestNewFunction_Tree();
+		_note("That is all, goodby");
+		return 0;
+	}
+
 	// demo of OT
 	/*try {
 				nOT::nTests::exampleOfOT();
@@ -1718,20 +1779,20 @@ int main(int argc, char **argv) {
 		nOT::nTests::testcase_run_all_tests();
 	}
 	catch(const std::exception &e) {
-		std::cerr << "\n*** The testcases code thrown an exception: " << e.what() << std::endl;
+		_erro("\n*** The testcases code thrown an exception: " << e.what());
 	}
 	catch(...) {
-		std::cerr << "\n*** The testcases code thrown an UNKNOWN exception!" << std::endl;
+		_erro("\n*** The testcases code thrown an UNKNOWN exception!");
 	}
 
-	int ret = nOT::nTests::main_start(argc, argv);
+	int ret = nOT::nTests::main_main(argc, argv);
 	return ret;
 }
 
 // int pole(const int r) { 	r=3; }
 
 
-int nOT::nTests::main_start(int argc, char **argv) {
+int nOT::nTests::main_main(int argc, char **argv) {
 	vector<string> args;
 	if (! (argc>=1)) {
 		throw std::runtime_error("Main program called with 0 arguments (not even program name).");
@@ -1964,7 +2025,7 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 
 	bool ok=true;
 	try {
-		main_start(argc, argv); // ... ok? TODO
+		main_main(argc, argv); // ... ok? TODO
 	}
 	catch(const std::exception &e) {
 		ok=false;
