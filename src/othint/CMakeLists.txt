@@ -43,3 +43,9 @@ else (LOCAL_EDITLINE)
 		target_link_libraries (othint ${EDITLINE_LIBRARY})
 	endif (EDITLINE_FOUND)
 endif(LOCAL_EDITLINE)
+
+add_custom_target(run
+    COMMAND ./othint --complete-shell
+    DEPENDS othint
+    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)
