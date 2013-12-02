@@ -45,7 +45,7 @@ else (LOCAL_EDITLINE)
 endif(LOCAL_EDITLINE)
 
 add_custom_target(run
-    COMMAND ./othint --complete-shell
+    COMMAND echo "" && ./othint --complete-shell
     DEPENDS othint
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
 )

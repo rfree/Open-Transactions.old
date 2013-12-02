@@ -1189,8 +1189,6 @@ const vector<string> cHintData::getNymsMy() {
 
 
 
-
-
 // ====================================================================
 
 // The Manager to access OT-hint (autocompletion) functionality
@@ -1214,8 +1212,8 @@ cHintManager::cHintManager()
 { }
 
 void cHintManager::TestNewFunction_Tree() { // testing new code [wip]
+	_info("Working on this="<<(void*)this);
 }
-
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot "; // minimal begining
@@ -2059,15 +2057,14 @@ bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 bool testcase_run_cEscapeString(const cTestCaseCfg &testCfg) {
 	bool ok=true;
 	std::string test = "Test";
-        std::string shouldBe = "T\\3st";
-        test[1] = 3;
-        std::string out = cEscapeString(test);
-        if(out!=shouldBe) {
-                ok = false;
-                if (testCfg.debug)
-                testCfg.ossErr<<"Bad Test cEscapeString: test string "<<test << " out " << out << " should be " <<shouldBe <<endl;
-                }
-
+	std::string shouldBe = "T\\3st";
+	test[1] = 3;
+	std::string out = cEscapeString(test);
+	if(out!=shouldBe) {
+		ok = false;
+		if (testCfg.debug)
+		testCfg.ossErr<<"Bad Test cEscapeString: test string "<<test << " out " << out << " should be " <<shouldBe <<endl;
+	}
 	return ok;
 }
 
@@ -2101,8 +2098,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 	AddFunction(testcase_namespace_pollution);
 	AddFunction(testcase_cxx11_memory);
 	AddFunction(testcase_run_main_args);
-        AddFunction(testcase_run_cEscapeString);
-
+	AddFunction(testcase_run_cEscapeString);
 
 	AddFunctionMustFail(testcase_fail1); // only for testing of this test code
 	AddFunctionMustFail(testcase_fail2); // only for testing of this test code
@@ -2169,8 +2165,6 @@ void exampleOfOT() {
 
 			std::cout << std::endl<<"server count: " << OTAPI_Wrap::GetServerCount () << std::endl;
 			std::cout << "list of servers: " << std::endl;
-
-
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetServerCount ();i++){
 					SERVER_ID = OTAPI_Wrap::GetServer_ID (i);

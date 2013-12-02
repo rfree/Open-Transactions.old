@@ -17,7 +17,9 @@ rfree/master/ - code should be nice and complile (in future)
 [git] git organisation change, dirs, .gitignore etc
 
 [bug] known bug
-[bugfix] fixing some bug
+[fix] fixing some bug. Was: [bugfix]
+
+[style] changes to coding style (small refactoring)
 
 ...works, a bug was fixed: [bugfix] / [ok]
 ...works, some functionality was completed: [good] / [ok]
