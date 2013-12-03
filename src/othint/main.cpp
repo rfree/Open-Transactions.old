@@ -1354,6 +1354,7 @@ ot [front] nym del $mynym [--a] [--b] [--c]
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.length();
+	_info("cut_begining=[" << cut_begining << "]");
 	if (sofar_str.length() <= cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
 	std::string ot = sofar_str.substr(0,cut_begining_size); // separate out the part that is know to has correct size and should be "ot"
@@ -1843,7 +1844,7 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 // (done with number=0) is an error (at least currently, in future we might cache various completion
 // arrays, or recalculate on change)
 static char* completionReadlineWrapper1(const char *sofar , int number) {
-	bool dbg = my_rl_wrapper_debug;
+	bool dbg = my_rl_wrapper_debug || 1;
 	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
 	string line;
 	if (rl_line_buffer) line = rl_line_buffer;
