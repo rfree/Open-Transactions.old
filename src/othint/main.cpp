@@ -1241,59 +1241,6 @@ using std::endl;
 using namespace nOT::nUtil;
 using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operators. It's appen, as in strings! :)
 
-// Data for hinting, e.g. cached or local information.
-class cHintData {
-	public:
-		vector<nNewcli::cNyminfo> mNymsMy;
-		vector<string> mNymsMy_str; // TODO optimize/share memory? or convert on usage
-
-		bool mNymsMy_loaded;
-
-		cHintData();
-
-		const vector<string> getNymsMy();
-};
-
-cHintData::cHintData()
-: mNymsMy_loaded(false)
-{
-}
-
-
-const vector<string> cHintData::getNymsMy() {
-	if (!mNymsMy_loaded) {
-		try {
-			mNymsMy_loaded=0; // to mark that we start to delete data/data is inconsistent
-			mNymsMy.clear();
-			mNymsMy_str.clear();
-
-			ifstream plik("nyms.txt");
-			long int sum=0, count=0;
-			while (plik.good() && (!plik.eof())) {
-				string name;  double score;
-				plik >> name >> score;
-				nNewcli::cNyminfo nym(name);
-				nym.mScore=score;
-				mNymsMy.push_back( nym );
-				sum+=score; ++count;
-			}
-			double avg = sum/double(count);
-
-			for (auto nym_info: mNymsMy ) {
-				if (nym_info.mScore > avg/2) {
-					//cerr << nym_info.mScore << " vs " << avg/2 << endl;
-					mNymsMy_str.push_back( nym_info );
-				}
-			}
-		}
-		catch(...) { }
-		mNymsMy_loaded = true;
-	}
-	return mNymsMy_str;
-}
-
-
-
 // ====================================================================
 
 // The Manager to access OT-hint (autocompletion) functionality
