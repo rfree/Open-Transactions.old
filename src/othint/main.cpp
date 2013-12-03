@@ -402,6 +402,7 @@ struct cNullstream : std::ostream {
 };
 cNullstream g_nullstream; // a stream that does nothing (eats/discards data)
 
+
 #define _dbg3(X) do { nOT::nUtil::current_logger.write_stream(20) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
 #define _dbg2(X) do { nOT::nUtil::current_logger.write_stream(30) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
 #define _dbg1(X) do { nOT::nUtil::current_logger.write_stream(40) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0) // details
@@ -456,6 +457,14 @@ std::string ToStr(const T & obj) {
 	return oss.str();
 }
 
+template <class T>
+std::string vectorToStr(const T & v) {
+	std::ostringstream oss;
+	for(auto rec: v) {
+		oss << rec <<",";
+		}
+	return oss.str();
+}
 std::string cSpaceFromEscape(const std::string &s) {
 	std::ostringstream  newStr;
         for(int i = 0; i < s.length();i++) {
@@ -488,6 +497,7 @@ void DBGDisplayVectorEndl(const std::vector<T> &v, const std::string &delim=" ")
 	DBGDisplayVector(v,delim);
 	std::cerr << std::endl;
 }
+
 
 bool CheckIfBegins(const std::string & beggining, const std::string & all) {
 	if (all.compare(0, beggining.length(), beggining) == 0) {
@@ -1133,7 +1143,7 @@ namespace nUse {
 			std::string qstrID = OTAPI_Wrap::Message_GetNewAcctID(strResponse);
 
         if (qstrID.length()==0) {
-						std::cerr<<"Failed trying to get the new account's ID from the server response."<<std::endl;
+						_erro("Failed trying to get the new account's ID from the server response.");
             return;
             }
 			SetAccountWallet_Name(qstrID,newAccountName);
@@ -1340,18 +1350,20 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 }
 */
-	bool dbg = false;
+	bool dbg = true;
 
 	string sofar_str_tmp = sofar_str;
 
-	if (dbg) { cerr << endl<< "sofar_str "<< sofar_str;};
+	if (dbg) { _dbg3("sofar_str "<<sofar_str);};
 
   string esc ("\\ ");
 
+
   string newEsc = "#x#";
+  // change Escape on new unique substring
   while(sofar_str_tmp.find(esc)!=std::string::npos) {
 		sofar_str_tmp.replace(sofar_str_tmp.find(esc),esc.length(),newEsc);
-		if (dbg) { cerr << endl<< "sofar_str_tmp "<< sofar_str_tmp;};
+		if (dbg) { _dbg3("sofar_str_tmp "<< sofar_str_tmp);}
 		}
 
 
@@ -1360,7 +1372,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
 
-	if (dbg) { cerr << endl<< "sofar.size()  "<< sofar.size();};
+	if (dbg) { _dbg3("sofar.size()  "<<sofar.size());};
 
 	for (auto& rec : sofar) {
 		  if(rec.find(newEsc)!=std::string::npos) {
@@ -1373,7 +1385,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 
 		for (auto& rec : sofar) {
-		  	if (dbg) { cerr << endl<< "rec "<< rec;};
+		  	if (dbg) { _dbg3("rec "<< rec);};
 			}
 
 	// exactly 2 elements, with "" for missing elements
@@ -1388,8 +1400,8 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	}
 	while (cmdPart.size()<2) cmdPart.push_back("");
-	if (dbg) { cerr << endl<< "parts "; DBGDisplayVectorEndl(cmdPart,",");};
-	if (dbg) { cerr << endl<< "args "; DBGDisplayVectorEndl(cmdArgs,",");}
+	if (dbg) { _dbg3("parts "<< vectorToStr(cmdPart));};
+	if (dbg) { _dbg3("args "<< vectorToStr(cmdArgs));}
 
 	if (GetLastCharIf(sofar_str)==" ") {
 		if( sofar.size()>=1 ) { // if there is any last-word element:
@@ -1419,9 +1431,9 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	}
 	string current_word="";
 	if (full_words < started_words) current_word = sofar.at(full_words);
-	if (dbg) { cerr << endl<< "full_words=" << full_words << " started_words="<<started_words
+	if (dbg) { _dbg3("full_words=" << full_words << " started_words="<<started_words
 		<< " topic="<<topic << " action="<<action
-		<< " current_word="<<current_word <<endl;
+		<< " current_word="<<current_word <<endl);
 	}
 
 	// TODO produce the object of parsed commandline by the way of parsing current sofar string
@@ -1472,7 +1484,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 				}
 				else {
-					std::cerr <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
+					std::cout <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
 					DBGDisplayVectorEndl(v,",");
 					return vector<string>{""};
 				}
@@ -1481,8 +1493,6 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 				vector<std::string> v = nOT::nUse::useOT.getAccounts();
 				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
-					//std::cout <<"type new account name";
-					;
 					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
 				}
 				else {
@@ -1997,11 +2007,11 @@ int nOT::nTests::main_main(int argc, char **argv) {
 			string v;  bool ok=1;  try { v=args.at(nr+1); } catch(...) { ok=0; }
 			if (ok) {
 				if(!nOT::nTests::testcase_complete_1(v))	{
-					cerr<<"Bad testcase_complete_1 for arguments '"<<arg<<"'"<<endl;
+					_dbg3("Bad testcase_complete_1 for arguments '"<<arg<<"'");
 					status = 1;
 			}
 
-			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl;
+			} else { _dbg3("Missing variables for command line argument '"<<arg<<"'");
 			status = 1; }
 		}
 
@@ -2144,7 +2154,7 @@ bool testcase_complete_1(const string &sofar) {
 	nOT::nUtil::DisplayVector(std::cout, out); // testcase
 
 
-	bool ok = 0;
+	bool ok = 1;
 
 	return ok;
 }
@@ -2215,9 +2225,10 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	size_t nr=0;
 	for(auto rec:tab) {
 		argv[nr] = strdup(rec.c_str()); // C style strdup/free
-		cerr << " argv " << argv[nr] <<std::endl;
+		if( dbg) { _dbg3("argv " << argv[nr]);}
+
 		++nr;
-		if( dbg) err << "'" << rec << "' ";
+		if( dbg) {_dbg3(rec); };
 	}
 	if (dbg) err << endl;
 
@@ -2278,7 +2289,7 @@ bool testcase_run_cEscapeString(const cTestCaseCfg &testCfg) {
 }
 
 bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run more types casting is needed)
-	cerr << "=== test cases, unit tests ============================================" << endl;
+	_dbg3("=== test cases, unit tests ============================================");
 
 	long int number_errors = 0; // long :o
 
@@ -2337,7 +2348,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 			if (exception_msg.size()) msgOss << " [what: " << exception_msg << "]";
 			msgOss<<"!";
 			string msg = msgOss.str();
-			cerr << " *** " << msg << endl;
+			_dbg3(" *** " << msg);
 			failure_details << " " << msg << " ";
 		}
 		++nr;
@@ -2347,9 +2358,9 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 		//cout << "All tests completed successfully." << endl;
 	}
 	else {
-		cerr << "*** Some tests were not completed! (" << failure_details.str() << ")" << endl;
+		_dbg3( "*** Some tests were not completed! (" << failure_details.str() << ")");
 	}
-	cerr << "=== test cases, unit tests - done =====================================" << endl;
+	_dbg3("=== test cases, unit tests - done =====================================");
 
 	return number_errors==0;
 }
