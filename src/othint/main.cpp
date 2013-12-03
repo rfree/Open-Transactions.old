@@ -1241,6 +1241,20 @@ using std::endl;
 using namespace nOT::nUtil;
 using namespace nOT::nUtil::nOper; // vector + vector and other shortcut operators. It's appen, as in strings! :)
 
+
+// Data for hinting, e.g. cached or local information.
+class cHintData {
+	public:
+		cHintData();
+};
+
+cHintData::cHintData()
+{
+}
+
+
+
+
 // ====================================================================
 
 // The Manager to access OT-hint (autocompletion) functionality
