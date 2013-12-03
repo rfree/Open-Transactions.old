@@ -209,7 +209,7 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 #include <string.h>
 
 // OT
-#include "ot/otapi/OTAPI.h"
+#include "OTAPI.h"
 //#include "OT_ME.h"
 
 // detecting and including proper version of readline or it's replacement
