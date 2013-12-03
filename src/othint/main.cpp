@@ -1026,41 +1026,38 @@ namespace nUse {
 
 		}
 
-		~cUseOT() 	{
+		~cUseOT() {
 			if(OTAPI_loaded)
+
 		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
 		}
 
-		bool Init()	{
-			if(OTAPI_error)
-			return false;
+		bool Init() {
+			if (OTAPI_error) return false;
+			if (OTAPI_loaded) return true;
 
-			if(OTAPI_loaded)
-			return true;
+			try {
 
-				try {
-
-						if(!OTAPI_Wrap::AppInit()) {// Init OTAPI
-								_erro("Error while init OTAPI thrown an UNKNOWN exception!");
-								return false;
-								}
-
-						std::cout <<std::endl<<"Trying to load wallet: ";
-						//if not pWrap it means that AppInit is not successed
-						OTAPI_Wrap *pWrap = OTAPI_Wrap::It();
-						if(!pWrap)
-							{
-							OTAPI_error = true;
-							_erro("Error while init OTAPI");
-							return false;
-							}
-
-						if(OTAPI_Wrap::LoadWallet())
-						std::cout <<"wallet was loaded "<<std::endl;
-						else
-						std::cout <<"error while loanding wallet "<<std::endl;
-						OTAPI_loaded = true;
+					if (!OTAPI_Wrap::AppInit()) {// Init OTAPI
+						_erro("Error while init OTAPI thrown an UNKNOWN exception!");
+						return false; // <--- RET
 					}
+
+					std::cout <<std::endl<<"Trying to load wallet: ";
+					//if not pWrap it means that AppInit is not successed
+					OTAPI_Wrap *pWrap = OTAPI_Wrap::It();
+					if (!pWrap) {
+						OTAPI_error = true;
+						_erro("Error while init OTAPI");
+						return false;
+					}
+
+					if(OTAPI_Wrap::LoadWallet())
+					std::cout <<"wallet was loaded "<<std::endl;
+					else
+					std::cout <<"error while loanding wallet "<<std::endl;
+					OTAPI_loaded = true;
+				}
 				catch(const std::exception &e) {
 				_erro("Error while OTAPI init " << e.what());
 				return false;
