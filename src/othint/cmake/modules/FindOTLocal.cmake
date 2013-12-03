@@ -1,5 +1,5 @@
 # Find OT lib and include directories
-
+message(STATUS "Finding OT in : ${CMAKE_PREFIX_PATH}")
 find_path(OT_INCLUDE_DIR OTAPI.h
 	"${CMAKE_PREFIX_PATH}/include"
 	)
