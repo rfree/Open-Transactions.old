@@ -460,7 +460,7 @@ std::string cSpaceFromEscape(const std::string &s) {
 	std::ostringstream  newStr;
         for(int i = 0; i < s.length();i++) {
                 if(s[i] == '\\' && s[i+1] ==32)
-                 newStr<<" ";
+                 newStr<<"";
                  else
                  newStr<<s[i];
                 }
@@ -1022,7 +1022,7 @@ namespace nUse {
 
 		void Init()	{
 		OTAPI_Wrap::AppInit(); // Init OTAPI
-		std::cout <<"Init loading wallet: ";
+		std::cout <<std::endl<<"Init loading wallet: ";
 		if(OTAPI_Wrap::LoadWallet())
 		std::cout <<"wallet was loaded "<<std::endl;
 		else
@@ -1310,7 +1310,7 @@ ot [front] nym del $mynym [--a] [--b] [--c]
 }
 
 vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
-	const std::string cut_begining="ot "; // minimal begining
+	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.size();
 	if (sofar_str.length() < cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
@@ -1341,9 +1341,40 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 }
 */
 	bool dbg = false;
-	std::istringstream iss(sofar_str);
+
+	string sofar_str_tmp = sofar_str;
+
+	if (dbg) { cerr << endl<< "sofar_str "<< sofar_str;};
+
+  string esc ("\\ ");
+
+  string newEsc = "#x#";
+  while(sofar_str_tmp.find(esc)!=std::string::npos) {
+		sofar_str_tmp.replace(sofar_str_tmp.find(esc),esc.length(),newEsc);
+		if (dbg) { cerr << endl<< "sofar_str_tmp "<< sofar_str_tmp;};
+		}
+
+
+
+	std::istringstream iss(sofar_str_tmp);
+
 	vector<string> sofar { std::istream_iterator<string>{iss}, std::istream_iterator<string>{} };
-	// ^-- fine for now, but later needs to take into account "..." and slashes etc... use boost option? -- yes? TODO test
+
+	if (dbg) { cerr << endl<< "sofar.size()  "<< sofar.size();};
+
+	for (auto& rec : sofar) {
+		  if(rec.find(newEsc)!=std::string::npos) {
+				//first back to Escape
+				rec = rec.replace(rec.find(newEsc),newEsc.length(),esc);
+				//second remove Escape
+				rec = cSpaceFromEscape(rec);
+				}
+			}
+
+
+		for (auto& rec : sofar) {
+		  	if (dbg) { cerr << endl<< "rec "<< rec;};
+			}
 
 	// exactly 2 elements, with "" for missing elements
 	decltype(sofar) cmdPart;
@@ -1354,9 +1385,11 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	else {
 		cmdPart.insert( cmdPart.begin(), sofar.begin(), sofar.begin()+2 );
 		cmdArgs.insert( cmdArgs.begin(), sofar.begin()+2, sofar.end() );
+
 	}
 	while (cmdPart.size()<2) cmdPart.push_back("");
-	if (dbg) DBGDisplayVectorEndl(cmdPart,",");
+	if (dbg) { cerr << endl<< "parts "; DBGDisplayVectorEndl(cmdPart,",");};
+	if (dbg) { cerr << endl<< "args "; DBGDisplayVectorEndl(cmdArgs,",");}
 
 	if (GetLastCharIf(sofar_str)==" ") {
 		if( sofar.size()>=1 ) { // if there is any last-word element:
@@ -1375,18 +1408,20 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	bool last_word_pending=false;
 	size_t nr=0;
+	string prev_char;
 	for (auto rec : sofar) {
 		if (rec!="") started_words++;
 		if (last_word_pending) { full_words++; last_word_pending=0; }
 		if (GetLastCharIf(rec)==" ") full_words++; else last_word_pending=1; // we ended this part, without a space, so we have a chance to count it
 		// still as finished word if there is a word after this one
 		++nr;
+		prev_char = rec;
 	}
 	string current_word="";
 	if (full_words < started_words) current_word = sofar.at(full_words);
-	if (dbg) { cerr << "full_words=" << full_words << " started_words="<<started_words
+	if (dbg) { cerr << endl<< "full_words=" << full_words << " started_words="<<started_words
 		<< " topic="<<topic << " action="<<action
-		<< " current_word="<<current_word << endl;
+		<< " current_word="<<current_word <<endl;
 	}
 
 	// TODO produce the object of parsed commandline by the way of parsing current sofar string
@@ -1433,11 +1468,12 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<4) { // we work on word4 - var2; account name
 			if (action=="new") {
 				vector<std::string> v = nOT::nUse::useOT.getAssets();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+				if (std::find(v.begin(), v.end(), cSpaceFromEscape(cmdArgs.at(0))) != v.end()){
 					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 				}
 				else {
-					std::cerr <<"new account name already exists, choose other name ";
+					std::cerr <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
+					DBGDisplayVectorEndl(v,",");
 					return vector<string>{""};
 				}
 			}
@@ -1462,11 +1498,15 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<5) { // we work on word4 - var2; account name
 			if (action=="new") {
-						vector<std::string> v = nOT::nUse::useOT.getAssets();
-							if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
-						nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
-						return vector<string>{""};
-						}
+						vector<std::string> v = nOT::nUse::useOT.getAccounts();
+							if (std::find(v.begin(), v.end(), cmdArgs.at(1)) == v.end()){
+								nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
+								}
+								else {
+								std::cerr <<"name " <<cmdArgs.at(1) << " already exists, choose other name ";
+								return vector<string>{""};
+								}
+
 			}
 			if (action=="rn") {
 
@@ -1941,6 +1981,7 @@ int main(int argc, char **argv) {
 
 int nOT::nTests::main_main(int argc, char **argv) {
 	vector<string> args;
+	int status = 0;
 	if (! (argc>=1)) {
 		throw std::runtime_error("Main program called with 0 arguments (not even program name).");
 	}
@@ -1955,8 +1996,13 @@ int nOT::nTests::main_main(int argc, char **argv) {
 		else if (arg=="--complete-one") {
 			string v;  bool ok=1;  try { v=args.at(nr+1); } catch(...) { ok=0; }
 			if (ok) {
-				nOT::nTests::testcase_complete_1(v);
-			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl; }
+				if(!nOT::nTests::testcase_complete_1(v))	{
+					cerr<<"Bad testcase_complete_1 for arguments '"<<arg<<"'"<<endl;
+					status = 1;
+			}
+
+			} else { cerr<<"Missing variables for command line argument '"<<arg<<"'"<<endl;
+			status = 1; }
 		}
 
 		++nr;
@@ -1980,7 +2026,7 @@ int nOT::nTests::main_main(int argc, char **argv) {
 		std::cerr<<"No arguments given."<<std::endl; return 1;
 	}
 */
-	return 0;
+	return status;
 }
 // ====================================================================
 
@@ -2098,7 +2144,7 @@ bool testcase_complete_1(const string &sofar) {
 	nOT::nUtil::DisplayVector(std::cout, out); // testcase
 
 
-	bool ok = 1;
+	bool ok = 0;
 
 	return ok;
 }
@@ -2160,11 +2206,16 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	typedef char * char_p;
 	char_p * argv  = new char_p[argc]; // C++ style new[]
 
+
+
 	bool dbg = testCfg.debug;   auto &err = testCfg.ossErr;
 	if (dbg) err << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
+
+	cerr << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
 	size_t nr=0;
 	for(auto rec:tab) {
 		argv[nr] = strdup(rec.c_str()); // C style strdup/free
+		cerr << " argv " << argv[nr] <<std::endl;
 		++nr;
 		if( dbg) err << "'" << rec << "' ";
 	}
@@ -2172,7 +2223,11 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 
 	bool ok=true;
 	try {
-		main_main(argc, argv); // ... ok? TODO
+		  ok = main_main(argc, argv)==0 ; // ... ok? TODO
+
+		  if (!ok) err << "BAD TEST " << __FUNCTION__ << " with " << argc << " argument(s): ";
+
+
 	}
 	catch(const std::exception &e) {
 		ok=false;
@@ -2193,7 +2248,12 @@ bool testcase_run_main_args_fail1(const cTestCaseCfg &testCfg) {
 // All this tests should succeed:
 bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 	bool ok=true;
+
 	const string programName="othint";
+
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot accunt new game\\ toke_ns TEST_CASE"} ) ) ok=false;
+
+	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot accunt rm TEST_CA_SE"} ) ) ok=false;
 
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot msg sen"} ) ) ok=false;
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one"} ) ) ok=false;
@@ -2224,7 +2284,7 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 
 	std::ostringstream quiet_oss;
 
-	cTestCaseCfg testCfg(cerr, false);
+	cTestCaseCfg testCfg(cerr, true);
 	cTestCaseCfg testCfgQuiet(quiet_oss, false); // to quiet down the tests
 
 	struct cTestCaseNamed {
