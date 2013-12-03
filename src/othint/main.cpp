@@ -773,8 +773,8 @@ msg rm --all		# remove all messages from mail box
 msguard info   # test, imaginary comand "msguard" (microsoft guard) info - shows windows firewall status for OT tcp
 msguard start
 msguard stop
-nym 			# can display active (default) nym
-nym ls			# list of all nyms
+*nym 			# can display active (default) nym
+*nym ls			# list of all nyms
 nym new			# make new nym with UI (it should ask potential user to give the name
 nym new <name>			# make new nym by giving name without UI
 nym rm <name>			# remove nym with such <name>
@@ -790,8 +790,8 @@ nym-cred new 			# change credential to trust?
 nym-cred revoke
 nym-cred show			# show all credential to trust?
 receipt?
-server			# can display active (default) server
-server ls			# as above but all servers are listed
+*server			# can display active (default) server
+*server ls			# as above but all servers are listed
 server add		# add new server
 server new 	# like newserver
 text encode
@@ -1173,6 +1173,18 @@ namespace nUse {
 				return "";
 		}
 
+		const nUtil::vector<std::string> getServers() {
+			if(!OTAPI_loaded)
+				Init();
+
+			vector<std::string> servers;
+			for(int i = 0 ; i < OTAPI_Wrap::GetServerCount ();i++) {
+				servers.push_back(OTAPI_Wrap::GetServer_Name(OTAPI_Wrap::GetServer_ID(i)));
+			}
+			return servers;
+		}
+
+
 	};
 
 
@@ -1350,7 +1362,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 }
 */
-	bool dbg = true;
+	bool dbg = false;
 
 	string sofar_str_tmp = sofar_str;
 
@@ -1453,6 +1465,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	}
 
 	// === at 2nd (non-forward-option) word (action) ===
+
 
 	if (topic=="account") {
 
@@ -1560,7 +1573,9 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<assetID>"} ) ;
+				std::cerr <<"type name of asset"<<endl;
+
+				return WordsThatMatch(  current_word  ,  vector<string>{} ) ;
 			}
 		}
 	}
@@ -1651,6 +1666,11 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			return WordsThatMatch(  current_word  ,  vector<string>{"check", "edit", "export", "import", "info", "ls", "new", "refresh", "register", "rm", "[BLANK]"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
+
+			if (action=="ls") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() );
+			}
+
 			if (action=="new") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"name", "[BLANK]"} ); //TODO Suitable changes to this part - propably after merging with otlib
 			}
@@ -1681,7 +1701,16 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	}*/
 
 	if (topic=="server") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "[BLANK]" } ) ;
+		if (full_words<2) { // we work on word2 - the action:
+			return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add",} ) ;
+		}
+
+		if (full_words<3) { // we work on word3 - var1
+			if (action=="ls") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getServers() ) ;
+			}
+		}
+
 	}
 
 	if (topic=="text") {
