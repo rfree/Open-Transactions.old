@@ -1020,9 +1020,9 @@ namespace nUse {
 
 		bool mNymsMy_loaded;
 		bool OTAPI_loaded;
-		bool OTAPI_loadedError;
+		bool OTAPI_error;
 
-		cUseOT() : mNymsMy_loaded(false), OTAPI_loaded(false),OTAPI_loadedError(false) 	{
+		cUseOT() : mNymsMy_loaded(false), OTAPI_loaded(false),OTAPI_error(false) 	{
 
 		}
 
@@ -1032,7 +1032,10 @@ namespace nUse {
 		}
 
 		bool Init()	{
-			if(OTAPI_loaded || OTAPI_loadedError)
+			if(OTAPI_error)
+			return false;
+
+			if(OTAPI_loaded)
 			return true;
 
 				try {
@@ -1047,7 +1050,7 @@ namespace nUse {
 						OTAPI_Wrap *pWrap = OTAPI_Wrap::It();
 						if(!pWrap)
 							{
-							OTAPI_loadedError = true;
+							OTAPI_error = true;
 							_erro("Error while init OTAPI");
 							return false;
 							}
@@ -1105,8 +1108,8 @@ namespace nUse {
 		}
 
 		const nUtil::vector<std::string> getAccountIDs() {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return vector<std::string> {};
 
 			vector<std::string> accountsIDs;
 			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
@@ -1116,8 +1119,8 @@ namespace nUse {
 		}
 
 		const std::string getAccountId(const std::string & accountName) {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return "";
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
 				if(OTAPI_Wrap::GetAccountWallet_Name ( OTAPI_Wrap::GetAccountWallet_ID (i))==accountName)
@@ -1127,8 +1130,8 @@ namespace nUse {
 		}
 
 		const nUtil::vector<std::string> getAssets() {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return vector<std::string> {};
 
 			vector<std::string> assets;
 			for(int i = 0 ; i < OTAPI_Wrap::GetAssetTypeCount ();i++) {
@@ -1138,8 +1141,8 @@ namespace nUse {
 		}
 
 		const std::string getAssetId(const std::string & assetName) {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return "";
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetAssetTypeCount ();i++) {
 				if(OTAPI_Wrap::GetAssetType_Name ( OTAPI_Wrap::GetAssetType_ID (i))==assetName)
@@ -1155,16 +1158,16 @@ namespace nUse {
 		}
 
 		const std::string SetAccountWallet_Name(const std::string & accountID, const std::string & NewAccountName) { //TODO: passing to function: const std::string & nymName, const std::string & signerNymName,
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return "";
 
 				OTAPI_Wrap::SetAccountWallet_Name (accountID, mUserID, NewAccountName);
 			return "";
 		}
 
 		void createAssetAccount(const std::string & assetName, const std::string & newAccountName) {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return ;
 
 			int32_t status = OTAPI_Wrap::createAssetAccount(mServerID, mUserID, getAssetId(assetName));
 
@@ -1186,8 +1189,8 @@ namespace nUse {
 		}
 
 		std::string deleteAssetAccount(const std::string & accountName) {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return "";
 
 			/*if(!OTAPI_Wrap::Wallet_CanRemoveAccount (getAccountId(accountName))) {
 						// inBox and OutBox must be get from server because without it account not work properly
@@ -1204,8 +1207,8 @@ namespace nUse {
 		}
 
 		const nUtil::vector<std::string> getServers() {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return vector<std::string> {};
 
 			vector<std::string> servers;
 			for(int i = 0 ; i < OTAPI_Wrap::GetServerCount ();i++) {
