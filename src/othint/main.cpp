@@ -1020,8 +1020,9 @@ namespace nUse {
 
 		bool mNymsMy_loaded;
 		bool OTAPI_loaded;
+		bool OTAPI_loadedError;
 
-		cUseOT() : mNymsMy_loaded(false), OTAPI_loaded(false) 	{
+		cUseOT() : mNymsMy_loaded(false), OTAPI_loaded(false),OTAPI_loadedError(false) 	{
 
 		}
 
@@ -1030,19 +1031,47 @@ namespace nUse {
 		OTAPI_Wrap::AppCleanup(); // UnInit OTAPI
 		}
 
-		void Init()	{
-		OTAPI_Wrap::AppInit(); // Init OTAPI
-		std::cout <<std::endl<<"Init loading wallet: ";
-		if(OTAPI_Wrap::LoadWallet())
-		std::cout <<"wallet was loaded "<<std::endl;
-		else
-		std::cout <<"error while loanding wallet "<<std::endl;
-		OTAPI_loaded = true;
+		bool Init()	{
+			if(OTAPI_loaded || OTAPI_loadedError)
+			return true;
+
+				try {
+
+						if(!OTAPI_Wrap::AppInit()) {// Init OTAPI
+								_erro("Error while init OTAPI thrown an UNKNOWN exception!");
+								return false;
+								}
+
+						std::cout <<std::endl<<"Trying to load wallet: ";
+						//if not pWrap it means that AppInit is not successed
+						OTAPI_Wrap *pWrap = OTAPI_Wrap::It();
+						if(!pWrap)
+							{
+							OTAPI_loadedError = true;
+							_erro("Error while init OTAPI");
+							return false;
+							}
+
+						if(OTAPI_Wrap::LoadWallet())
+						std::cout <<"wallet was loaded "<<std::endl;
+						else
+						std::cout <<"error while loanding wallet "<<std::endl;
+						OTAPI_loaded = true;
+					}
+				catch(const std::exception &e) {
+				_erro("Error while OTAPI init " << e.what());
+				return false;
+				}
+				catch(...) {
+				_erro("Error while OTAPI init thrown an UNKNOWN exception!");
+				return false;
+				}
+		return OTAPI_loaded;
 		}
 
 		const nUtil::vector<std::string> getNymsMy() {
-			if(!OTAPI_loaded)
-				Init();
+			if(!Init())
+			return vector<std::string> {};
 
 			if (!mNymsMy_loaded) {
 				try {
@@ -1064,8 +1093,9 @@ namespace nUse {
 		}
 
 		const nUtil::vector<std::string> getAccounts() {
-			if(!OTAPI_loaded)
-				Init();
+
+			if(!Init())
+			return vector<std::string> {};
 
 			vector<std::string> accounts;
 			for(int i = 0 ; i < OTAPI_Wrap::GetAccountCount ();i++) {
