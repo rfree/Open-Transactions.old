@@ -766,7 +766,7 @@ msg send <mynym> <hisnym> --no-footer     # action option
 msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push  	 # example of force send (?) - not sure if it will appear
-msg ls			# list all messages
+/msg ls			# list all messages
 msg mv			# move message to different directory in your mail box
 msg rm <index>		# remove message with <index> number
 msg rm --all		# remove all messages from mail box
@@ -1213,6 +1213,35 @@ namespace nUse {
 			}
 			return servers;
 		}
+		const nUtil::vector<std::string> getMessages() {
+			if(!Init())
+			return vector<std::string> {};
+
+			std::cout <<"mid\tfrom\t\tcontent inbox:"<< std::endl;
+			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
+			std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+			std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+
+
+			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nym_ID);i++){
+
+					std::cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nym_ID,i);
+					}
+			}
+
+			std::cout<<std::endl<<"mid\tto\t\tcontent outbox:"<< std::endl;
+			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
+			std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+			std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+
+			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nym_ID);i++){
+
+					std::cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
+					}
+			}
+			return vector<std::string> {};
+		}
+
 
 
 	};
@@ -1619,9 +1648,14 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 		}
 		if (full_words<3) { // we work on word3 - var1
+			if (action=="ls") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getMessages() ); //TODO otlib
+			}
 			if (action=="send") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
 			}
+
+
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
 			}
