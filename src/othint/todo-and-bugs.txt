@@ -1,0 +1,33 @@
+
+====================================================================
+BUGS IMPORTANT
+====================================================================
+
+* hanged-otclient-pid-causes-segfault
+
+
+====================================================================
+BUGS MISC
+====================================================================
+
+* on program death (e.g. ctrl-C) terminal might be unusable untill reset
+
+
+====================================================================
+TODO 
+====================================================================
+
+* debug: configurable debug level (from autostart)
+* debug: testcases should use this debug level
+* implement more commands for othint + execution
+* new_tree 
+* genereate help/usage page using new_tree
+
+
+====================================================================
+IDEAS - possible TODO
+====================================================================
+
+* leave otclid service in background and make other clients use that one to skip loading time (init/wallet open time)
+
+
