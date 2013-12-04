@@ -489,7 +489,9 @@ void DisplayVectorEndl(std::ostream & out, const std::vector<T> &v, const std::s
 
 template <class T>
 void DBGDisplayVector(const std::vector<T> &v, const std::string &delim=" ") {
+	std::cerr << ">|";
 	std::copy( v.begin(), v.end(), std::ostream_iterator<T>(std::cerr, delim.c_str()) );
+	std::cerr << "|<";
 }
 
 template <class T>
@@ -1355,6 +1357,7 @@ vector<string> cHintManager::AutoCompleteEntire(const string &sofar_str) const {
 	const std::string cut_begining="ot"; // minimal begining
 	const int cut_begining_size = cut_begining.length();
 	_info("cut_begining=[" << cut_begining << "]");
+	// <= add space if we are at ot<tab>
 	if (sofar_str.length() <= cut_begining_size) return WordsThatMatch(sofar_str, vector<string>{ cut_begining }); // too short, force completio to "ot"
 
 	std::string ot = sofar_str.substr(0,cut_begining_size); // separate out the part that is know to has correct size and should be "ot"
@@ -1843,6 +1846,8 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 // ("ot m",0) then ("ot m",1) then ("ot x",0) and suddenly back to ("ot x",2) without reinitialization
 // (done with number=0) is an error (at least currently, in future we might cache various completion
 // arrays, or recalculate on change)
+
+
 static char* completionReadlineWrapper1(const char *sofar , int number) {
 	bool dbg = my_rl_wrapper_debug || 1;
 	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
@@ -1850,17 +1855,21 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 	if (rl_line_buffer) line = rl_line_buffer;
 	line = line.substr(0, rl_point); // Complete from cursor position
 	nOT::nOTHint::cHintManager hint;
-	vector <string> completions = hint.AutoCompleteEntire(line); // <--
-	// TODO cache the result! across number=...
-	if (!completions.size()) completions.push_back(""); // Not proper way of disabling filename autocompletion!
+	static vector <string> completions;
+	if (number == 0) {
+		_dbg3("Editline completion start");
+		completions = hint.AutoCompleteEntire(line); // <--
+	}
+	if (!completions.size()) completions.push_back(""); // TODO: proper way of disabling filename autocompletion!
 	auto completions_size = completions.size();
-	if (dbg) DBGDisplayVectorEndl(completions);
 	if (dbg) cerr << "completions_size=" << completions_size << endl;
 	// if (! completions_size) return NULL; // <--- RET
 	if (number==completions_size){ // stop
 		//rl_bind_key('\t', rl_insert);
+		_dbg3("Editline completion stop");
 		return NULL;
 	}
+	_dbg3(">|" + completions.at(number) + "|<");
 	return strdup( completions.at(number).c_str() ); // caller must free() this memory
 }
 
