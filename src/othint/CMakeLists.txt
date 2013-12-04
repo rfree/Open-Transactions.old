@@ -3,13 +3,13 @@ project (othint)
 
 # Options
 
-option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" OFF)
+option(LOCAL_EDITLINE "Use local Editline library ($HOME/.local)" ON) # Always ON because of bugs in Debian libedit package!
 option(WITH_WRAPPER "Build with wrapper" OFF)
 option(LOCAL_OT "Build with locally installed ot" ON)
 
 # Set variables
 
-set(CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
+
 set(CMAKE_SKIP_BUILD_RPATH  FALSE) # Always include RPATH to the binary
 
 if (WITH_WRAPPER)
@@ -20,8 +20,6 @@ endif (WITH_WRAPPER)
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 ")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/") # Add folder with cmake modules
-
-include_directories("${CMAKE_PREFIX_PATH}/include/ot/otlib") # For ExportWrapper.h needed by OTAPI.h
 
 # Add executable
 
@@ -41,7 +39,7 @@ if (LOCAL_EDITLINE)
 		include_directories(${EDITLINE_INCLUDE_DIR})
 		target_link_libraries (othint ${EDITLINE_LIBRARY})
 	endif (EDITLINE_FOUND)
-else (LOCAL_EDITLINE)
+else ()
 	find_package(Editline)
 	if (EDITLINE_FOUND)
 		include_directories(${EDITLINE_INCLUDE_DIR})
@@ -59,6 +57,7 @@ if (LOCAL_OT)
 	endif (OT_FOUND)
 endif(LOCAL_OT)
 
+include_directories("$ENV{HOME}/.local/include/ot/otlib") # For ExportWrapper.h needed by OTAPI.h
 # make run
 
 add_custom_target(run

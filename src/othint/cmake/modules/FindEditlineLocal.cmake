@@ -1,12 +1,13 @@
 # Find Editline/Ncurses lib and include directories
-
+message(STATUS "Looking for Editline locally.")
+set(CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
 find_path(EDITLINE_INCLUDE_DIR editline/readline.h
-	"${CMAKE_PREFIX_PATH}/include"
+	 "$ENV{HOME}/.local/include"
 	)
 
 find_library(EDITLINE_LIBRARY
 	NAMES edit
-	PATHS "${CMAKE_PREFIX_PATH}/lib"
+	PATHS "$ENV{HOME}/.local/lib"
 	)
 
 find_library(NCURSES_LIBRARY

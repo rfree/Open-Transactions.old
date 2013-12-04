@@ -1,6 +1,9 @@
 # Find Editline/Ncurses lib and include directories
-
-find_path(EDITLINE_INCLUDE_DIR editline/readline.h
+message(STATUS "Looking for Editline globally.")
+find_path(EDITLINE_INCLUDE_DIR
+	NAMES
+	editline/readline.h
+	PATHS
 	/opt/local/include
 	/usr/local/include
 	/usr/include
