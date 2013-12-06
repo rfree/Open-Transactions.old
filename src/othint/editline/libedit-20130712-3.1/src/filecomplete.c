@@ -144,6 +144,7 @@ fn_tilde_expand(const char *txt)
 char *
 fn_filename_completion_function(const char *text, int state)
 {
+	return NULL; /*Don't use filename autocomletion for now*/
 	static DIR *dir = NULL;
 	static char *filename = NULL, *dirname = NULL, *dirpath = NULL;
 	static size_t filename_len = 0;
@@ -460,7 +461,7 @@ fn_complete(EditLine *el,
 		    cur_off - (int)len, cur_off);
 	} else
 		matches = 0;
-	if (!attempted_completion_function || 
+	if (!attempted_completion_function ||
 	    (over != NULL && !*over && !matches))
 		matches = completion_matches(
 		    ct_encode_string(temp, &el->el_scratch), complet_func);
@@ -509,7 +510,7 @@ fn_complete(EditLine *el,
 			}
 			/* matches[1] through matches[i-1] are available */
 			matches_num = (size_t)(i - 1);
-				
+
 			/* newline to get on next line from command line */
 			(void)fprintf(el->el_outfile, "\n");
 

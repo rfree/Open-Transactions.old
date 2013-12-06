@@ -1857,16 +1857,17 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 	nOT::nOTHint::cHintManager hint;
 	static vector <string> completions;
 	if (number == 0) {
-		_dbg3("Editline completion start");
+		_dbg3("Start autocomplete");
 		completions = hint.AutoCompleteEntire(line); // <--
 	}
-	if (!completions.size()) completions.push_back(""); // TODO: proper way of disabling filename autocompletion!
 	auto completions_size = completions.size();
+	if (!completions_size) {
+		_dbg3("Stop autocomplete: no matchng words found");
+		return NULL; // <--- RET
+	}
 	if (dbg) cerr << "completions_size=" << completions_size << endl;
-	// if (! completions_size) return NULL; // <--- RET
 	if (number==completions_size){ // stop
-		//rl_bind_key('\t', rl_insert);
-		_dbg3("Editline completion stop");
+		_dbg3("Stop autocomplete");
 		return NULL;
 	}
 	_dbg3(">|" + completions.at(number) + "|<");

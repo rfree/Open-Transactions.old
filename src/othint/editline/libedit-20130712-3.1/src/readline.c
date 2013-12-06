@@ -264,7 +264,7 @@ rl_set_prompt(const char *prompt)
 
 	if (!prompt)
 		prompt = "";
-	if (rl_prompt != NULL && strcmp(rl_prompt, prompt) == 0) 
+	if (rl_prompt != NULL && strcmp(rl_prompt, prompt) == 0)
 		return 0;
 	if (rl_prompt)
 		el_free(rl_prompt);
@@ -358,7 +358,7 @@ rl_initialize(void)
 	    "ReadLine compatible suspend function",
 	    _el_rl_tstp);
 	el_set(e, EL_BIND, "^Z", "rl_tstp", NULL);
-		
+
 	/* read settings from configuration file */
 	el_source(e, NULL);
 
@@ -1960,7 +1960,7 @@ rl_callback_read_char(void)
 	}
 }
 
-void 
+void
 rl_callback_handler_install(const char *prompt, VCPFunction *linefunc)
 {
 	if (e == NULL) {
@@ -1969,9 +1969,9 @@ rl_callback_handler_install(const char *prompt, VCPFunction *linefunc)
 	(void)rl_set_prompt(prompt);
 	rl_linefunc = linefunc;
 	el_set(e, EL_UNBUFFERED, 1);
-}   
+}
 
-void 
+void
 rl_callback_handler_remove(void)
 {
 	el_set(e, EL_UNBUFFERED, 0);
@@ -2171,7 +2171,7 @@ rl_completion_matches(const char *str, rl_compentry_func_t *fun)
 		list[0][min] = '\0';
 	}
 	return list;
-		
+
 out:
 	el_free(list);
 	return NULL;
