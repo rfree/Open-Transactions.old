@@ -768,7 +768,7 @@ msg send <mynym> <hisnym> --no-footer     # action option
 msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push  	 # example of force send (?) - not sure if it will appear
-/msg ls			# list all messages
+*msg ls			# list all messages
 msg mv			# move message to different directory in your mail box
 msg rm <index>		# remove message with <index> number
 msg rm --all		# remove all messages from mail box
@@ -1005,8 +1005,7 @@ class cCmdlineInfo {
 
 namespace nOT {
 namespace nUse {
-
-	using std::vector;
+	OT_COMMON_USING_NAMESPACE
 	// TODO more uses - as in the macro.. OT_COMMON_USING_NAMESPACE
 
 
@@ -1205,46 +1204,64 @@ namespace nUse {
 				return "";
 		}
 
-		const nUtil::vector<std::string> getServers() {
+		const vector<string> getServers() {
 			if(!Init())
-			return vector<std::string> {};
+			return vector<string> {};
 
-			vector<std::string> servers;
+			vector<string> servers;
 			for(int i = 0 ; i < OTAPI_Wrap::GetServerCount ();i++) {
 				servers.push_back(OTAPI_Wrap::GetServer_Name(OTAPI_Wrap::GetServer_ID(i)));
 			}
 			return servers;
 		}
-		const nUtil::vector<std::string> getMessages() {
+		const vector<string> getMessages() {
 			if(!Init())
-			return vector<std::string> {};
+			return vector<string> {};
 
-			std::cout <<"mid\tfrom\t\tcontent inbox:"<< std::endl;
+			cout <<"mid\tfrom\t\tcontent inbox:"<< endl;
 			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
-			std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
-			std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+			string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+			string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
 
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nym_ID);i++){
 
-					std::cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nym_ID,i);
+					cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nym_ID,i);
 					}
 			}
 
-			std::cout<<std::endl<<"mid\tto\t\tcontent outbox:"<< std::endl;
+			cout<<endl<<"mid\tto\t\tcontent outbox:"<< endl;
 			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
-			std::string nym_ID = OTAPI_Wrap::GetNym_ID (i);
-			std::string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+			string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+			string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nym_ID);i++){
 
-					std::cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
+					cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
 					}
 			}
-			return vector<std::string> {};
+			return vector<string> {};
 		}
 
+		const vector<string> getMessageByID(const string & nym_Name) { //TODO
+			if(!Init())
+			return vector<string> {};
 
+			string nym_Name = OTAPI_Wrap::GetNym_Name (nymID);
+			cout <<"mid\tfrom\t\tcontent inbox:"<< endl;
+			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nymID);i++){
+				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nymID,i);
+			}
+			cout << endl << "mid\tto\t\tcontent outbox:" << endl;
+			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nymID);i++){
+				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nymID,i);
+			}
+			return vector<string> {};
+		}
+
+		void removeMailByIndex(const string &){
+			bool OTAPI_Wrap::Nym_RemoveMailByIndex (const std::string & NYM_ID, const int32_t & nIndex)
+		}
 
 	};
 
