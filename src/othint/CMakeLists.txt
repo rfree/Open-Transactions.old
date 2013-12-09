@@ -58,6 +58,7 @@ if (LOCAL_OT)
 endif(LOCAL_OT)
 
 include_directories("$ENV{HOME}/.local/include/ot/otlib") # For ExportWrapper.h needed by OTAPI.h
+include_directories("$ENV{HOME}/.local/include/ot") # For irrXML.h needed by OT_ME.h
 # make run
 
 add_custom_target(run

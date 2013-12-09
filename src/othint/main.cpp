@@ -210,7 +210,7 @@ File format of sources: identation with \t char, which we assume is 2 spaces wid
 
 // OT
 #include "OTAPI.h"
-//#include "OT_ME.h"
+#include "OT_ME.h"
 
 // detecting and including proper version of readline or it's replacement
 #ifndef CFG_USE_READLINE // should we use readline?
@@ -768,7 +768,8 @@ msg send <mynym> <hisnym> --no-footer     # action option
 msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2>
 msg send <mynym> <hisnym> --cc <ccnym> --cc <ccnym2> --push  	 # example of force send (?) - not sure if it will appear
-*msg ls			# list all messages
+*msg ls			# list all messages for all nyms
+/msg ls <mynym> # list all messages for nym
 msg mv			# move message to different directory in your mail box
 msg rm <index>		# remove message with <index> number
 msg rm --all		# remove all messages from mail box
@@ -1186,7 +1187,7 @@ namespace nUse {
 
 		}
 
-		std::string deleteAssetAccount(const std::string & accountName) {
+		std::string deleteAssetAccount(const std::string & accountName) { ///<
 			if(!Init())
 			return "";
 
@@ -1204,7 +1205,7 @@ namespace nUse {
 				return "";
 		}
 
-		const vector<string> getServers() {
+		const vector<string> getServers() { ///< Get all servers name
 			if(!Init())
 			return vector<string> {};
 
@@ -1214,7 +1215,8 @@ namespace nUse {
 			}
 			return servers;
 		}
-		const vector<string> getMessages() {
+
+		const vector<string> getMessages() { ///< Get all messages from all Nyms.
 			if(!Init())
 			return vector<string> {};
 
@@ -1222,7 +1224,6 @@ namespace nUse {
 			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
 			string nym_ID = OTAPI_Wrap::GetNym_ID (i);
 			string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
-
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nym_ID);i++){
 
@@ -1232,35 +1233,43 @@ namespace nUse {
 
 			cout<<endl<<"mid\tto\t\tcontent outbox:"<< endl;
 			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
-			string nym_ID = OTAPI_Wrap::GetNym_ID (i);
-			string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
+				string nym_ID = OTAPI_Wrap::GetNym_ID (i);
+				string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
 
 			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nym_ID);i++){
-
-					cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
-					}
+				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
+				}
 			}
 			return vector<string> {};
 		}
 
-		const vector<string> getMessageByID(const string & nym_Name) { //TODO
+		const vector<string> getNymMessages(const string & nym_Name) { ///< Get all messages from Nym.
 			if(!Init())
-			return vector<string> {};
+				return vector<string> {};
 
-			string nym_Name = OTAPI_Wrap::GetNym_Name (nymID);
-			cout <<"mid\tfrom\t\tcontent inbox:"<< endl;
-			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nymID);i++){
-				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nymID,i);
-			}
-			cout << endl << "mid\tto\t\tcontent outbox:" << endl;
-			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nymID);i++){
-				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nymID,i);
-			}
+			//string nym_Name = OTAPI_Wrap::GetNym_Name (nymID);
+			//cout <<"mid\tfrom\t\tcontent inbox:"<< endl;
+			//for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nymID);i++){
+				//cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nymID,i);
+			//}
+			//cout << endl << "mid\tto\t\tcontent outbox:" << endl;
+			//for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nymID);i++){
+				//cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nymID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nymID,i);
+			//}
 			return vector<string> {};
+		}
+
+		string sendMsg() { ///< Get all messages from Nym.
+			if(!Init())
+				return "";
+			OT_ME madeEasy;
+			string test("test");
+			string ret = madeEasy.send_user_msg ( mServerID, mUserID, mUserID, test);
+			return ret;
 		}
 
 		void removeMailByIndex(const string &){
-			bool OTAPI_Wrap::Nym_RemoveMailByIndex (const std::string & NYM_ID, const int32_t & nIndex)
+			//bool OTAPI_Wrap::Nym_RemoveMailByIndex (const std::string & NYM_ID, const int32_t & nIndex)
 		}
 
 	};
@@ -1560,32 +1569,29 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return vector<string>{""};
 			}
 		}
-		if (full_words<5) { // we work on word4 - var2; account name
+		if (full_words<5) { // Execute commands!
 			if (action=="new") {
-						vector<std::string> v = nOT::nUse::useOT.getAccounts();
-							if (std::find(v.begin(), v.end(), cmdArgs.at(1)) == v.end()){
-								nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1));
-								}
-								else {
-								std::cerr <<"name " <<cmdArgs.at(1) << " already exists, choose other name ";
-								return vector<string>{""};
-								}
+				vector<std::string> v = nOT::nUse::useOT.getAccounts();
+				if (std::find(v.begin(), v.end(), cmdArgs.at(1)) == v.end()){
+					nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
+				}
+				else {
+					std::cerr <<"name " <<cmdArgs.at(1) << " already exists, choose other name ";
+					return vector<string>{""};
+				}
 
 			}
 			if (action=="rn") {
-
-						vector<std::string> v = nOT::nUse::useOT.getAssets();
-						if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
-
-						nOT::nUse::useOT.SetAccountWallet_NameByName(cmdArgs.at(0), cmdArgs.at(1));
-						return vector<string>{""};
-					}
-					else {
-						std::cerr <<"new account name already exists, choose other name ";
-						return vector<string>{""};
-					}
+				vector<std::string> v = nOT::nUse::useOT.getAssets();
+				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
+					nOT::nUse::useOT.SetAccountWallet_NameByName(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
+					return vector<string>{""};
 				}
-
+				else {
+					std::cerr <<"new account name already exists, choose other name ";
+					return vector<string>{""};
+				}
+			}
 		}
 
 	}
@@ -1668,15 +1674,18 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 		}
+
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="ls") {
-				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getMessages() ); //TODO otlib
+				//return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ) ;
+				nOT::nUse::useOT.getMessages(); // <====== Execute
+				return vector<string>{""};
 			}
 			if (action=="send") {
-				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
+				nOT::nUse::useOT.sendMsg();
+				return vector<string>{""};
+				//return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
 			}
-
-
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
 			}
@@ -1684,11 +1693,21 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "index"} );
 			}
 		}
+
 		if (full_words<4) { // we work on word3 - var1
-			if (cmdArgs.at(0)=="<mynym>") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<hisnym>"} ); //TODO otlib
+			if (action=="ls") {
+				vector<std::string> v = nOT::nUse::useOT.getNymsMy();
+				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
+					nOT::nUse::useOT.getMessages(); // <====== Execute
+					return vector<string>{""};
+				}
+				else {
+					std::cerr << "Can't find that nym: " << cmdArgs.at(0);
+					return vector<string>{""};
+				}
 			}
 		}
+
 		if (full_words<5) { // we work on word4 - var2
 			if (cmdArgs.at(1)=="<hisnym>") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<ccoptional>"} ); //TODO otlib
