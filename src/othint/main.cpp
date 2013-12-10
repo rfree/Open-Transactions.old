@@ -424,8 +424,7 @@ const char* ShortenTheFile(const char *s) {
 class cLogger {
 	public:
 		cLogger();
-
-		std::ostream &write_stream(int level) { if (mStream) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
+		std::ostream &write_stream(int level) { if (0)/*(mStream)*/ { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
 		std::string icon(int level) const;
 		void setDebugLevel(int level) { mLevel = level; }
 	protected:
@@ -467,12 +466,12 @@ std::string vectorToStr(const T & v) {
 }
 std::string cSpaceFromEscape(const std::string &s) {
 	std::ostringstream  newStr;
-        for(int i = 0; i < s.length();i++) {
-                if(s[i] == '\\' && s[i+1] ==32)
-                 newStr<<"";
-                 else
-                 newStr<<s[i];
-                }
+		for(int i = 0; i < s.length();i++) {
+			if(s[i] == '\\' && s[i+1] ==32)
+				newStr<<"";
+			else
+				newStr<<s[i];
+			}
 	return newStr.str();
 }
 
@@ -739,7 +738,7 @@ account			# can display active (default) account
 /account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
 *account rm <accountName>			# delete account
-*account rn <oldAccountName>	<newAccountName>		# rename account
+*account mv <oldAccountName>	<newAccountName>		# rename account
 account-in ls			# for active account
 account-in ls <accountID>			# for specific <accountID>
 account-in accept <paymentID>				#	accept this particullar payment
@@ -760,7 +759,7 @@ market
 market ls
 mint new
 msg			# should show what options do you have with this topic
-msg send		# should ask you about nyms ?
+/msg send		# should ask you about nyms ?
 msg send <mynym> 		# should take your nym and ask about addressee's name
 msg send <mynym> <hisnym> 		# an example of usage
 msg send <mynym> <hisnym> --push     		# global option
@@ -1259,12 +1258,11 @@ namespace nUse {
 			return vector<string> {};
 		}
 
-		string sendMsg() { ///< Get all messages from Nym.
+		string sendMsg(const string & msg) { ///< Get all messages from Nym.
 			if(!Init())
 				return "";
 			OT_ME madeEasy;
-			string test("test");
-			string ret = madeEasy.send_user_msg ( mServerID, mUserID, mUserID, test);
+			string ret = madeEasy.send_user_msg ( mServerID, mUserID, mUserID, msg); //TODO: server?
 			return ret;
 		}
 
@@ -1272,6 +1270,12 @@ namespace nUse {
 			//bool OTAPI_Wrap::Nym_RemoveMailByIndex (const std::string & NYM_ID, const int32_t & nIndex)
 		}
 
+		bool checkNymName(const string & nymName){
+		vector<std::string> v = getNymsMy();
+			if (std::find(v.begin(), v.end(), nymName) == v.end())
+				return false;
+			return true;
+		}
 	};
 
 
@@ -1520,7 +1524,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	if (topic=="account") {
 
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm","rn"} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm", "mv"} ) ;
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="new") {
@@ -1535,27 +1539,23 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
 			}
-			if (action=="rn") {
+			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAccounts() ) ;
 			}
 		}
 
 		if (full_words<4) { // we work on word4 - var2; account name
 			if (action=="new") {
-				vector<std::string> v = nOT::nUse::useOT.getAssets();
-				if (std::find(v.begin(), v.end(), cSpaceFromEscape(cmdArgs.at(0))) != v.end()){
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
 					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 				}
 				else {
 					std::cout <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
-					DBGDisplayVectorEndl(v,",");
 					return vector<string>{""};
 				}
 			}
 			if (action=="rm") {
-
-				vector<std::string> v = nOT::nUse::useOT.getAccounts();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) != v.end()){
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
 					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
 				}
 				else {
@@ -1564,15 +1564,14 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				}
 			}
 
-			if (action=="rn") {
+			if (action=="mv") {
 				std::cerr <<"type new account name";
 				return vector<string>{""};
 			}
 		}
 		if (full_words<5) { // Execute commands!
 			if (action=="new") {
-				vector<std::string> v = nOT::nUse::useOT.getAccounts();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(1)) == v.end()){
+				if (!nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // unique name
 					nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
 				}
 				else {
@@ -1581,9 +1580,8 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				}
 
 			}
-			if (action=="rn") {
-				vector<std::string> v = nOT::nUse::useOT.getAssets();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
+			if (action=="mv") {
+				if (!nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // unique name
 					nOT::nUse::useOT.SetAccountWallet_NameByName(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
 					return vector<string>{""};
 				}
@@ -1675,16 +1673,16 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			return WordsThatMatch(  current_word  , vector<string>{"send","ls","rm","mv"} );
 		}
 
-		if (full_words<3) { // we work on word3 - var1
+		if (full_words<3) { // we work on word3 - var1 - sender name
 			if (action=="ls") {
 				//return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ) ;
 				nOT::nUse::useOT.getMessages(); // <====== Execute
 				return vector<string>{""};
 			}
 			if (action=="send") {
-				nOT::nUse::useOT.sendMsg();
-				return vector<string>{""};
-				//return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
+				//nOT::nUse::useOT.sendMsg();
+				//return vector<string>{""};
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
@@ -1694,10 +1692,9 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			}
 		}
 
-		if (full_words<4) { // we work on word3 - var1
+		if (full_words<4) { // we work on word4 - var2 -  recipient name
 			if (action=="ls") {
-				vector<std::string> v = nOT::nUse::useOT.getNymsMy();
-				if (std::find(v.begin(), v.end(), cmdArgs.at(0)) == v.end()){
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
 					nOT::nUse::useOT.getMessages(); // <====== Execute
 					return vector<string>{""};
 				}
@@ -1706,13 +1703,38 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 					return vector<string>{""};
 				}
 			}
-		}
-
-		if (full_words<5) { // we work on word4 - var2
-			if (cmdArgs.at(1)=="<hisnym>") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<ccoptional>"} ); //TODO otlib
+			if (action=="send") {
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
+					return WordsThatMatch(  current_word  , nOT::nUse::useOT.getNymsMy() );
+				}
+				else {
+					std::cerr << "Can't find that nym: " << cmdArgs.at(0);
+					return vector<string>{""};
+				}
 			}
 		}
+
+		if (full_words<5) { // we work on word5 - var3
+			if (action=="send") {
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(1))){
+					return vector<string>{""}; // ready for message
+				}
+				else {
+					std::cerr << "Can't find that nym: " << cmdArgs.at(1);
+					return vector<string>{""};
+				}
+			}
+		}
+
+		if (full_words<5) { // we work on word6
+			if (action=="send") { // message text
+				if (!cmdArgs.at(2).length())
+					std::cerr << "Message is empty.";
+				return vector<string>{""}; // ready for message
+			}
+		}
+
+
 	}
 
 	if (topic=="msguard") { // testing!
@@ -1836,7 +1858,6 @@ void cInteractiveShell::run() {
 		if (line == "quit") break;
 		std::string cmdline;
 		cmdline = "ot " + line;
-		cout << "Auto-complete for '" << cmdline << "': " << endl;
 		nOT::nTests::testcase_complete_1(cmdline);
 	}
 }
@@ -1886,7 +1907,7 @@ static char** completionReadlineWrapper( const char * sofar , int start,  int en
 
 static char* completionReadlineWrapper1(const char *sofar , int number) {
 	bool dbg = my_rl_wrapper_debug || 1;
-	if (dbg) cerr << "\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl;
+	if (dbg) _dbg3("\nsofar="<<sofar<<" number="<<number<<" rl_line_buffer="<<rl_line_buffer<<endl);
 	string line;
 	if (rl_line_buffer) line = rl_line_buffer;
 	line = line.substr(0, rl_point); // Complete from cursor position
@@ -1901,7 +1922,7 @@ static char* completionReadlineWrapper1(const char *sofar , int number) {
 		_dbg3("Stop autocomplete: no matchng words found");
 		return NULL; // <--- RET
 	}
-	if (dbg) cerr << "completions_size=" << completions_size << endl;
+	if (dbg) _dbg3( "completions_size=" << completions_size << endl);
 	if (number==completions_size){ // stop
 		_dbg3("Stop autocomplete");
 		return NULL;
@@ -1976,10 +1997,7 @@ void cInteractiveShell::runEditline() {
 		if (cmd.length()) {
 			add_history(cmd.c_str()); // TODO (leaks memory...) but why
 		}
-		cout << "Command was: " << cmd << endl;
 
-
-		cout << "Auto completion for (" << cmd << ") is: ";
 		nOT::nTests::testcase_complete_1(cmd);
 		cout << endl;
 
