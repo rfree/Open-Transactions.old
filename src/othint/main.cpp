@@ -398,7 +398,7 @@ namespace nUtil {
 OT_COMMON_USING_NAMESPACE_1;
 
 struct cNullstream : std::ostream {
-    cNullstream() : std::ios(0), std::ostream(0) {}
+		cNullstream() : std::ios(0), std::ostream(0) {}
 };
 cNullstream g_nullstream; // a stream that does nothing (eats/discards data)
 
@@ -424,7 +424,7 @@ const char* ShortenTheFile(const char *s) {
 class cLogger {
 	public:
 		cLogger();
-		std::ostream &write_stream(int level) { if (0)/*(mStream)*/ { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
+		std::ostream &write_stream(int level) { if /*(0)*/(mStream) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
 		std::string icon(int level) const;
 		void setDebugLevel(int level) { mLevel = level; }
 	protected:
@@ -512,12 +512,12 @@ bool CheckIfBegins(const std::string & beggining, const std::string & all) {
 
 std::string cEscapeFromSpace(const std::string &s) {
 	std::ostringstream  newStr;
-        for(int i = 0; i < s.length();i++) {
-                if(s[i] ==32)
-                 newStr<<"\\"<< " ";
-                 else
-                 newStr<<s[i];
-                }
+				for(int i = 0; i < s.length();i++) {
+								if(s[i] ==32)
+								 newStr<<"\\"<< " ";
+								 else
+								 newStr<<s[i];
+								}
 	return newStr.str();
 }
 
@@ -571,12 +571,12 @@ std::string rtrim(const std::string &s) {
 
 std::string cEscapeString(const std::string &s) {
 	std::ostringstream  newStr;
-        for(int i = 0; i < s.length();i++) {
-                if(s[i] >=32 && s[i] <= 126)
-                        newStr<<s[i];
-                        else
-                        newStr<<"\\"<< (int) s[i];
-                }
+				for(int i = 0; i < s.length();i++) {
+								if(s[i] >=32 && s[i] <= 126)
+												newStr<<s[i];
+												else
+												newStr<<"\\"<< (int) s[i];
+								}
 
 	return newStr.str();
 }
@@ -641,9 +641,9 @@ using nOT::nUtil::ToStr;
 === Introduction ===
 
 First an advance example of magic of OT hints:
-  ot msg send bob al<TAB>
+	ot msg send bob al<TAB>
 will auto-complete options:
-  alice alex alcapone
+	alice alex alcapone
 In this situation, bash autocomplete with othint program
 will query the OT server to list your contacts named al...
 
@@ -651,18 +651,18 @@ With respecting your privacy, trying to use remote server only if
 data was not cached, and only asking servers that you trust (the --HT option)
 that is the default. Start with "ot --H0" to make sure there will be 0 network
 activity, no servers will be asked:
-  ot --H0 msg send bob a<TAB>
+	ot --H0 msg send bob a<TAB>
 will auto-complete with data that can be given without causing network traffic.
 
 ot_secure:
 If it's more convinient, we might provide separate command: "ot_net", "ot_secure"
 with other level of discretion in the hinting process as well with say more
 confirmations when also EXECUTING a command that will connect to OT server.
-  ot_quiet mint spawn bob silve<TAB>
+	ot_quiet mint spawn bob silve<TAB>
 	1. will NOT ask any server about the list of currenies silve... will use cache
 		silvergrams silvertest silverbob {showing only cached data, last update 3h ago}
 	2. when the command is finished and executed as
-	  ot_quiet mint spawn bob silvergrams 1000<ENTER>
+		ot_quiet mint spawn bob silvergrams 1000<ENTER>
 	it will ask: "Please confirm do you want to connect NOW to OT server aliased BigTest1,
 	with ID=855gusd2dffj2d9uisdfokj233 (unknown/new server), and execute
 	mint-spawn command? Type 2 words: 'unknown spawn' to confirm, or 'no'"
@@ -887,7 +887,7 @@ and program will not leak any activity to open network (LAN, Internet, etc)
 VPN forced:
 Global configuration option could force to always use VPN (append --vpn-all-net)
 then use "ot --HN" will not auto-complete on <TAB> but show:
-  {can not use --HN because your configuration disabled it, please try --HV}
+	{can not use --HN because your configuration disabled it, please try --HV}
 and if executed as full command, will also refuse to work, with explanation.
 
 Please remember that VPNs or even more advanced solutions are not that secure, and that
@@ -1167,23 +1167,29 @@ namespace nUse {
 			if(!Init())
 			return ;
 
-			int32_t status = OTAPI_Wrap::createAssetAccount(mServerID, mUserID, getAssetId(assetName));
+			OT_ME madeEasy;
+			string strResponse;
+			strResponse = madeEasy.create_asset_acct(mServerID, mUserID, getAssetId(assetName));
 
-			std::string strResponse = OTAPI_Wrap::PopMessageBuffer 	( status,mServerID,mUserID );
+			// -1 error, 0 failure, 1 success.
+			if (1 != madeEasy.VerifyMessageSuccess(strResponse))
+			{
+				_erro("Failed trying to create Account at Server.");
+				return;
+			}
 
-			std::string qstrID = OTAPI_Wrap::Message_GetNewAcctID(strResponse);
+			// Get the ID of the new account.
+			string strID = OTAPI_Wrap::Message_GetNewAcctID(strResponse);
+			if (!strID.size())
+      {
+				_erro("Failed trying to get the new account's ID from the server response.");
+				return;
+			}
 
-        if (qstrID.length()==0) {
-						_erro("Failed trying to get the new account's ID from the server response.");
-            return;
-            }
-			SetAccountWallet_Name(qstrID,newAccountName);
-			// inBox and OutBox must be get from server because without it account not work properly
-			// example if you can't delete account without inbox and outbox
-			int32_t  inBoxInt = OTAPI_Wrap::getInbox 	(mServerID,mUserID,getAccountId(newAccountName));
-			int32_t outBoxInt = OTAPI_Wrap::getOutbox 	(mServerID,mUserID,getAccountId(newAccountName));
+			// Set the Name of the new account.
+			SetAccountWallet_Name(strID,newAccountName);
 
-
+			_info("Account " << newAccountName << "(" << strID << ")" << " created successfully.");
 		}
 
 		std::string deleteAssetAccount(const std::string & accountName) { ///<
@@ -1271,10 +1277,10 @@ namespace nUse {
 		}
 
 		bool checkNymName(const string & nymName){
-		vector<std::string> v = getNymsMy();
-			if (std::find(v.begin(), v.end(), nymName) == v.end())
-				return false;
-			return true;
+			vector<string> v = getNymsMy();
+			if (std::find(v.begin(), v.end(), nymName) != v.end())
+				return true;
+			return false;
 		}
 	};
 
@@ -1422,12 +1428,12 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	if (dbg) { _dbg3("sofar_str "<<sofar_str);};
 
-  string esc ("\\ ");
+	string esc ("\\ ");
 
 
-  string newEsc = "#x#";
-  // change Escape on new unique substring
-  while(sofar_str_tmp.find(esc)!=std::string::npos) {
+	string newEsc = "#x#";
+	// change Escape on new unique substring
+	while(sofar_str_tmp.find(esc)!=std::string::npos) {
 		sofar_str_tmp.replace(sofar_str_tmp.find(esc),esc.length(),newEsc);
 		if (dbg) { _dbg3("sofar_str_tmp "<< sofar_str_tmp);}
 		}
@@ -1441,7 +1447,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	if (dbg) { _dbg3("sofar.size()  "<<sofar.size());};
 
 	for (auto& rec : sofar) {
-		  if(rec.find(newEsc)!=std::string::npos) {
+			if(rec.find(newEsc)!=std::string::npos) {
 				//first back to Escape
 				rec = rec.replace(rec.find(newEsc),newEsc.length(),esc);
 				//second remove Escape
@@ -1451,7 +1457,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 
 		for (auto& rec : sofar) {
-		  	if (dbg) { _dbg3("rec "<< rec);};
+				if (dbg) { _dbg3("rec "<< rec);};
 			}
 
 	// exactly 2 elements, with "" for missing elements
@@ -1546,7 +1552,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 		if (full_words<4) { // we work on word4 - var2; account name
 			if (action=="new") {
-				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // check if exist
 					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 				}
 				else {
@@ -1555,7 +1561,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				}
 			}
 			if (action=="rm") {
-				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){
+				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // check if exist
 					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
 				}
 				else {
@@ -2353,9 +2359,9 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 
 	bool ok=true;
 	try {
-		  ok = main_main(argc, argv)==0 ; // ... ok? TODO
+			ok = main_main(argc, argv)==0 ; // ... ok? TODO
 
-		  if (!ok) err << "BAD TEST " << __FUNCTION__ << " with " << argc << " argument(s): ";
+			if (!ok) err << "BAD TEST " << __FUNCTION__ << " with " << argc << " argument(s): ";
 
 
 	}
