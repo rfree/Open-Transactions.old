@@ -1439,7 +1439,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	while(sofar_str_tmp.find(esc)!=std::string::npos) {
 		sofar_str_tmp.replace(sofar_str_tmp.find(esc),esc.length(),newEsc);
 		if (dbg) { _dbg3("sofar_str_tmp "<< sofar_str_tmp);}
-		}
+	}
 
 
 
@@ -1450,13 +1450,13 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	if (dbg) { _dbg3("sofar.size()  "<<sofar.size());};
 
 	for (auto& rec : sofar) {
-			if(rec.find(newEsc)!=std::string::npos) {
-				//first back to Escape
-				rec = rec.replace(rec.find(newEsc),newEsc.length(),esc);
-				//second remove Escape
-				rec = cSpaceFromEscape(rec);
-				}
-			}
+		while(rec.find(newEsc)!=std::string::npos) {
+			//first back to Escape
+			rec = rec.replace(rec.find(newEsc),newEsc.length(),esc);
+			//second remove Escape
+			rec = cSpaceFromEscape(rec);
+		}
+	}
 
 
 		for (auto& rec : sofar) {
