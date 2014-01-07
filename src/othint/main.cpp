@@ -1225,24 +1225,19 @@ namespace nUse {
 			if(!Init())
 			return vector<string> {};
 
-			cout <<"mid\tfrom\t\tcontent inbox:"<< endl;
-			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
-			string nym_ID = OTAPI_Wrap::GetNym_ID (i);
-			string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
-
-			for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nym_ID);i++){
-
-					cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nym_ID,i);
-					}
-			}
-
-			cout<<endl<<"mid\tto\t\tcontent outbox:"<< endl;
 			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
 				string nym_ID = OTAPI_Wrap::GetNym_ID (i);
 				string nym_Name = OTAPI_Wrap::GetNym_Name (nym_ID);
-
-			for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nym_ID);i++){
-				cout << i+1<< "\t"<< OTAPI_Wrap::GetNym_Name(nym_ID)<<"\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i);
+				cout << "===" << nym_Name << "(" << nym_ID << ")"  << "===" << endl;
+				cout << "INBOX" << endl;
+				cout << "id\tfrom\t\tcontent:" << endl;
+				for(int i = 0 ; i < OTAPI_Wrap::GetNym_MailCount (nym_ID);i++){
+					cout << i+1<< "\t" << nym_Name << "\t" << OTAPI_Wrap::GetNym_MailContentsByIndex (nym_ID,i) << endl;
+				}
+				cout << "OUTBOX" << endl;
+				cout << "id\tto\t\tcontent:" << endl;
+				for(int i = 0 ; i < OTAPI_Wrap::GetNym_OutmailCount (nym_ID);i++){
+					cout << i+1<< "\t" << nym_Name << "\t" << OTAPI_Wrap::GetNym_OutmailContentsByIndex (nym_ID,i) << endl;
 				}
 			}
 			return vector<string> {};
@@ -1264,12 +1259,20 @@ namespace nUse {
 			return vector<string> {};
 		}
 
-		string sendMsg(const string & msg) { ///< Get all messages from Nym.
+		void sendMsg(const string & msg) { ///< Get all messages from Nym.
 			if(!Init())
-				return "";
+				return;
 			OT_ME madeEasy;
-			string ret = madeEasy.send_user_msg ( mServerID, mUserID, mUserID, msg); //TODO: server?
-			return ret;
+			string strResponse = madeEasy.send_user_msg ( mServerID, mUserID, mUserID, msg);
+
+			// -1 error, 0 failure, 1 success.
+			if (1 != madeEasy.VerifyMessageSuccess(strResponse))
+			{
+				_erro("Failed trying to create Account at Server.");
+				return;
+			}
+
+			_info("Message was sent successfully.");
 		}
 
 		void removeMailByIndex(const string &){
@@ -1598,7 +1601,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			}
 		}
 
-	}
+	} // account
 
 	if (topic=="account-in") {
 		if (full_words<2) { // we work on word2 - the action:
@@ -1732,16 +1735,15 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			}
 		}
 
-		if (full_words<5) { // we work on word6
+		if (full_words<6) { // we work on word6
 			if (action=="send") { // message text
-				if (!cmdArgs.at(2).length())
-					std::cerr << "Message is empty.";
-				return vector<string>{""}; // ready for message
+				nOT::nUse::useOT.sendMsg(cmdArgs.at(2)); // <====== Execute
+				return vector<string>{""};
 			}
 		}
 
 
-	}
+	} // msg
 
 	if (topic=="msguard") { // testing!
 		if (full_words<2) { // we work on word2 - the action:
@@ -1783,7 +1785,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
 			}
 		}
-	}
+	} // nym
 
 	if (topic=="nym-cred") {
 		return WordsThatMatch(  current_word  ,  vector<string>{"new", "revoke" , "show"} ) ;
