@@ -1196,13 +1196,12 @@ namespace nUse {
 			if(!Init())
 			return "";
 
-			/*if(!OTAPI_Wrap::Wallet_CanRemoveAccount (getAccountId(accountName))) {
-						// inBox and OutBox must be get from server because without it account not work properly
-			// example if you can't delete account without inbox and outbox
-			int32_t  inBoxInt = OTAPI_Wrap::getInbox 	(mServerID,mUserID,getAccountId(accountName));
-			int32_t outBoxInt = OTAPI_Wrap::getOutbox 	(mServerID,mUserID,getAccountId(accountName));
+			if(!OTAPI_Wrap::Wallet_CanRemoveAccount (getAccountId(accountName))) {
+				// inBox and OutBox must be get from server because without it account not work properly
+				// example if you can't delete account without inbox and outbox
+				int32_t  inBoxInt = OTAPI_Wrap::getInbox 	(mServerID,mUserID,getAccountId(accountName));
+				int32_t outBoxInt = OTAPI_Wrap::getOutbox 	(mServerID,mUserID,getAccountId(accountName));
 			}
-*/
 
 			if(OTAPI_Wrap::deleteAssetAccount(mServerID, mUserID, getAccountId(accountName))==-1)
 				return "Error while deleting account";
@@ -1282,6 +1281,20 @@ namespace nUse {
 		bool checkNymName(const string & nymName){
 			vector<string> v = getNymsMy();
 			if (std::find(v.begin(), v.end(), nymName) != v.end())
+				return true;
+			return false;
+		}
+
+		bool checkAssetName(const string & assetName){
+			vector<string> v = getAssets();
+			if (std::find(v.begin(), v.end(), assetName) != v.end())
+				return true;
+			return false;
+		}
+
+		bool checkAccountName(const string & accountName){
+			vector<string> v = getAccounts();
+			if (std::find(v.begin(), v.end(), accountName) != v.end())
 				return true;
 			return false;
 		}
@@ -1535,7 +1548,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls", "refresh", "rm", "mv"} ) ;
 		}
-		if (full_words<3) { // we work on word3 - var1
+		if (full_words<3) { // we work on word3 (cmdArgs.at(0)) asset name
 			if (action=="new") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
 			}
@@ -1553,18 +1566,18 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			}
 		}
 
-		if (full_words<4) { // we work on word4 - var2; account name
+		if (full_words<4) { // we work on word4 (cmdArgs.at(1)) account name
 			if (action=="new") {
-				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // check if exist
-					return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
+				if (nOT::nUse::useOT.checkAssetName(cmdArgs.at(0))){ // check if asset exists
+					return vector<string>{""};
 				}
 				else {
-					std::cout <<"asset "<< cSpaceFromEscape(cmdArgs.at(0))<< " don't exists"<<endl;
+					std::cout << "asset " << cSpaceFromEscape(cmdArgs.at(0)) << " don't exists" << endl;
 					return vector<string>{""};
 				}
 			}
 			if (action=="rm") {
-				if (nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // check if exist
+				if (nOT::nUse::useOT.checkAccountName(cmdArgs.at(0))){ // check if account exists
 					return vector<string>{nOT::nUse::useOT.deleteAssetAccount(cmdArgs.at(0))};
 				}
 				else {
@@ -1572,15 +1585,15 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 					return vector<string>{""};
 				}
 			}
-
 			if (action=="mv") {
 				std::cerr <<"type new account name";
 				return vector<string>{""};
 			}
 		}
+
 		if (full_words<5) { // Execute commands!
 			if (action=="new") {
-				if (!nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // unique name
+				if (!nOT::nUse::useOT.checkAccountName(cmdArgs.at(1))){ // unique name
 					nOT::nUse::useOT.createAssetAccount(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
 				}
 				else {
@@ -1590,12 +1603,12 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 			}
 			if (action=="mv") {
-				if (!nOT::nUse::useOT.checkNymName(cmdArgs.at(0))){ // unique name
+				if (!nOT::nUse::useOT.checkAccountName(cmdArgs.at(1))){ // unique name
 					nOT::nUse::useOT.SetAccountWallet_NameByName(cmdArgs.at(0), cmdArgs.at(1)); // <====== Execute
 					return vector<string>{""};
 				}
 				else {
-					std::cerr <<"new account name already exists, choose other name ";
+					std::cerr <<"New account name already exists, choose other name ";
 					return vector<string>{""};
 				}
 			}
