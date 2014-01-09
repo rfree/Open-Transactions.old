@@ -735,7 +735,7 @@ account			# can display active (default) account
 *account ls			# list all accounts
 *account new			# make new account with UI
 *account new <assetID>			# make new account by giving only <assetID>...
-/account new <assetID> <accountName>			#... and <accountName>
+*account new <assetID> <accountName>			#... and <accountName>
 account refresh			#	refresh database of private accounts' list
 *account rm <accountName>			# delete account
 *account mv <oldAccountName>	<newAccountName>		# rename account
@@ -745,6 +745,7 @@ account-in accept <paymentID>				#	accept this particullar payment
 account-in accept --all			# accept all
 account-out ls
 asset				# can display active (default) asset
+*asset ls		# display all assets
 asset new 	# change to issue?
 asset new <assetName>			# set new asset with given <assetName>
 basket new
@@ -1192,6 +1193,29 @@ namespace nUse {
 			_info("Account " << newAccountName << "(" << strID << ")" << " created successfully.");
 		}
 
+		void createNym(const std::string & nymName) {
+			if(!Init())
+			return ;
+
+			OT_ME madeEasy;
+			int32_t nKeybits = 1024;
+			string NYM_ID_SOURCE = "";
+			string ALT_LOCATION = "";
+			string strID = madeEasy.create_pseudonym(nKeybits, NYM_ID_SOURCE, ALT_LOCATION);
+
+			if (strID.empty())
+			{
+				_erro("Failed trying to create new Nym.");
+				return;
+			}
+
+			// Set the Name of the new Nym.
+			OTAPI_Wrap::SetNym_Name(strID, strID, nymName);
+
+
+			_info("Nym " << nymName << "(" << strID << ")" << " created successfully.");
+		}
+
 		std::string deleteAssetAccount(const std::string & accountName) { ///<
 			if(!Init())
 			return "";
@@ -1622,9 +1646,11 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		}
 		if (full_words<3) { // we work on word3 - var1
 			if (action=="accept") {
+				//TODO
 				return WordsThatMatch(  current_word  ,  vector<string>{"--all", "<paymentID>"} ) ;
 			}
 			if (action=="ls") {
+				//TODO
 				return WordsThatMatch(  current_word  ,  vector<string>{"<accountID>"} ) ;
 			}
 		}
@@ -1638,11 +1664,13 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"new", "ls"} ) ;
 		}
-		if (full_words<3) { // we work on word3 - var1
-			if (action=="new") {
-				std::cerr <<"type name of asset"<<endl;
-
-				return WordsThatMatch(  current_word  ,  vector<string>{} ) ;
+		if (full_words<3) { // we work on word3 - cmdArgs.at(0) - asset name
+			if (action=="ls") {
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getAssets() ) ;
+			}
+			else if (action=="new") {
+				std::cerr << "Type name of asset" << endl;
+				return vector<string>{""};
 			}
 		}
 	}
@@ -1773,14 +1801,15 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<2) { // we work on word2 - the action:
 			return WordsThatMatch(  current_word  ,  vector<string>{"check", "edit", "export", "import", "info", "ls", "new", "refresh", "register", "rm", "[BLANK]"} ) ;
 		}
-		if (full_words<3) { // we work on word3 - var1
+		if (full_words<3) { // we work on word3 - cmdArgs.at(0)
 
 			if (action=="ls") {
 				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() );
 			}
 
 			if (action=="new") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"name", "[BLANK]"} ); //TODO Suitable changes to this part - propably after merging with otlib
+				std::cerr <<"Type new Nym name";
+				return vector<string>{""};
 			}
 			if (action=="rm") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"name", "<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
@@ -1798,6 +1827,14 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
 			}
 		}
+		if (full_words<4) { // we work on word4 - var2
+			if (action=="new") {
+				nOT::nUse::useOT.createNym(cmdArgs.at(0)); // <====== Execute
+			}
+		}
+
+
+
 	} // nym
 
 	if (topic=="nym-cred") {
