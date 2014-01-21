@@ -759,10 +759,10 @@ contract sign
 market
 market ls
 mint new
-msg			# should show what options do you have with this topic
+*msg			# should show what options do you have with this topic
 /msg send		# should ask you about nyms ?
 msg send <mynym> 		# should take your nym and ask about addressee's name
-msg send <mynym> <hisnym> 		# an example of usage
+*msg send <mynym> <hisnym> 		# an example of usage
 msg send <mynym> <hisnym> --push     		# global option
 msg send <mynym> <hisnym> --no-footer     # action option
 msg send <mynym> <hisnym> --cc <ccnym>     # action option with value
@@ -779,12 +779,13 @@ msguard stop
 *nym 			# can display active (default) nym
 *nym ls			# list of all nyms
 nym new			# make new nym with UI (it should ask potential user to give the name
-nym new <name>			# make new nym by giving name without UI
+*nym new <name>			# make new nym by giving name without UI
 nym rm <name>			# remove nym with such <name>
 nym rm <nymID>		# remove nym with such <nymID>
 nym info <nymID>		# show information about such <nymID>
 nym edit <nymID>		# allows to edit information about such <nymID>
-nym register <nymID> <serverID>			# register this specific <nymID> to specific <serverID> server
+*nym register <nymID>	# register this specific <nymID> on default server
+/nym register <nymID> <serverID>	# register this specific <nymID> to specific <serverID> server
 nym import		# import saved (somewhere?) nyms
 nym export		# export nyms to (outerspace) :) ?
 nym check <nymID>			# returns Public Key of this <nymID> nym
@@ -1094,6 +1095,19 @@ namespace nUse {
 		return mNymsMy_str;
 		}
 
+		const string getNymIdByName(const string & nymName) {
+			if(!Init())
+			return "";
+
+			for(int i = 0 ; i < OTAPI_Wrap::GetNymCount ();i++){
+				string nymID = OTAPI_Wrap::GetNym_ID (i);
+				string nymName_ = OTAPI_Wrap::GetNym_Name (nymID);
+				if (nymName_ == nymName)
+					return nymID;
+			}
+			return "";
+		}
+
 		const nUtil::vector<std::string> getAccounts() {
 
 			if(!Init())
@@ -1212,8 +1226,27 @@ namespace nUse {
 			// Set the Name of the new Nym.
 			OTAPI_Wrap::SetNym_Name(strID, strID, nymName);
 
-
 			_info("Nym " << nymName << "(" << strID << ")" << " created successfully.");
+		}
+
+		void registerNym(const std::string & nymName) {
+			if(!Init())
+			return ;
+
+			OT_ME madeEasy;
+
+			//TODO: set server
+			_warn("Checking for default nym only");
+			bool isReg = OTAPI_Wrap::IsNym_RegisteredAtServer(getNymIdByName(nymName), mServerID);
+
+			if (!isReg)
+			{
+				string response = madeEasy.register_nym(mServerID, getNymIdByName(nymName));
+				_info(response);
+				_info("Nym " << mUserID << " was registered successfully");
+			}
+			else
+				_info("Nym " << mUserID << " was already registered");
 		}
 
 		std::string deleteAssetAccount(const std::string & accountName) { ///<
@@ -1732,7 +1765,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			if (action=="send") {
 				//nOT::nUse::useOT.sendMsg();
 				//return vector<string>{""};
-				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() ); //TODO otlib
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() );
 			}
 			if (action=="mv") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"Where-to?"} ); // in mail box... will there be other directories?
@@ -1804,7 +1837,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<3) { // we work on word3 - cmdArgs.at(0)
 
 			if (action=="ls") {
-				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy() );
+				nOT::nUse::useOT.getNymsMy(); // <====== Execute
 			}
 
 			if (action=="new") {
@@ -1821,7 +1854,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib
 			}
 			if (action=="register") {
-				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>", "<serverID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy());//TODO server name
 			}
 			if (action=="check") {
 				return WordsThatMatch(  current_word  ,  vector<string>{"<nymID>"} );//TODO Suitable changes to this part - propably after merging with otlib same problem like with "msg send" how to implement this one?
@@ -1830,6 +1863,9 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		if (full_words<4) { // we work on word4 - var2
 			if (action=="new") {
 				nOT::nUse::useOT.createNym(cmdArgs.at(0)); // <====== Execute
+			}
+			if (action=="register") {
+				nOT::nUse::useOT.registerNym(cmdArgs.at(0)); // <====== Execute
 			}
 		}
 
