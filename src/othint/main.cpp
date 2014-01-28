@@ -794,12 +794,15 @@ nym-cred new 			# change credential to trust?
 nym-cred revoke
 nym-cred show			# show all credential to trust?
 receipt?
-*server			# can display active (default) server
-*server ls			# as above but all servers are listed
+server			# can display active (default) server
+/server ls			# as above but all servers are listed TODO: Display mode information about servers
 server add		# add new server
 server new 	# like newserver
-text encode
+text encode	# ask to paste text to encode
+*text encode <text>
+text encode <file>
 text decode
+text decode <file>
 voucher new
 wallet? status
 #------List of all included commands-----#
@@ -1355,8 +1358,27 @@ namespace nUse {
 				return true;
 			return false;
 		}
-	};
 
+		const string encodeText(const string & plainText) {
+			if(!Init())
+				return "";
+
+			bool bLineBreaks = false; //TODO
+			string encodedText;
+			encodedText = OTAPI_Wrap::Encode (plainText, bLineBreaks);
+			return encodedText;
+		}
+
+		const string decodeText(const string & encodedText) {
+			if(!Init())
+				return "";
+
+			bool bLineBreaks = false; //TODO
+			string plainText;
+			plainText = OTAPI_Wrap::Decode (encodedText, bLineBreaks);
+			return plainText;
+		}
+	};
 
 	cUseOT useOT;
 } // nUse
@@ -1883,7 +1905,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	if (topic=="server") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add",} ) ;
+			return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add"} ) ;
 		}
 
 		if (full_words<3) { // we work on word3 - var1
@@ -1895,7 +1917,36 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 	}
 
 	if (topic=="text") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ; //coding method needed
+		if (full_words<2) { // we work on word2 - the action:
+			return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ; //coding
+		}
+
+		if (full_words<3) { // we work on word3 - var1
+			if (action=="encode") { // text to encode
+				//execution:
+				//TODO ask to paste plain text
+				//const vector<string> encodeText(const string & plainText)
+				return vector<string>{""};
+			}
+
+			if (action=="decode") { // text to decode
+				//execution:
+				//TODO ask to paste encoded text
+				//const vector<string> decodeText(const string & encodedText)
+				return vector<string>{""};
+			}
+		}
+
+		if (full_words<4) { // we work on word4 - var2
+			if (action=="encode") {
+				_info(nOT::nUse::useOT.encodeText(cmdArgs.at(0))); // <====== Execute
+			}
+
+			if (action=="decode") {
+				_info(nOT::nUse::useOT.decodeText(cmdArgs.at(0))); // <====== Execute
+			}
+		}
+
 	}
 
 	if (topic=="voucher") {
@@ -1906,23 +1957,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 		return WordsThatMatch(  current_word  ,  vector<string>{"status"} ) ;
 	}*/
 
-	if (topic=="server") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"ls", "new", "add", "[BLANK]" } ) ;
-	}
-
-	if (topic=="text") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ;
-	}
-
-	if (topic=="voucher") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
-	}
-
-	/*if (topic=="wallet") {
-		return WordsThatMatch(  current_word  ,  vector<string>{"status"} ) ;
-	}*/
-
-	return vector<string>(0,"");
+	return vector<string>{""};
 	//throw std::runtime_error("Unable to handle following completion: sofar_str='" + ToStr(sofar_str) + "' in " + OT_CODE_STAMP);
 }
 
