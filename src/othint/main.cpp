@@ -800,9 +800,11 @@ server add		# add new server
 server new 	# like newserver
 text encode	# ask to paste text to encode
 *text encode <text>
-text encode <file>
+text encode <textfile>
 text decode
-text decode <file>
+text decode <textfile>
+*text encrypt <recipientNymName> <text>
+text decrypt
 voucher new
 wallet? status
 #------List of all included commands-----#
@@ -1363,7 +1365,7 @@ namespace nUse {
 			if(!Init())
 				return "";
 
-			bool bLineBreaks = false; //TODO
+			bool bLineBreaks = true; //TODO
 			string encodedText;
 			encodedText = OTAPI_Wrap::Encode (plainText, bLineBreaks);
 			return encodedText;
@@ -1373,9 +1375,25 @@ namespace nUse {
 			if(!Init())
 				return "";
 
-			bool bLineBreaks = false; //TODO
+			bool bLineBreaks = true; //TODO
 			string plainText;
 			plainText = OTAPI_Wrap::Decode (encodedText, bLineBreaks);
+			return plainText;
+		}
+
+		const string encryptText(const string & recipientNymName, const string & plainText) {
+			if(!Init())
+				return "";
+			string encryptedText;
+			encryptedText = OTAPI_Wrap::Encrypt(getNymIdByName(recipientNymName), plainText);
+			return encryptedText;
+		}
+
+		const string decryptText(const string & recipientNymName, const string & encryptedText) {
+			if(!Init())
+				return "";
+			string plainText;
+			plainText = OTAPI_Wrap::Decrypt(getNymIdByName(recipientNymName), encryptedText);
 			return plainText;
 		}
 	};
@@ -1918,7 +1936,7 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 
 	if (topic=="text") {
 		if (full_words<2) { // we work on word2 - the action:
-			return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode" } ) ; //coding
+			return WordsThatMatch(  current_word  ,  vector<string>{"encode", "decode", "encrypt", "decrypt" } ) ; //coding
 		}
 
 		if (full_words<3) { // we work on word3 - var1
@@ -1935,6 +1953,14 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 				//const vector<string> decodeText(const string & encodedText)
 				return vector<string>{""};
 			}
+
+			if (action=="encrypt") { // recipient Nym Name
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy());
+			}
+
+			if (action=="decrypt") { // recipient Nym Name
+				return WordsThatMatch(  current_word  ,  nOT::nUse::useOT.getNymsMy());
+			}
 		}
 
 		if (full_words<4) { // we work on word4 - var2
@@ -1945,9 +1971,26 @@ vector<string> cHintManager::BuildTreeOfCommandlines(const string &sofar_str, bo
 			if (action=="decode") {
 				_info(nOT::nUse::useOT.decodeText(cmdArgs.at(0))); // <====== Execute
 			}
+
+			if (action=="encrypt") {
+				return vector<string>{""};
+			}
+
+			if (action=="decrypt") {
+				return vector<string>{""};
+			}
 		}
 
-	}
+		if (full_words<5) { // we work on word5 - var3
+			if (action=="encrypt") {
+				_info(nOT::nUse::useOT.encryptText(cmdArgs.at(0), cmdArgs.at(1))); // <====== Execute
+			}
+
+			if (action=="decrypt") {
+				_info(nOT::nUse::useOT.decryptText(cmdArgs.at(0), cmdArgs.at(1))); // <====== Execute
+			}
+		}
+	} // topic=="text"
 
 	if (topic=="voucher") {
 		return WordsThatMatch(  current_word  ,  vector<string>{"new"} ) ;
