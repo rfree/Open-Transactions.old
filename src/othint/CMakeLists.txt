@@ -15,6 +15,9 @@ set(CMAKE_SKIP_BUILD_RPATH  FALSE) # Always include RPATH to the binary
 if (WITH_WRAPPER)
 	set(CMAKE_CXX_COMPILER "$ENV{HOME}/.local/bin/compile-cxx")
 	set(CMAKE_CC_COMPILER "$ENV{HOME}/.local/bin/compile-cc")
+	message(STATUS "Option was set to use WRAPPER. Using CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
+else ()
+	message(STATUS "Option was NOT set for wrapper. Using CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 endif (WITH_WRAPPER)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3 -O0 ")
@@ -47,6 +50,13 @@ else ()
 	endif (EDITLINE_FOUND)
 endif(LOCAL_EDITLINE)
 
+# TODO search for chaiscript
+
+# TODO should this be needed in order to use boost? (we need boost for chai currently)
+FIND_PACKAGE( Boost 1.49 COMPONENTS thread REQUIRED )
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+TARGET_LINK_LIBRARIES( othint ${Boost_LIBRARIES} )
+
 # Find libraries and headers for OT
 
 if (LOCAL_OT)
@@ -59,6 +69,7 @@ endif(LOCAL_OT)
 
 include_directories("../../include/otlib") # For ExportWrapper.h needed by OTAPI.h
 include_directories("../../include") # For irrXML.h needed by OT_ME.h
+include_directories("$ENV{HOME}/.local/include") # for chaiscript etc (see TODO above)
 # make run
 
 add_custom_target(run
