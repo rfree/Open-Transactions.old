@@ -14,7 +14,7 @@ Dependencies installation (Debian):
 	* Download OpenTransactions and build it, using instructions from  ../../docs/INSTALL-linux-modern.txt or other suitable
 	* Install also the header files into ~/.local/
 	* Checklist, in ~ .local you shoul have files like:
-		find  /home/opentransactions/.local/lib/ | grep libot
+		$ find  /home/opentransactions/.local/lib/ | grep libot
 			/home/opentransactions/.local/lib/libot.so.0
 			/home/opentransactions/.local/lib/libot.a
 			/home/opentransactions/.local/lib/libotapi.so
@@ -24,6 +24,13 @@ Dependencies installation (Debian):
 			mkdir  ~/.local/include/ot
 			cp -ar Open-Transactions/include/* ~/.local/include/ot/ # where Open-Transactions/ are the sources e.g. from github
 
+	* Get, build and install latest editline (editline in debian 7 has bugs)
+		$ wget http://thrysoee.dk/editline/libedit-20130712-3.1.tar.gz
+		$ tar -xzf libedit-20130712-3.1.tar.gz
+		$ cd libedit-20130712-3.1
+		$ ./configure --prefix=$HOME/.local
+		$ make
+		$ make install
 
 If want to use ccmake (curses gui):
 	# aptitude install cmake-curses-gui

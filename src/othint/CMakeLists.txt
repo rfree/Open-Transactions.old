@@ -50,15 +50,15 @@ endif(LOCAL_EDITLINE)
 # Find libraries and headers for OT
 
 if (LOCAL_OT)
-	find_package(OTLocal)
-	if (OT_FOUND)
-		include_directories(${OT_INCLUDE_DIR})
-		target_link_libraries (othint ${OT_LIBRARY})
-	endif (OT_FOUND)
+	find_package(OTLocal REQUIRED)
+	if (OTLocal_FOUND)
+		include_directories(${OTLocal_INCLUDE_DIR})
+		target_link_libraries (othint ${OTLocal_LIBRARY})
+	endif (OTLocal_FOUND)
 endif(LOCAL_OT)
 
-include_directories("$ENV{HOME}/.local/include/ot/otlib") # For ExportWrapper.h needed by OTAPI.h
-include_directories("$ENV{HOME}/.local/include/ot") # For irrXML.h needed by OT_ME.h
+include_directories("../../include/otlib") # For ExportWrapper.h needed by OTAPI.h
+include_directories("../../include") # For irrXML.h needed by OT_ME.h
 # make run
 
 add_custom_target(run

@@ -2,7 +2,7 @@
 This are instructions for the new, modern building.
 Why: Very fast builds, debug, clang seems better compiler (speed,memory) generating better code (fast; C++11)
 How: Use ~/local/ script that wraps and calls ccache + user-local newer clang and debug code
-State: This functionality is now (2013-10) under development, see 
+State: This functionality is now (2013-10) under development, see
 github https://github.com/rfree/Open-Transactions/ for unofficial version by rfree (me).
 
 
@@ -13,35 +13,72 @@ github https://github.com/rfree/Open-Transactions/ for unofficial version by rfr
 4. Fast rebuilding
 
 
+1. See general instructions for your system, and also install "clang" and "ccache" as in point 2.
 
 
-1. See general instructions for your system - but and also install "clang" as in point 2.
+2.
+a) clang and ccache installation
 
+Install ccache:
 
+	# apt-get install ccache
 
-2. 
-a) clang
 As user we recommend to build from sources clang compiler in some new version
-e.g. at least clang 3.3 (as of 2013-10). We would advice to build it per-user, 
-using 
-PREFIX=$HOME/.local/
+e.g. at least clang 3.3 (as of 2013-10). We would advice to build it per-user, using PREFIX=$HOME/.local/ when configuring
+
 On debian 7 good setup is to system-wide install clang from repository (3.2)
-and user-local build clang 3.3.
+and user-local build clang 3.3:
+
+	# apt-get install clang
+
+Download sources:
+	$ wget http://www.llvm.org/releases/3.3/cfe-3.3.src.tar.gz
+	$ wget http://www.llvm.org/releases/3.3/cfe-3.3.src.tar.gz.sig
+	$ wget http://www.llvm.org/releases/3.3/llvm-3.3.src.tar.gz
+	$ wget http://www.llvm.org/releases/3.3/llvm-3.3.src.tar.gz.sig
+
+Verify downloads:
+	$ sha512sum *gz
+	06773f43f7d3529f06edb029f7de398f06a700a0f2476e00c4727e70c291028221bfac23625dfd2c220d6ac91a21670848187a934b99a21801c695127371afcc  cfe-3.3.src.tar.gz
+	1b7f7c5e907a68f642dcbe48fdff9585cb1504022bc9d386f310ebe5d25103d0d5f7cf0abf19e0e3fd666970160a98c90033754e2b79b2fac0cf866c984f8038  llvm-3.3.src.tar.gz
+
+	$ gpg --verify cfe-3.3.src.tar.gz.sig
+	$ gpg --recv-key E95C63DC
+	$ gpg --verify cfe-3.3.src.tar.gz.sig
+	$ gpg --verify llvm-3.3.src.tar.gz.sig
+
+Unpack and prepare to build:
+	$ tar -xzf llvm-3.3.src.tar.gz
+	$ tar -xzf cfe-3.3.src.tar.gz
+	$ mv cfe-3.3.src llvm-3.3.src/tools/clang
+	$ mkdir build
+	$ cd build
+
+Build:
+	If compiling with clang - must pass full path to compiler
+	$ CC=/usr/bin/clang CXX=/usr/bin/clang++; ../llvm-3.3.src/configure --prefix=$HOME/.local
+	$ make -j2
+	$ make install
+
+Add to ~/.profile to use clang with ccache:
+	# set PATH so it includes user's .local root bin if it exists
+	if [ -d "$HOME/.local/bin" ] ; then
+		PATH="$HOME/.local/bin:$PATH"
+	fi
+
+	export CPP="clang -E"; export CC="ccache clang"; export CXX="ccache clang++"
 
 b) 3rd party libs like chaiscript - same as in the other tutorials
 
-c) run our script utils/compiler-wrapper/install.sh (or you will be asked to 
-run it when building. It will install the wrapper in $HOME/.local/bin as 
+c) run our script utils/compiler-wrapper/install.sh (or you will be asked to
+run it when building. It will install the wrapper in $HOME/.local/bin as
 compile-cxx and other scripts.
 
 
-
-3. For main build use 
+3. For main build use
+!!!IMPORTANT!!! Don't use wrapper (broken)
 ./cmd/build.sh 0
-
 
 
 4. Fast recompilations are done with e.g.
 ./cmd/build.sh 200
-
-
