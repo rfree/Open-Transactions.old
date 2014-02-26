@@ -402,6 +402,17 @@ struct cNullstream : std::ostream {
 };
 cNullstream g_nullstream; // a stream that does nothing (eats/discards data)
 
+// ====================================================================
+
+template <class T>
+std::string ToStr(const T & obj) {
+	std::ostringstream oss;
+	oss << obj;
+	return oss.str();
+}
+
+// ====================================================================
+
 
 #define _dbg3(X) do { nOT::nUtil::current_logger.write_stream(20) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
 #define _dbg2(X) do { nOT::nUtil::current_logger.write_stream(30) << OT_CODE_STAMP << ' ' << X << std::endl; } while(0)
@@ -424,17 +435,25 @@ const char* ShortenTheFile(const char *s) {
 class cLogger {
 	public:
 		cLogger();
-		std::ostream &write_stream(int level) { if /*(0)*/(mStream) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
+		std::ostream &write_stream(int level) { if ((level >= mLevel) && (mStream)) { *mStream << icon(level) << ' '; return *mStream; } return g_nullstream; }
 		std::string icon(int level) const;
-		void setDebugLevel(int level) { mLevel = level; }
+		void setDebugLevel(int level);
 	protected:
 		std::ostream *mStream; // pointing only
 		int mLevel;
 };
 
+cLogger current_logger;
+
+void cLogger::setDebugLevel(int level) {
+	bool note_before = (mLevel > level); // report the level change before or after the change? (on higher level)
+	if (note_before) _note("Setting debug level to "<<level);
+	mLevel = level;
+	if (!note_before) _note("Setting debug level to "<<level);
+}
+
 cLogger::cLogger() : mStream(NULL), mLevel(90) { mStream = & std::cout; }
 
-cLogger current_logger;
 
 std::string cLogger::icon(int level) const {
 	if (level >= 100) return "@@";
@@ -448,13 +467,6 @@ std::string cLogger::icon(int level) const {
 }
 
 // ====================================================================
-
-template <class T>
-std::string ToStr(const T & obj) {
-	std::ostringstream oss;
-	oss << obj;
-	return oss.str();
-}
 
 template <class T>
 std::string vectorToStr(const T & v) {
@@ -1410,6 +1422,12 @@ OT_COMMON_USING_NAMESPACE
 
 using namespace nOT::nUtil;
 
+std::string StreamName(std::ostream &str) {
+	if (str == std::cout) return "cout";
+	if (str == std::cout) return "cin";
+	return "other-stream";
+}
+
 struct cTestCaseCfg {
 	std::ostream &ossErr;
 	bool debug;
@@ -1417,7 +1435,12 @@ struct cTestCaseCfg {
 	cTestCaseCfg(std::ostream &ossErr, bool debug)
 	: ossErr(ossErr) , debug(debug)
 	{ }
+
+	std::ostream & print(std::ostream &ostr) const { ostr << "[" << (debug ? "debug":"quiet") << " " << StreamName(ossErr) << "]";  return ostr; }
+
 };
+
+std::ostream & operator<<(std::ostream &ostr, const cTestCaseCfg &cfg) { return cfg.print(ostr); }
 
 bool testcase_run_all_tests();
 
@@ -2224,7 +2247,8 @@ bool LoadScript_Main(const std::string &thefile_name) { // here we temporarly ca
 	return will_continue;
 } // LocalDeveloperCommands()
 
-void LoadScript(const std::string &script_filename) {
+void LoadScript(const std::string &script_filename, const std::string &title) {
+	_note("Script " + script_filename + " ("+title+")");
 	try {
 		LoadScript_Main(script_filename);
 	}
@@ -2239,7 +2263,7 @@ void LoadScript(const std::string &script_filename) {
 // ====================================================================
 
 int main(int argc, char **argv) {
-	LoadScript("autostart-dev.local");
+	LoadScript("autostart-dev.local", "autostart script");
 
 	// demo of OT
 	/*try {
@@ -2512,7 +2536,6 @@ bool helper_testcase_run_main_with_arguments(const cTestCaseCfg &testCfg , vecto
 	bool dbg = testCfg.debug;   auto &err = testCfg.ossErr;
 	if (dbg) err << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
 
-	cerr << "Testing " << __FUNCTION__ << " with " << argc << " argument(s): ";
 	size_t nr=0;
 	for(auto rec:tab) {
 		argv[nr] = strdup(rec.c_str()); // C style strdup/free
@@ -2559,7 +2582,7 @@ bool testcase_run_main_args(const cTestCaseCfg &testCfg) {
 
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one", "ot msg sen"} ) ) ok=false;
 	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName,"--complete-one"} ) ) ok=false;
-	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName} ) ) ok=false;
+//	if (!	helper_testcase_run_main_with_arguments(testCfg, vector<string>{programName} ) ) ok=false;
 
 	return ok;
 }
@@ -2627,19 +2650,22 @@ bool testcase_run_all_tests() { // Can only run bool(*)(void) functions (to run 
 		bool result = 0;
 		string exception_msg;
 		try {
-			cTestCaseCfg & config = ( (test.mExpectedOutcome == 0) ? testCfg : testCfgQuiet); // if test should fail - quiet it
+			cTestCaseCfg & config = ( (test.mExpectedOutcome == 0) ? testCfgQuiet : testCfg ); // if test should fail - make it quiet
+			cerr << "--- start test --- " << test.mName << " (config=" << config << ")" << " \n";
 			result = (   test.mFunc   )( config ); // <--- run the test with config
+			cerr << "--- done test --- " << test.mName << " \n\n";
 		} catch(const std::exception &e) { exception_msg = e.what(); }
 
 		bool as_expected = (result == test.mExpectedOutcome);
 
 		if (!as_expected) {
 			number_errors++;
-			std::ostringstream msgOss; msgOss << "test #" << nr << " " << test.mName  <<  " failed";
+			std::ostringstream msgOss; msgOss << "test #" << nr << " " << test.mName  <<  " failed"
+				<< "(result was "<<result<<" instead expected "<<test.mExpectedOutcome<<") ";
 			if (exception_msg.size()) msgOss << " [what: " << exception_msg << "]";
 			msgOss<<"!";
 			string msg = msgOss.str();
-			_dbg3(" *** " << msg);
+			//_dbg3(" *** " << msg);
 			failure_details << " " << msg << " ";
 		}
 		++nr;
