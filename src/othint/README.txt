@@ -1,7 +1,31 @@
 
 ========================================================================
-BUILDING
+START
+------------------------------------------------------------------------
+This are tools for OT (Open Transactions - secure messages and banking software).
+othint - is a tool to easily type, and auto-complete commands for OT for otcli
+otcli - is ot new cli - Open Transactions NEW Command Line Interface
+------------------------------------------------------------------------
+* do "make" or possibly first "cmake ." or see BUILDING 
+* do "make run" or ./othint will run program - or see USING
 ========================================================================
+
+
+========================================================================
+USING
+------------------------------------------------------------------------
+run "make run" or execute the binary ./othint
+
+Now you are in interactive shell called 
+newcli (Open Transactions NEW Command-Line Interface)
+here you execute OT commands, and auto-completion (tab key) works!
+
+========================================================================
+
+
+========================================================================
+BUILDING
+------------------------------------------------------------------------
 building Othint
 
 Dependencies:
